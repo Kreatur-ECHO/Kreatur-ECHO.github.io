@@ -29,7 +29,7 @@ const Comments = (() => {
       inputPosition: 'top',
       theme: 'preferred_color_scheme',
       lang: 'zh-CN',
-      loading: 'lazy',
+      loading: '',
     },
 
     // 本地留言板 (备用)
@@ -73,9 +73,7 @@ const Comments = (() => {
           data-input-position="${c.inputPosition}"
           data-theme="${c.theme}"
           data-lang="${c.lang}"
-          data-loading="${c.loading}"
           crossorigin="anonymous"
-          async
         ></script>
       </div>`;
   }
