@@ -57,25 +57,32 @@ const Comments = (() => {
 
   // ---- giscus ----
   function renderGiscus() {
+    // 只渲染容器，脚本通过 initGiscus() 动态创建
+    // (innerHTML 不会执行 <script> 标签)
+    return '<div class="giscus-wrapper" id="giscusWrapper"></div>';
+  }
+
+  function initGiscus() {
+    if (!CONFIG.giscus.enabled) return;
+    const wrapper = document.getElementById('giscusWrapper');
+    if (!wrapper) return;
+
     const c = CONFIG.giscus;
-    return `
-      <div class="giscus-wrapper" id="giscusWrapper">
-        <script
-          src="https://giscus.app/client.js"
-          data-repo="${c.repo}"
-          data-repo-id="${c.repoId}"
-          data-category="${c.category}"
-          data-category-id="${c.categoryId}"
-          data-mapping="${c.mapping}"
-          data-strict="${c.strict}"
-          data-reactions-enabled="${c.reactionsEnabled}"
-          data-emit-metadata="${c.emitMetadata}"
-          data-input-position="${c.inputPosition}"
-          data-theme="${c.theme}"
-          data-lang="${c.lang}"
-          crossorigin="anonymous"
-        ></script>
-      </div>`;
+    const script = document.createElement('script');
+    script.src = 'https://giscus.app/client.js';
+    script.setAttribute('data-repo', c.repo);
+    script.setAttribute('data-repo-id', c.repoId);
+    script.setAttribute('data-category', c.category);
+    script.setAttribute('data-category-id', c.categoryId);
+    script.setAttribute('data-mapping', c.mapping);
+    script.setAttribute('data-strict', c.strict);
+    script.setAttribute('data-reactions-enabled', c.reactionsEnabled);
+    script.setAttribute('data-emit-metadata', c.emitMetadata);
+    script.setAttribute('data-input-position', c.inputPosition);
+    script.setAttribute('data-theme', c.theme);
+    script.setAttribute('data-lang', c.lang);
+    script.crossOrigin = 'anonymous';
+    wrapper.appendChild(script);
   }
 
   // ---- 本地留言板 ----
@@ -383,6 +390,7 @@ const Comments = (() => {
 
   function init() {
     loadLocal();
+    initGiscus();  // 通过 DOM API 创建 script 标签（innerHTML 不执行脚本）
   }
 
   return { init, renderSection, bindEvents };
