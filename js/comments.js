@@ -52,9 +52,10 @@ const Comments = (() => {
       <h2 class="section-title">💬 Comments</h2>
       ${giscusHTML}
       <p class="giscus-fallback" id="giscusFallback" style="display:none;">
-        ⚠️ Comments not loading?<br>
-        <strong>Firefox</strong>: disable Enhanced Tracking Protection for this site (shield icon in address bar).<br>
-        <strong>Other browsers</strong>: check that third-party scripts are not blocked.
+        ⚠️ Comments not loading? giscus.app may be blocked by your browser.<br>
+        <strong>Edge</strong>: Settings → Privacy → Tracking prevention → switch to <strong>Balanced</strong>, or add this site to exceptions.<br>
+        <strong>Firefox</strong>: click the shield icon in address bar → disable Enhanced Tracking Protection.<br>
+        You can also use the <strong>Quick Message</strong> panel below ↓
       </p>
       ${localHTML}
     </section>`;
@@ -87,18 +88,19 @@ const Comments = (() => {
     script.setAttribute('data-lang', c.lang);
     script.crossOrigin = 'anonymous';
 
-    // giscus 加载失败时显示提示
-    script.onerror = () => {
+    // giscus 加载失败 → 显示提示 + 自动展开备用留言
+    const onFail = () => {
       const fallback = document.getElementById('giscusFallback');
       if (fallback) fallback.style.display = 'block';
+      const details = document.getElementById('localComments');
+      if (details) details.open = true;
     };
 
-    // 超时检测：5 秒后若 iframe 未出现则显示提示
+    script.onerror = onFail;
+
+    // 超时检测：5 秒后若 iframe 未出现
     setTimeout(() => {
-      if (!document.querySelector('.giscus-frame')) {
-        const fallback = document.getElementById('giscusFallback');
-        if (fallback) fallback.style.display = 'block';
-      }
+      if (!document.querySelector('.giscus-frame')) onFail();
     }, 5000);
 
     wrapper.appendChild(script);
