@@ -631,21 +631,58 @@ img {
   min-height: 200px;
 }
 
-/* 本地留言分隔线 */
-.local-comments-divider {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+/* giscus 加载失败提示 */
+.giscus-fallback {
+  text-align: center;
+  padding: 16px 20px;
   margin-bottom: 28px;
-  color: var(--color-text-muted);
-  font-size: 0.82rem;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: var(--radius-sm);
+  color: #856404;
+  font-size: 0.85rem;
+  line-height: 1.7;
 }
-.local-comments-divider::before,
-.local-comments-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--color-border);
+
+/* 本地留言折叠面板 */
+.local-comments {
+  margin-top: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+.local-comments-toggle {
+  padding: 12px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--transition-fast);
+  list-style: none;
+}
+.local-comments-toggle::-webkit-details-marker { display: none; }
+.local-comments-toggle::before {
+  content: '▸ ';
+  display: inline-block;
+  transition: transform 0.2s;
+  font-size: 0.8rem;
+}
+details[open] .local-comments-toggle::before {
+  transform: rotate(90deg);
+}
+.local-comments-toggle:hover {
+  background: var(--color-surface-hover);
+}
+.local-note {
+  font-weight: 400;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-left: 8px;
+}
+.local-comments-body {
+  padding: 0 18px 18px;
 }
 
 .comment-form {
