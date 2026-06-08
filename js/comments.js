@@ -1,156 +1,201 @@
 /**
  * ============================================================
- *  Comments Module — 留言区逻辑
+ *  Comments Module — giscus 评论 + 本地留言板
  * ============================================================
- * 功能:
- *   - 昵称 / 留言内容 / 图片上传 (base64 存 localStorage)
- *   - 快捷复制 (复制留言文字 / 复制页面链接)
- *   - 数据持久化到 localStorage
- *   - 简单 XSS 防护
+ *
+ * giscus: 基于 GitHub Discussions 的公共评论系统
+ *         评论公开可见，需 GitHub 账号登录后发表
+ *
+ * 本地留言: localStorage 存储（备用，默认隐藏）
+ *           可在 CONFIG 中切换
+ *
+ * giscus 配置来源:
+ *   https://giscus.app  → 输入 Kreatur-ECHO/Kreatur-ECHO.github.io
  */
 
 const Comments = (() => {
-  const STORAGE_KEY = 'blog-comments';
-  const MAX_IMAGE_SIZE = 500 * 1024; // 500KB 单图上限
-  let comments = [];
+  const CONFIG = {
+    // giscus 配置
+    giscus: {
+      enabled: true,
+      repo: 'Kreatur-ECHO/Kreatur-ECHO.github.io',
+      repoId: 'R_kgDOS0cc8Q',
+      category: 'General',
+      categoryId: 'DIC_kwDOS0cc8c4C-wVw',
+      mapping: 'pathname',
+      strict: '0',
+      reactionsEnabled: '1',
+      emitMetadata: '0',
+      inputPosition: 'top',
+      theme: 'preferred_color_scheme',
+      lang: 'zh-CN',
+      loading: 'lazy',
+    },
+
+    // 本地留言板 (备用)
+    local: {
+      enabled: true,
+      storageKey: 'blog-comments',
+      maxImageSize: 500 * 1024,
+    },
+  };
 
   // ============================================================
-  //  数据加载 & 保存
-  // ============================================================
-  function load() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      comments = raw ? JSON.parse(raw) : [];
-    } catch (e) {
-      comments = [];
-    }
-  }
-
-  function save() {
-    try {
-      // 控制总存储体积，超过 4MB 时裁剪旧评论
-      let data = JSON.stringify(comments);
-      while (data.length > 4 * 1024 * 1024 && comments.length > 0) {
-        comments.shift();
-        data = JSON.stringify(comments);
-      }
-      localStorage.setItem(STORAGE_KEY, data);
-    } catch (e) {
-      console.warn('[Comments] localStorage full, trimming...');
-      comments.shift();
-      save();
-    }
-  }
-
-  // ============================================================
-  //  渲染留言区 HTML (由 Renderer 调用)
+  //  渲染
   // ============================================================
   function renderSection() {
+    const giscusHTML = CONFIG.giscus.enabled ? renderGiscus() : '';
+    const localHTML = CONFIG.local.enabled ? renderLocal() : '';
+
     return `
     <section class="section fade-in fade-in-5" id="comments">
       <h2 class="section-title">💬 Guestbook</h2>
-
-      <!-- 留言表单 -->
-      <div class="comment-form" id="commentForm">
-        <div class="comment-form-row">
-          <input
-            type="text"
-            id="commentName"
-            class="comment-input"
-            placeholder="Your name (optional)"
-            maxlength="30"
-            autocomplete="off"
-          />
-        </div>
-        <div class="comment-form-row">
-          <textarea
-            id="commentText"
-            class="comment-textarea"
-            placeholder="Leave a message..."
-            rows="3"
-            maxlength="1000"
-          ></textarea>
-        </div>
-        <div class="comment-form-actions">
-          <label class="comment-upload-btn" title="Upload image">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <span>Image</span>
-            <input type="file" id="commentImageInput" accept="image/*" hidden />
-          </label>
-          <span class="comment-char-count" id="charCount">0 / 1000</span>
-          <button class="comment-submit-btn" id="commentSubmit">Submit</button>
-        </div>
-        <!-- 图片预览 -->
-        <div class="comment-image-preview" id="commentImagePreview" style="display:none;">
-          <img id="commentImagePreviewImg" src="" alt="Preview" />
-          <button class="comment-image-remove" id="commentImageRemove" title="Remove image">&times;</button>
-        </div>
-        <div class="comment-form-error" id="commentError" style="display:none;"></div>
-      </div>
-
-      <!-- 留言列表 -->
-      <div class="comments-list" id="commentsList">
-        ${renderList()}
-      </div>
+      ${giscusHTML}
+      ${localHTML}
     </section>`;
   }
 
-  function renderList() {
-    if (comments.length === 0) {
-      return `<div class="comments-empty">No messages yet. Be the first to leave one! ✨</div>`;
+  // ---- giscus ----
+  function renderGiscus() {
+    const c = CONFIG.giscus;
+    return `
+      <div class="giscus-wrapper" id="giscusWrapper">
+        <script
+          src="https://giscus.app/client.js"
+          data-repo="${c.repo}"
+          data-repo-id="${c.repoId}"
+          data-category="${c.category}"
+          data-category-id="${c.categoryId}"
+          data-mapping="${c.mapping}"
+          data-strict="${c.strict}"
+          data-reactions-enabled="${c.reactionsEnabled}"
+          data-emit-metadata="${c.emitMetadata}"
+          data-input-position="${c.inputPosition}"
+          data-theme="${c.theme}"
+          data-lang="${c.lang}"
+          data-loading="${c.loading}"
+          crossorigin="anonymous"
+          async
+        ></script>
+      </div>`;
+  }
+
+  // ---- 本地留言板 ----
+  let localComments = [];
+  let pendingImage = null;
+
+  function loadLocal() {
+    try {
+      const raw = localStorage.getItem(CONFIG.local.storageKey);
+      localComments = raw ? JSON.parse(raw) : [];
+    } catch (e) { localComments = []; }
+  }
+
+  function saveLocal() {
+    try {
+      let data = JSON.stringify(localComments);
+      while (data.length > 4 * 1024 * 1024 && localComments.length > 0) {
+        localComments.shift();
+        data = JSON.stringify(localComments);
+      }
+      localStorage.setItem(CONFIG.local.storageKey, data);
+    } catch (e) {
+      localComments.shift();
+      saveLocal();
     }
+  }
 
-    return comments
-      .slice()
-      .reverse()
-      .map((c, i) => {
-        const realIdx = comments.length - 1 - i;
-        const name = escapeHTML(c.name || 'Anonymous');
-        const initial = (c.name || 'A')[0].toUpperCase();
-        const hue = hashHue(c.name || 'Anonymous');
-        const date = new Date(c.time).toLocaleString('zh-CN');
+  function renderLocal() {
+    return `
+      <div class="local-comments" id="localComments">
+        <div class="local-comments-divider">
+          <span>or leave a quick message below</span>
+        </div>
 
-        const imgHTML = c.image
-          ? `<div class="comment-body-image">
-              <img src="${c.image}" alt="attached image" loading="lazy" />
-             </div>`
-          : '';
-
-        return `
-        <div class="comment-card" data-index="${realIdx}">
-          <div class="comment-avatar" style="background: hsl(${hue}, 55%, 55%)">${initial}</div>
-          <div class="comment-body">
-            <div class="comment-header">
-              <span class="comment-name">${name}</span>
-              <span class="comment-time">${date}</span>
-            </div>
-            <div class="comment-text">${escapeHTML(c.message)}</div>
-            ${imgHTML}
-            <div class="comment-actions">
-              <button class="comment-action-btn copy-comment" data-index="${realIdx}" title="Copy message">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-                Copy
-              </button>
-              <button class="comment-action-btn copy-link" data-index="${realIdx}" title="Copy page link">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-                Link
-              </button>
-              <button class="comment-action-btn delete-comment" data-index="${realIdx}" title="Delete">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-              </button>
-            </div>
+        <div class="comment-form" id="commentForm">
+          <div class="comment-form-row">
+            <input type="text" id="commentName" class="comment-input"
+              placeholder="Your name (optional)" maxlength="30" autocomplete="off" />
           </div>
-        </div>`;
-      })
-      .join('');
+          <div class="comment-form-row">
+            <textarea id="commentText" class="comment-textarea"
+              placeholder="Leave a message..." rows="2" maxlength="1000"></textarea>
+          </div>
+          <div class="comment-form-actions">
+            <label class="comment-upload-btn" title="Upload image">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span>Image</span>
+              <input type="file" id="commentImageInput" accept="image/*" hidden />
+            </label>
+            <span class="comment-char-count" id="charCount">0 / 1000</span>
+            <button class="comment-submit-btn" id="commentSubmit">Submit</button>
+          </div>
+          <div class="comment-image-preview" id="commentImagePreview" style="display:none;">
+            <img id="commentImagePreviewImg" src="" alt="Preview" />
+            <button class="comment-image-remove" id="commentImageRemove" title="Remove">&times;</button>
+          </div>
+          <div class="comment-form-error" id="commentError" style="display:none;"></div>
+        </div>
+
+        <div class="comments-list" id="commentsList">
+          ${renderLocalList()}
+        </div>
+      </div>`;
+  }
+
+  function renderLocalList() {
+    if (localComments.length === 0) {
+      return '<div class="comments-empty">No messages yet ✨</div>';
+    }
+    return localComments.slice().reverse().map((c, i) => {
+      const realIdx = localComments.length - 1 - i;
+      const name = escapeHTML(c.name || 'Anonymous');
+      const initial = (c.name || 'A')[0].toUpperCase();
+      const hue = ((c.name || 'A').charCodeAt(0) * 137) % 360;
+      const date = new Date(c.time).toLocaleString('zh-CN');
+      const imgHTML = c.image
+        ? `<div class="comment-body-image"><img src="${c.image}" alt="attached" loading="lazy" /></div>`
+        : '';
+
+      return `
+      <div class="comment-card" data-index="${realIdx}">
+        <div class="comment-avatar" style="background:hsl(${hue},55%,55%)">${initial}</div>
+        <div class="comment-body">
+          <div class="comment-header">
+            <span class="comment-name">${name}</span>
+            <span class="comment-time">${date}</span>
+          </div>
+          <div class="comment-text">${escapeHTML(c.message)}</div>
+          ${imgHTML}
+          <div class="comment-actions">
+            <button class="comment-action-btn copy-comment" data-index="${realIdx}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy
+            </button>
+            <button class="comment-action-btn copy-link">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg> Link
+            </button>
+            <button class="comment-action-btn delete-comment" data-index="${realIdx}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
   }
 
   // ============================================================
-  //  事件绑定 (由 main.js 调用)
+  //  事件绑定
   // ============================================================
   function bindEvents() {
+    // giscus 主题跟随
+    bindGiscusTheme();
+
+    // 本地留言板
+    if (!CONFIG.local.enabled) return;
     const form = document.getElementById('commentForm');
-    if (!form) return; // 留言区未启用
+    if (!form) return;
+
+    loadLocal();
 
     const nameInput = document.getElementById('commentName');
     const textInput = document.getElementById('commentText');
@@ -163,35 +208,20 @@ const Comments = (() => {
     const charCount = document.getElementById('charCount');
     const listDiv = document.getElementById('commentsList');
 
-    let pendingImage = null;
-
-    // 字数统计
     textInput.addEventListener('input', () => {
       const len = textInput.value.length;
       charCount.textContent = `${len} / 1000`;
       charCount.style.color = len > 900 ? '#e74c3c' : '';
     });
 
-    // 图片选择
     imageInput.addEventListener('change', () => {
       const file = imageInput.files[0];
       if (!file) return;
-
-      if (!file.type.startsWith('image/')) {
-        showError('Please select an image file.');
-        imageInput.value = '';
-        return;
-      }
-
-      if (file.size > MAX_IMAGE_SIZE) {
-        showError('Image must be under 500KB.');
-        imageInput.value = '';
-        return;
-      }
+      if (!file.type.startsWith('image/')) { showError('Please select an image.'); imageInput.value = ''; return; }
+      if (file.size > CONFIG.local.maxImageSize) { showError('Image must be under 500KB.'); imageInput.value = ''; return; }
 
       const reader = new FileReader();
       reader.onload = (e) => {
-        // 压缩大图
         compressImage(e.target.result, 400, 300, 0.7).then(compressed => {
           pendingImage = compressed;
           previewImg.src = compressed;
@@ -202,7 +232,6 @@ const Comments = (() => {
       reader.readAsDataURL(file);
     });
 
-    // 移除图片
     removeImgBtn.addEventListener('click', () => {
       pendingImage = null;
       previewImg.src = '';
@@ -210,32 +239,18 @@ const Comments = (() => {
       imageInput.value = '';
     });
 
-    // 提交
-    submitBtn.addEventListener('click', () => submit());
-    textInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submit();
-    });
-
     function submit() {
-      const name = nameInput.value.trim();
       const message = textInput.value.trim();
+      if (!message) { showError('Please enter a message.'); textInput.focus(); return; }
 
-      if (!message) {
-        showError('Please enter a message.');
-        textInput.focus();
-        return;
-      }
-
-      comments.push({
-        name: name || '',
-        message: message,
+      localComments.push({
+        name: nameInput.value.trim() || '',
+        message,
         image: pendingImage || '',
         time: Date.now(),
       });
+      saveLocal();
 
-      save();
-
-      // 清空表单
       nameInput.value = '';
       textInput.value = '';
       pendingImage = null;
@@ -246,49 +261,69 @@ const Comments = (() => {
       charCount.style.color = '';
       hideError();
 
-      // 刷新列表
-      listDiv.innerHTML = renderList();
+      listDiv.innerHTML = renderLocalList();
       bindListActions(listDiv);
-
-      // 滚动到新评论
       listDiv.querySelector('.comment-card')?.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // 列表操作
+    submitBtn.addEventListener('click', submit);
+    textInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submit();
+    });
+
     bindListActions(listDiv);
   }
 
   function bindListActions(container) {
-    // 复制留言
     container.querySelectorAll('.copy-comment').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.index);
-        const c = comments[idx];
+        const c = localComments[idx];
         if (!c) return;
         copyToClipboard(c.message, btn);
       });
     });
-
-    // 复制页面链接
     container.querySelectorAll('.copy-link').forEach(btn => {
-      btn.addEventListener('click', () => {
-        copyToClipboard(window.location.href, btn);
-      });
+      btn.addEventListener('click', () => copyToClipboard(window.location.href, btn));
     });
-
-    // 删除
     container.querySelectorAll('.delete-comment').forEach(btn => {
       btn.addEventListener('click', () => {
         if (!confirm('Delete this message?')) return;
         const idx = parseInt(btn.dataset.index);
-        comments.splice(idx, 1);
-        save();
+        localComments.splice(idx, 1);
+        saveLocal();
         const listDiv = document.getElementById('commentsList');
-        if (listDiv) {
-          listDiv.innerHTML = renderList();
-          bindListActions(listDiv);
-        }
+        if (listDiv) { listDiv.innerHTML = renderLocalList(); bindListActions(listDiv); }
       });
+    });
+  }
+
+  // ---- giscus 主题同步 ----
+  function bindGiscusTheme() {
+    if (!CONFIG.giscus.enabled) return;
+
+    function sendGiscusTheme(theme) {
+      const iframe = document.querySelector('.giscus-frame');
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.postMessage(
+          { giscus: { setConfig: { theme } } },
+          'https://giscus.app'
+        );
+      }
+    }
+
+    // 初始主题
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    // 给 giscus 一点加载时间
+    setTimeout(() => sendGiscusTheme(isDark ? 'dark' : 'light'), 2000);
+
+    // 监听主题变化
+    const observer = new MutationObserver(() => {
+      const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      sendGiscusTheme(dark ? 'dark' : 'light');
+    });
+    observer.observe(document.documentElement, {
+      attributes: true, attributeFilter: ['data-theme'],
     });
   }
 
@@ -296,44 +331,33 @@ const Comments = (() => {
   //  工具
   // ============================================================
   function copyToClipboard(text, btn) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
+    if (navigator.clipboard?.writeText) {
       navigator.clipboard.writeText(text).then(() => flashButton(btn));
     } else {
-      // Fallback
       const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
+      ta.value = text; ta.style.opacity = '0'; ta.style.position = 'fixed';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
       flashButton(btn);
     }
   }
 
   function flashButton(btn) {
     const orig = btn.textContent;
-    btn.textContent = '✓ Copied!';
-    btn.style.color = '#27ae60';
-    setTimeout(() => {
-      btn.textContent = orig;
-      btn.style.color = '';
-    }, 1500);
+    btn.textContent = '✓ Copied!'; btn.style.color = '#27ae60';
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1500);
   }
 
   function compressImage(dataUrl, maxW, maxH, quality) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const img = new Image();
       img.onload = () => {
         let w = img.width, h = img.height;
         if (w > maxW) { h *= maxW / w; w = maxW; }
         if (h > maxH) { w *= maxH / h; h = maxH; }
         const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
         resolve(canvas.toDataURL('image/jpeg', quality));
       };
       img.src = dataUrl;
@@ -344,31 +368,23 @@ const Comments = (() => {
     const el = document.getElementById('commentError');
     if (el) { el.textContent = msg; el.style.display = 'block'; }
   }
-
   function hideError() {
     const el = document.getElementById('commentError');
     if (el) { el.textContent = ''; el.style.display = 'none'; }
   }
-
   function escapeHTML(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
   }
-
   function hashHue(str) {
     let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
+    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
     return Math.abs(hash) % 360;
   }
 
-  // ============================================================
-  //  初始化
-  // ============================================================
   function init() {
-    load();
+    loadLocal();
   }
 
   return { init, renderSection, bindEvents };

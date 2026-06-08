@@ -624,6 +624,30 @@ img {
 }
 
 /* ===== Comments / Guestbook ===== */
+
+/* giscus 评论区 */
+.giscus-wrapper {
+  margin-bottom: 40px;
+  min-height: 200px;
+}
+
+/* 本地留言分隔线 */
+.local-comments-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+.local-comments-divider::before,
+.local-comments-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
 .comment-form {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
