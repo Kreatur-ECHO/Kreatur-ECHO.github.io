@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YEYU - Personal Blog</title>
+  <meta name="description" content="YEYU's personal blog — Thoughts, code, and creativity.">
+
+  <!-- ===== Stylesheets ===== -->
+  <!-- themes.css: 颜色、字体、圆角等设计变量 -->
+  <link rel="stylesheet" href="css/themes.css">
+  <!-- style.css: 布局和组件样式 -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ===== App Root ===== -->
+  <!-- 所有 HTML 内容由 js/main.js 动态渲染 -->
+  <div id="app"></div>
+
+  <!-- ===== Data (must load before renderer) ===== -->
+  <!-- 修改网站基本信息: data/config.js -->
+  <script src="data/config.js"></script>
+  <!-- 增删博客文章: data/posts.js -->
+  <script src="data/posts.js"></script>
+
+  <!-- ===== JavaScript Modules ===== -->
+  <script src="js/theme.js"></script>
+  <script src="js/github.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/comments.js"></script>
+  <script src="js/effects.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

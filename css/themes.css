@@ -1,0 +1,126 @@
+/**
+ * ============================================================
+ *  Theme Definitions — 在这里定义/切换主题色彩方案
+ * ============================================================
+ * 要添加新主题:
+ *   1. 复制 :root 或 [data-theme="dark"] 块
+ *   2. 重命名选择器（例如 [data-theme="ocean"]）
+ *   3. 修改 CSS 变量值
+ *   4. 在 js/theme.js 的 THEME_LIST 中注册新主题
+ *
+ * CSS 变量命名规范:
+ *   --color-bg-*          背景色
+ *   --color-surface-*     卡片/面板色
+ *   --color-text-*        文字色
+ *   --color-accent-*      强调色
+ *   --color-border-*      边框色
+ *   --shadow-*            阴影
+ *   --radius-*            圆角
+ *   --font-*              字体
+ * ============================================================
+ */
+
+/* ===== Light Theme (默认) ===== */
+:root,
+[data-theme="light"] {
+  /* 背景 */
+  --color-bg-primary:    #fafafa;
+  --color-bg-hero:       transparent;
+
+  /* 表面 */
+  --color-surface:       #ffffff;
+  --color-surface-hover: #f5f5f5;
+
+  /* 文字 */
+  --color-text-primary:   #1a1a2e;
+  --color-text-secondary: #555555;
+  --color-text-muted:     #888888;
+
+  /* 强调色 */
+  --color-accent:         #6c63ff;
+  --color-accent-hover:   #5a52d5;
+  --color-accent-glow:    rgba(108, 99, 255, 0.15);
+  --color-accent-soft:    #f0efff;
+  --color-accent-soft-text: #6c63ff;
+
+  /* 边框 */
+  --color-border:         #e8e8ee;
+
+  /* 阴影 */
+  --shadow-card:          0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-card-hover:    0 10px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
+  --shadow-nav:           0 1px 3px rgba(0,0,0,0.06);
+
+  /* 渐变 */
+  --gradient-hero:        linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+  /* 圆角 */
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  20px;
+  --radius-full: 9999px;
+
+  /* 字体 */
+  --font-sans:  -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono:  'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+
+  /* 过渡 */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== Dark Theme ===== */
+[data-theme="dark"] {
+  --color-bg-primary:    #0d1117;
+  --color-bg-hero:       transparent;
+
+  --color-surface:       #161b22;
+  --color-surface-hover: #21262d;
+
+  --color-text-primary:   #e6edf3;
+  --color-text-secondary: #8b949e;
+  --color-text-muted:     #6e7681;
+
+  --color-accent:         #7c73ff;
+  --color-accent-hover:   #938bff;
+  --color-accent-glow:    rgba(124, 115, 255, 0.2);
+  --color-accent-soft:    rgba(124, 115, 255, 0.12);
+  --color-accent-soft-text: #a9a3ff;
+
+  --color-border:         #30363d;
+
+  --shadow-card:          0 1px 3px rgba(0,0,0,0.3);
+  --shadow-card-hover:    0 8px 32px rgba(0,0,0,0.5);
+  --shadow-nav:           0 1px 3px rgba(0,0,0,0.3);
+}
+
+/* ===== 可在此处添加更多主题 ===== */
+
+/* 示例: Ocean 主题
+[data-theme="ocean"] {
+  --color-bg-primary:    #f0f7ff;
+  --color-surface:       #ffffff;
+  --color-surface-hover: #e8f1fc;
+  --color-text-primary:   #1a2a3a;
+  --color-text-secondary: #4a6078;
+  --color-text-muted:     #7a8fa0;
+  --color-accent:         #0ea5e9;
+  --color-accent-hover:   #0284c7;
+  --color-accent-glow:    rgba(14, 165, 233, 0.15);
+  --color-accent-soft:    #e0f2fe;
+  --color-accent-soft-text: #0ea5e9;
+  --color-border:         #dce8f4;
+  --shadow-card:          0 1px 3px rgba(0,0,0,0.05);
+  --shadow-card-hover:    0 8px 30px rgba(0,0,0,0.08);
+  --shadow-nav:           0 1px 3px rgba(0,0,0,0.04);
+  --gradient-hero:        linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  20px;
+  --radius-full: 9999px;
+  --font-sans:  ...;
+  --font-mono:  ...;
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+*/

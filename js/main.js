@@ -1,0 +1,241 @@
+/**
+ * ============================================================
+ *  Main Entry — 初始化 & 事件绑定
+ * ============================================================
+ */
+
+(function () {
+  'use strict';
+
+  // ---- 主题初始化 ----
+  ThemeManager.init();
+  ThemeManager.listenSystem();
+  ThemeManager.updateToggleIcon();
+
+  // ---- 检查必需的全局变量 ----
+  if (typeof SiteConfig === 'undefined') {
+    console.error('[Blog] SiteConfig not found. Make sure data/config.js is loaded before js/main.js');
+    return;
+  }
+  if (typeof BlogPosts === 'undefined') {
+    console.error('[Blog] BlogPosts not found. Make sure data/posts.js is loaded before js/main.js');
+    return;
+  }
+
+  // ---- 组装页面 ----
+  const app = document.getElementById('app');
+
+  // 按 sections.order 排序，决定哪些区块渲染
+  const sectionBuilders = {
+    hero:    () => Renderer.renderHero(SiteConfig),
+    blog:    () => Renderer.renderBlogSection(BlogPosts),
+    projects:() => Renderer.renderProjectsSection(),
+    archive: () => Renderer.renderArchiveSection(BlogPosts),
+    comments:() => Renderer.renderCommentsSection(),
+  };
+
+  const enabledSections = Object.entries(SiteConfig.sections)
+    .filter(([_, cfg]) => cfg.enabled)
+    .sort(([, a], [, b]) => a.order - b.order)
+    .map(([name]) => name);
+
+  // 渲染各区块
+  const sectionsHTML = enabledSections
+    .map(name => (sectionBuilders[name] ? sectionBuilders[name]() : ''))
+    .join('\n');
+
+  app.innerHTML = `
+    ${Renderer.renderNavbar(SiteConfig)}
+    <main>
+      ${sectionsHTML}
+    </main>
+    ${Renderer.renderSidebar(SiteConfig)}
+    ${Renderer.renderFooter(SiteConfig)}
+    ${Renderer.renderBackToTop()}
+  `;
+
+  // ---- 事件绑定 ----
+  bindEvents();
+
+  // ---- 启动侧边栏滚动监听 ----
+  initSidebarScrollSpy();
+
+  // ---- 启动留言模块 ----
+  if (typeof Comments !== 'undefined') {
+    Comments.init();
+    Comments.bindEvents();
+  }
+
+  // ---- 启动鼠标特效 ----
+  if (typeof CursorEffects !== 'undefined') {
+    CursorEffects.init();
+  }
+
+  // ---- 加载 GitHub 数据 ----
+  loadGitHubData();
+
+  // ============================================================
+  //  内部函数
+  // ============================================================
+
+  function bindEvents() {
+    // 主题切换
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+      themeToggle.addEventListener('click', () => {
+        ThemeManager.toggle();
+        ThemeManager.updateToggleIcon();
+      });
+    }
+
+    // 移动端导航
+    const navToggle = document.getElementById('navToggle');
+    const navLinks = document.getElementById('navLinks');
+    if (navToggle && navLinks) {
+      navToggle.addEventListener('click', () => {
+        navLinks.classList.toggle('open');
+      });
+      navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => navLinks.classList.remove('open'));
+      });
+    }
+
+    // 回到顶部
+    const backToTop = document.getElementById('backToTop');
+    if (backToTop) {
+      window.addEventListener('scroll', () => {
+        backToTop.classList.toggle('visible', window.scrollY > 500);
+      });
+      backToTop.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    // 导航栏阴影
+    const navbar = document.getElementById('navbar');
+    if (navbar) {
+      window.addEventListener('scroll', () => {
+        navbar.classList.toggle('shadow', window.scrollY > 50);
+      });
+    }
+  }
+
+  function initSidebarScrollSpy() {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+
+    const dots = sidebar.querySelectorAll('.sidebar-dot');
+    if (dots.length === 0) return;
+
+    // 收集各区块的 DOM 元素
+    const sectionEls = [];
+    dots.forEach(dot => {
+      const id = dot.dataset.section;
+      const el = document.getElementById(id);
+      if (el) sectionEls.push({ id, el, dot });
+    });
+
+    // 节流滚动处理
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          updateActive();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+
+    function updateActive() {
+      const scrollY = window.scrollY + 120; // 偏移量，让高亮更准确
+
+      // 在 hero 区域以上时隐藏侧边栏
+      const heroEl = document.getElementById('about');
+      const heroBottom = heroEl ? heroEl.offsetTop + heroEl.offsetHeight : 400;
+
+      if (window.scrollY < heroEl.offsetTop) {
+        sidebar.classList.remove('visible');
+        dots.forEach(d => d.classList.remove('active'));
+        return;
+      }
+      sidebar.classList.add('visible');
+
+      // 从后往前找第一个在视口上方的区块
+      let activeId = null;
+      for (let i = sectionEls.length - 1; i >= 0; i--) {
+        if (sectionEls[i].el.offsetTop <= scrollY) {
+          activeId = sectionEls[i].id;
+          break;
+        }
+      }
+
+      dots.forEach(d => {
+        d.classList.toggle('active', d.dataset.section === activeId);
+      });
+    }
+
+    // 点击跳转
+    dots.forEach(dot => {
+      dot.addEventListener('click', () => {
+        const target = document.querySelector(dot.dataset.target);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+
+    // 初始状态
+    updateActive();
+  }
+
+  async function loadGitHubData() {
+    const username = SiteConfig.github.username;
+
+    try {
+      const user = await GitHubAPI.fetchUser(username);
+
+      // 更新统计数字
+      setStat('statRepos', user.public_repos ?? 0);
+      setStat('statFollowers', user.followers ?? 0);
+      setStat('statFollowing', user.following ?? 0);
+      setStat('statJoined', (user.created_at || '').slice(0, 4));
+
+      // 如果 GitHub 上有 bio，更新 hero 中的描述
+      if (user.bio) {
+        const bioEl = document.querySelector('.hero-bio');
+        if (bioEl) bioEl.textContent = user.bio;
+      }
+    } catch (err) {
+      console.warn('[Blog] Failed to fetch GitHub user data:', err);
+      setStat('statRepos', '?');
+      setStat('statFollowers', '?');
+      setStat('statFollowing', '?');
+    }
+
+    // 加载仓库
+    const reposContainer = document.getElementById('reposContainer');
+    if (!reposContainer) return;
+
+    try {
+      const repos = await GitHubAPI.fetchRepos(username, {
+        sort: SiteConfig.github.reposSort,
+        perPage: SiteConfig.github.reposPerPage,
+      });
+
+      if (!repos || repos.length === 0) {
+        reposContainer.innerHTML = GitHubAPI.renderEmpty();
+      } else {
+        reposContainer.innerHTML = repos.map(GitHubAPI.renderRepoCard).join('');
+      }
+    } catch (err) {
+      console.warn('[Blog] Failed to fetch GitHub repos:', err);
+      reposContainer.innerHTML = GitHubAPI.renderError(username);
+    }
+  }
+
+  function setStat(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+})();
