@@ -32,6 +32,20 @@ const SiteConfig = {
     avatar: 'https://avatars.githubusercontent.com/u/291270204?v=4',
   },
 
+  // ---- 社交链接 ----
+  // icon: 填入 SVG 内联代码或使用预设名 (github / twitter / mail / website)
+  // 留空或删除某个对象即不显示
+  social: [
+    {
+      icon: 'github',
+      label: 'GitHub',
+      url: 'https://github.com/Kreatur-ECHO',
+    },
+    // 示例: 将来添加其他平台，取消注释即可
+    // { icon: 'twitter',  label: 'Twitter', url: 'https://twitter.com/yourname' },
+    // { icon: 'mail',     label: 'Email',   url: 'mailto:you@example.com' },
+  ],
+
   // ---- GitHub 账户 ----
   github: {
     username: 'Kreatur-ECHO',
