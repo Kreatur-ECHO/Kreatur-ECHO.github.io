@@ -1,0 +1,40 @@
+name: Fetch Guestbook Comments
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'   # 每 10 分钟
+  workflow_dispatch:          # 手动触发
+  push:
+    paths:
+      - '.github/workflows/fetch-comments.yml'  # workflow 变更时触发
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch comments from Issue #2
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl -s -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/Kreatur-ECHO/Kreatur-ECHO.github.io/issues/2/comments?per_page=50" \
+            > data/comments.json.tmp
+          mv data/comments.json.tmp data/comments.json
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/comments.json
+          if git diff --staged --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Update guestbook comments [skip ci]"
+            git push
+          fi

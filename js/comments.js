@@ -109,11 +109,11 @@ const Comments = (() => {
   }
 
   // ============================================================
-  //  加载评论
+  //  加载评论 (从本地 JSON 文件，由 GitHub Action 定时更新)
   // ============================================================
   async function fetchComments() {
     try {
-      const res = await fetch(`${CONFIG.commentsUrl}?per_page=${CONFIG.perPage}`);
+      const res = await fetch('data/comments.json');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       comments = await res.json();
     } catch (err) {
