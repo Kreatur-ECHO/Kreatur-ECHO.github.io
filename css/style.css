@@ -625,66 +625,6 @@ img {
 
 /* ===== Comments / Guestbook ===== */
 
-/* giscus 评论区 */
-.giscus-wrapper {
-  margin-bottom: 40px;
-  min-height: 200px;
-}
-
-/* giscus 加载失败提示 */
-.giscus-fallback {
-  text-align: center;
-  padding: 16px 20px;
-  margin-bottom: 28px;
-  background: #fff3cd;
-  border: 1px solid #ffc107;
-  border-radius: var(--radius-sm);
-  color: #856404;
-  font-size: 0.85rem;
-  line-height: 1.7;
-}
-
-/* 本地留言折叠面板 */
-.local-comments {
-  margin-top: 32px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  overflow: hidden;
-}
-.local-comments-toggle {
-  padding: 12px 18px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  user-select: none;
-  transition: background var(--transition-fast);
-  list-style: none;
-}
-.local-comments-toggle::-webkit-details-marker { display: none; }
-.local-comments-toggle::before {
-  content: '▸ ';
-  display: inline-block;
-  transition: transform 0.2s;
-  font-size: 0.8rem;
-}
-details[open] .local-comments-toggle::before {
-  transform: rotate(90deg);
-}
-.local-comments-toggle:hover {
-  background: var(--color-surface-hover);
-}
-.local-note {
-  font-weight: 400;
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
-  margin-left: 8px;
-}
-.local-comments-body {
-  padding: 0 18px 18px;
-}
-
 .comment-form {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -910,6 +850,12 @@ details[open] .local-comments-toggle::before {
 }
 .comment-body-image img:hover {
   transform: scale(1.03);
+}
+.comment-body-image img.expanded {
+  max-width: 100%;
+  max-height: 600px;
+  transform: none;
+  cursor: zoom-out;
 }
 
 .comment-actions {
