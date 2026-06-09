@@ -2,7 +2,7 @@ name: Fetch Guestbook Comments
 
 on:
   schedule:
-    - cron: '*/10 * * * *'   # 每 10 分钟
+    - cron: '3,13,23,33,43,53 * * * *'   # 每 10 分钟（偏移 3 分钟避免整点拥堵）
   workflow_dispatch:          # 手动触发
   push:
     paths:
