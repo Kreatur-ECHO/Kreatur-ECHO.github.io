@@ -17,7 +17,7 @@ blog/
 │   ├── theme.js             # 主题管理器（亮/暗切换）
 │   ├── github.js            # GitHub API 模块
 │   ├── renderer.js          # HTML 组件渲染器
-│   ├── comments.js          # 留言板（读 data/comments.json）
+│   ├── comments.js          # 留言板（直接拉 GitHub API，回退读 data/comments.json）
 │   ├── effects.js           # 鼠标粒子 + 点击波纹特效
 │   └── main.js              # 主入口（组装页面 + 事件绑定）
 ├── data/
@@ -29,7 +29,7 @@ blog/
 ```
 
 ## 关键设计决策
-1. **无第三方依赖**：评论系统用 GitHub Issue #2 作为后端 + GitHub Action 生成静态 JSON，避免第三方 API 限流和浏览器拦截
+1. **评论系统**：前端直接从 GitHub Issues API 拉取（实时零延迟），本地 JSON 作回退，GitHub Action 维护静态副本
 2. **模块化**：配置 / 数据 / 渲染 / 逻辑完全分离
 3. **主题切换**：CSS 变量方案，支持亮/暗模式
 4. **特效**：Canvas 粒子系统 + 点击波纹
