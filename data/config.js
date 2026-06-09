@@ -41,6 +41,11 @@ const SiteConfig = {
       label: 'GitHub',
       url: 'https://github.com/Kreatur-ECHO',
     },
+    {
+      icon: 'qq',
+      label: 'QQ',
+      url: 'https://user.qzone.qq.com/2476484290',
+    },
     // 示例: 将来添加其他平台，取消注释即可
     // { icon: 'twitter',  label: 'Twitter', url: 'https://twitter.com/yourname' },
     // { icon: 'mail',     label: 'Email',   url: 'mailto:you@example.com' },
