@@ -26,6 +26,20 @@ const Comments = (() => {
   let rawComments = [];   // 原始副本，排序不丢失数据
   let scfLikes = {};      // SCF 返回的点赞计数 { commentId: count }
   let sortMode = 'latest'; // 'latest' | 'popular'
+  let likedByMe = new Set(); // localStorage 记住已点赞的评论 ID
+
+  function loadLikedByMe() {
+    try {
+      const stored = localStorage.getItem('blog_liked_comments');
+      if (stored) likedByMe = new Set(JSON.parse(stored));
+    } catch { likedByMe = new Set(); }
+  }
+
+  function saveLikedByMe() {
+    try {
+      localStorage.setItem('blog_liked_comments', JSON.stringify([...likedByMe]));
+    } catch { /* quota exceeded, ignore */ }
+  }
 
   // ============================================================
   //  渲染
@@ -82,6 +96,7 @@ const Comments = (() => {
       const scfCount = scfLikes[c.id] || 0;
       const likeCount = ghLikes + scfCount;
       const hasLikes = likeCount > 0;
+      const alreadyLiked = likedByMe.has(String(c.id));
 
       return `
       <div class="comment-card gh-comment">
@@ -94,7 +109,7 @@ const Comments = (() => {
           </div>
           <div class="comment-text gh-markdown">${bodyHTML}</div>
           <div class="comment-actions">
-            <button class="comment-action-btn comment-reaction-btn${hasLikes ? ' has-likes' : ''}" data-cid="${c.id}" title="👍 Like">
+            <button class="comment-action-btn comment-reaction-btn${hasLikes ? ' has-likes' : ''}${alreadyLiked ? ' already-liked' : ''}" data-cid="${c.id}" title="${alreadyLiked ? '已点赞' : '👍 Like'}"${alreadyLiked ? ' disabled' : ''}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="${hasLikes ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>
               ${likeCount > 0 ? `<span class="reaction-count">${likeCount}</span>` : ''}
             </button>
@@ -178,14 +193,17 @@ const Comments = (() => {
 
       if (data.success) {
         scfLikes[commentId] = data.count;
+        likedByMe.add(String(commentId));
+        saveLikedByMe();
         refreshList();
         btn.classList.add('liked');
         setTimeout(() => btn.classList.remove('liked'), 800);
       } else if (data.already) {
+        // 后端去重了，同步前端状态
+        likedByMe.add(String(commentId));
+        saveLikedByMe();
         scfLikes[commentId] = data.count;
         refreshList();
-        btn.classList.add('already-liked');
-        setTimeout(() => btn.classList.remove('already-liked'), 1200);
       } else {
         throw new Error(data.error || `HTTP ${res.status}`);
       }
@@ -319,6 +337,7 @@ const Comments = (() => {
     const listDiv = document.getElementById('commentsList');
     if (!listDiv) return;
 
+    loadLikedByMe();
     await fetchComments();
     await fetchLikes();
     applySort();
