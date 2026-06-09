@@ -784,14 +784,10 @@ ${contentIndented}
 
       setDirty(false);
       hideStatus();
-      showStatus('✅ 已保存并发布！', 'success');
+      showStatus('✅ 已保存并发布！即将刷新...', 'success');
 
-      posts[idx >= 0 ? idx : posts.length - 1].url = '#post/' + post.id;
-
-      editingPostId = post.id;
-      refreshEditorUI();
-
-      setTimeout(hideStatus, 3000);
+      // 2 秒后自动刷新页面（Token 在 sessionStorage，无需重新登录）
+      setTimeout(() => window.location.reload(), 2000);
     } catch (err) {
       if (generation !== gen) return;
       hideStatus();
@@ -822,10 +818,9 @@ ${contentIndented}
         if (editingPostId === postId) editingPostId = null;
         setDirty(false);
         hideStatus();
-        showStatus('🗑 已删除', 'info');
+        showStatus('🗑 已删除，即将刷新...', 'info');
 
-        renderPanel();
-        setTimeout(hideStatus, 3000);
+        setTimeout(() => window.location.reload(), 2000);
       } catch (err) {
         if (generation !== gen) return;
         hideStatus();
