@@ -110,22 +110,24 @@ const Renderer = (() => {
   }
 
   // ---- 辅助：文章排序 ----
+  // 星标文章始终置顶；星标和非星标各自按当前模式排序
   function sortPosts(posts, mode, articleViews) {
-    const arr = [...posts];
-    if (mode === 'popular') {
-      // 按浏览计数降序，无浏览数据的排在后面
-      arr.sort((a, b) => {
-        const va = (articleViews[a.id] && articleViews[a.id].count) || 0;
-        const vb = (articleViews[b.id] && articleViews[b.id].count) || 0;
-        if (vb !== va) return vb - va;
-        // 浏览量相同时按日期降序
-        return new Date(b.date) - new Date(a.date);
-      });
-    } else {
-      // 默认按日期降序
-      arr.sort((a, b) => new Date(b.date) - new Date(a.date));
-    }
-    return arr;
+    const featured = posts.filter(p => p.featured);
+    const normal = posts.filter(p => !p.featured);
+
+    const sortFn = (mode === 'popular')
+      ? (a, b) => {
+          const va = (articleViews[a.id] && articleViews[a.id].count) || 0;
+          const vb = (articleViews[b.id] && articleViews[b.id].count) || 0;
+          if (vb !== va) return vb - va;
+          return new Date(b.date) - new Date(a.date);
+        }
+      : (a, b) => new Date(b.date) - new Date(a.date);
+
+    featured.sort(sortFn);
+    normal.sort(sortFn);
+
+    return [...featured, ...normal];
   }
 
   // ---- 博客文章区块 ----
