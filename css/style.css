@@ -385,8 +385,24 @@ img {
 .post-card {
   border-color: var(--color-accent);
 }
-.post-card.featured {
-  border-width: 1.5px;
+
+/* 置顶文章 — 右上角星星角标 */
+.post-card.featured::after {
+  content: '★';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 7px 9px 0 0;
+  font-size: 15px;
+  color: #fff;
+  background: var(--color-accent);
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+  z-index: 1;
 }
 
 .post-date {
