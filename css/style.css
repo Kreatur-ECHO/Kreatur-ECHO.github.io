@@ -216,8 +216,8 @@ img {
 .hero-avatar-wrapper::before {
   content: '';
   position: absolute;
-  width: 12px;
-  height: 12px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   /* 径向渐变实现自然羽化：中心亮紫 → 边缘透明 */
   background: radial-gradient(circle at 50% 50%,
@@ -231,8 +231,8 @@ img {
   /* 锚定在 wrapper 中心 */
   top: 50%;
   left: 50%;
-  margin-top: -6px;
-  margin-left: -6px;
+  margin-top: -12px;
+  margin-left: -12px;
   animation: orbitAvatar 4s linear infinite;
   z-index: 2;
 }
