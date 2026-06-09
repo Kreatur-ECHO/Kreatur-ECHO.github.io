@@ -25,9 +25,15 @@
   const app = document.getElementById('app');
   let currentView = null; // 'home' | 'post'
 
+  // ---- 排序状态 ----
+  let postSortMode = 'latest'; // 'latest' | 'popular'
+  let articleViews = {};       // { "article-id": { count: N, days: {...} } }
+
   // ---- API 地址 ----
   const VISITS_API = (typeof SiteConfig !== 'undefined' && SiteConfig.likesApi)
     ? SiteConfig.likesApi + '/visits' : '';
+  const ARTICLE_VIEWS_API = (typeof SiteConfig !== 'undefined' && SiteConfig.likesApi)
+    ? SiteConfig.likesApi + '/article-views' : '';
 
   // ---- 哈希路由 ----
   function routeFromHash() {
@@ -103,7 +109,7 @@
 
     const sectionBuilders = {
       hero:    () => Renderer.renderHero(SiteConfig),
-      blog:    () => Renderer.renderBlogSection(BlogPosts),
+      blog:    () => Renderer.renderBlogSection(BlogPosts, postSortMode, articleViews),
       projects:() => Renderer.renderProjectsSection(),
       archive: () => Renderer.renderArchiveSection(BlogPosts),
       comments:() => Renderer.renderCommentsSection(),
@@ -134,6 +140,7 @@
     initQQButton();
     loadGitHubData();
     loadVisitCount();
+    loadArticleViews();
 
     // ---- 留言模块 ----
     if (typeof Comments !== 'undefined') {
@@ -174,6 +181,9 @@
     // 绑定主题等通用事件
     bindCommonEvents();
 
+    // 记录文章浏览
+    recordArticleView(post.id);
+
     // 回到顶部
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
@@ -204,6 +214,7 @@
   /** 主页特有事件 */
   function bindHomeEvents() {
     bindCommonEvents();
+    bindBlogSortBar();
     // 主页额外的特定逻辑在 initSidebarScrollSpy / initQQButton / loadGitHubData 中
   }
 
@@ -389,6 +400,67 @@
     } catch (err) {
       console.warn('[Blog] Failed to load visit count:', err);
     }
+  }
+
+  // ============================================================
+  //  文章浏览计数（SCF + COS）+ 排序
+  // ============================================================
+  async function loadArticleViews() {
+    if (!ARTICLE_VIEWS_API) return;
+    try {
+      const res = await fetch(ARTICLE_VIEWS_API + '?t=' + Date.now());
+      if (res.ok) {
+        articleViews = await res.json();
+      }
+    } catch (err) {
+      console.warn('[Blog] Failed to load article views:', err);
+    }
+  }
+
+  async function recordArticleView(articleId) {
+    if (!ARTICLE_VIEWS_API || !articleId) return;
+    try {
+      await fetch(ARTICLE_VIEWS_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ article_id: articleId }),
+      });
+    } catch (err) {
+      console.warn('[Blog] Failed to record article view:', err);
+    }
+  }
+
+  function bindBlogSortBar() {
+    const sortBar = document.getElementById('postsSortBar');
+    if (!sortBar) return;
+
+    sortBar.addEventListener('click', (e) => {
+      const btn = e.target.closest('.sort-btn');
+      if (!btn) return;
+      const newMode = btn.dataset.sort;
+      if (postSortMode === newMode) return;
+
+      postSortMode = newMode;
+
+      // 更新按钮状态
+      sortBar.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      // 重新渲染博客区块
+      const blogSection = document.getElementById('blog');
+      if (!blogSection) return;
+
+      // 重建整个 blog section
+      const newHTML = Renderer.renderBlogSection(BlogPosts, postSortMode, articleViews);
+      const temp = document.createElement('div');
+      temp.innerHTML = newHTML;
+      const newSection = temp.firstElementChild;
+      if (newSection) {
+        blogSection.parentNode.replaceChild(newSection, blogSection);
+        // 重新绑定排序事件
+        bindBlogSortBar();
+      }
+    });
   }
 
   // ============================================================

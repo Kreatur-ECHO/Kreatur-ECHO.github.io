@@ -104,14 +104,44 @@ const Renderer = (() => {
     </section>`;
   }
 
+  // ---- 辅助：过滤空白文章（标题和正文都为空） ----
+  function filterNonBlank(posts) {
+    return posts.filter(p => (p.title || '').trim() || (p.content || '').trim());
+  }
+
+  // ---- 辅助：文章排序 ----
+  function sortPosts(posts, mode, articleViews) {
+    const arr = [...posts];
+    if (mode === 'popular') {
+      // 按浏览计数降序，无浏览数据的排在后面
+      arr.sort((a, b) => {
+        const va = (articleViews[a.id] && articleViews[a.id].count) || 0;
+        const vb = (articleViews[b.id] && articleViews[b.id].count) || 0;
+        if (vb !== va) return vb - va;
+        // 浏览量相同时按日期降序
+        return new Date(b.date) - new Date(a.date);
+      });
+    } else {
+      // 默认按日期降序
+      arr.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+    return arr;
+  }
+
   // ---- 博客文章区块 ----
-  function renderBlogSection(posts) {
-    const cardsHTML = posts
+  function renderBlogSection(posts, sortMode, articleViews) {
+    const validPosts = filterNonBlank(posts);
+
+    // 排序
+    const sorted = sortPosts(validPosts, sortMode || 'latest', articleViews || {});
+
+    const cardsHTML = sorted
       .map(post => {
         const tagsHTML = post.tags.map(t => `<span class="post-tag">${t}</span>`).join('');
         const featuredClass = post.featured ? ' featured' : '';
+        const viewCount = (articleViews && articleViews[post.id]) ? articleViews[post.id].count || 0 : 0;
         return `
-        <a href="${post.url}" class="post-card-link">
+        <a href="${post.url}" class="post-card-link" data-post-id="${post.id}">
           <article class="post-card${featuredClass}">
             <div class="post-date">${post.date}</div>
             <h3 class="post-title">${post.title}</h3>
@@ -124,7 +154,19 @@ const Renderer = (() => {
 
     return `
     <section class="section fade-in fade-in-2" id="blog">
-      <h2 class="section-title">📝 Latest Posts</h2>
+      <div class="section-header-row">
+        <h2 class="section-title">📝 Latest Posts</h2>
+        <div class="posts-sort-bar" id="postsSortBar">
+          <button class="sort-btn${(sortMode || 'latest') === 'latest' ? ' active' : ''}" data-sort="latest">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            最新
+          </button>
+          <button class="sort-btn${(sortMode || 'latest') === 'popular' ? ' active' : ''}" data-sort="popular">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            最多浏览
+          </button>
+        </div>
+      </div>
       <div class="posts-grid">
         ${cardsHTML}
       </div>
@@ -162,7 +204,7 @@ const Renderer = (() => {
 
   // ---- 归档时间线区块 ----
   function renderArchiveSection(posts) {
-    const itemsHTML = posts
+    const itemsHTML = filterNonBlank(posts)
       .map(post => `
         <div class="timeline-item">
           <div class="timeline-date">${post.date}</div>

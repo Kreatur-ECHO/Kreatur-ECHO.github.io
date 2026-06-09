@@ -376,6 +376,28 @@ img {
 }
 
 /* ===== Blog Post Cards ===== */
+/* 区块标题行：标题 + 排序栏 */
+.section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.section-header-row .section-title {
+  margin-bottom: 0;
+}
+.section-header-row .section-title::after {
+  display: none;
+}
+
+/* 文章排序栏 */
+.posts-sort-bar {
+  display: flex;
+  gap: 6px;
+}
+
 .posts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
