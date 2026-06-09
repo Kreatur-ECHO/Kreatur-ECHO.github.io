@@ -205,11 +205,12 @@ const Comments = (() => {
   async function fetchComments() {
     // 1) 优先：直接从 GitHub API 获取（实时）
     try {
-      const res = await fetch(CONFIG.commentsUrl + '?per_page=' + CONFIG.perPage);
+      const res = await fetch(CONFIG.commentsUrl + '?per_page=' + CONFIG.perPage + '&t=' + Date.now());
       if (res.ok) {
         rawComments = await res.json();
         comments = [...rawComments];
         applySort();
+        console.log('[Guestbook] Loaded ' + comments.length + ' comments from GitHub API (live)');
         return;
       }
       throw new Error(`HTTP ${res.status}`);
@@ -219,11 +220,12 @@ const Comments = (() => {
 
     // 2) 回退：本地 JSON（由 GitHub Action 更新的静态副本）
     try {
-      const res = await fetch('data/comments.json');
+      const res = await fetch('data/comments.json?t=' + Date.now());
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       rawComments = await res.json();
       comments = [...rawComments];
       applySort();
+      console.log('[Guestbook] Loaded ' + comments.length + ' comments from local fallback');
     } catch (err) {
       console.warn('[Guestbook] Local fallback also failed:', err);
       rawComments = [];

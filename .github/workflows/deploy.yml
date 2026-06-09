@@ -27,6 +27,15 @@ jobs:
         run: |
           sed -i "s|REACTIONS_TOKEN_PLACEHOLDER|${{ secrets.REACTIONS_TOKEN }}|g" data/config.js
 
+      - name: Refresh comments.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl -s -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/Kreatur-ECHO/Kreatur-ECHO.github.io/issues/2/comments?per_page=50" \
+            > data/comments.json
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
