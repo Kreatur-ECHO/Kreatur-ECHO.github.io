@@ -382,8 +382,10 @@ img {
   opacity: 1;
 }
 
-.post-card.featured {
+.post-card {
   border-color: var(--color-accent);
+}
+.post-card.featured {
   border-width: 1.5px;
 }
 
