@@ -16,18 +16,6 @@
 
 const BlogPosts = [
   {
-    id: 'new-post-mq6o4nwv',
-    date: '2026-06-09',
-    title: '',
-    excerpt: '',
-    tags: [],
-    url: '#post/new-post-mq6o4nwv',
-    featured: false,
-    content: `
-      
-    `,
-  },
-  {
     id: 'hello-world',
     date: '2026-06-08',
     title: 'Hello, World! — 博客的第一篇文章',

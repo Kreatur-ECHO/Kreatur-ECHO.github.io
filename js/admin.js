@@ -225,7 +225,9 @@ const Admin = (() => {
 
 const BlogPosts = [`;
 
-    const entries = postsArr.map((post, i) => {
+    // 过滤掉空白文章（标题和正文都为空）
+    const validPosts = postsArr.filter(p => (p.title || '').trim() || (p.content || '').trim());
+    const entries = validPosts.map((post, i) => {
       const tagsStr = (post.tags || []).map(t => `'${escapeJS(t)}'`).join(', ');
       // content：先去掉可能存在的旧缩进 → 转义 → 再加 6 空格缩进
       const contentClean = unindentContent(post.content || '');
@@ -855,6 +857,7 @@ ${contentIndented}
     if (!id) { alert('请输入文章 ID。'); idEl?.focus(); return null; }
     if (!date) { alert('请选择日期。'); dateEl?.focus(); return null; }
     if (!title) { alert('请输入标题。'); titleEl?.focus(); return null; }
+    if (!content) { alert('请输入文章正文。'); contentEl?.focus(); return null; }
 
     return {
       id,
