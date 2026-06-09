@@ -216,18 +216,23 @@ img {
 .hero-avatar-wrapper::before {
   content: '';
   position: absolute;
-  width: 7px;
-  height: 7px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: var(--color-accent);
+  /* 径向渐变实现自然羽化：中心亮紫 → 边缘透明 */
+  background: radial-gradient(circle at 50% 50%,
+    var(--color-accent) 0%,
+    rgba(108, 99, 255, 0.7) 30%,
+    rgba(108, 99, 255, 0.15) 70%,
+    transparent 100%
+  );
   box-shadow:
-    0 0 8px 3px var(--color-accent-glow),
-    0 0 24px 8px var(--color-accent-glow);
+    0 0 18px 6px var(--color-accent-glow);
   /* 锚定在 wrapper 中心 */
   top: 50%;
   left: 50%;
-  margin-top: -3.5px;
-  margin-left: -3.5px;
+  margin-top: -6px;
+  margin-left: -6px;
   animation: orbitAvatar 4s linear infinite;
   z-index: 2;
 }
