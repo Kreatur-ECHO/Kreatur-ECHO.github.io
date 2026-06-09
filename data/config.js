@@ -68,9 +68,10 @@ const SiteConfig = {
     },
   },
 
-  // ---- 评论点赞用 GitHub Token ----
-  // 仅需 reactions:write 权限，限定 Kreatur-ECHO.github.io 仓库
-  // 在 https://github.com/settings/tokens?type=beta 创建 fine-grained token
+  // ---- 评论点赞 ----
+  // 前端点赞走 SCF 云函数 → 腾讯云 COS 持久化存储
+  // GitHub Token 仍用于部署时从私有 repo 获取数据（如有需要）
+  likesApi: 'https://1441674200-gt37s9jbcv.in.ap-guangzhou.tencentscf.com',
   reactionsToken: 'REACTIONS_TOKEN_PLACEHOLDER',
 
   // ---- 区块配置 ----

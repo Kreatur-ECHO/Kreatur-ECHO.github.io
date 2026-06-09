@@ -19,10 +19,12 @@ const Comments = (() => {
     commentsUrl: 'https://api.github.com/repos/Kreatur-ECHO/Kreatur-ECHO.github.io/issues/2/comments',
     issueUrl: 'https://github.com/Kreatur-ECHO/Kreatur-ECHO.github.io/issues/2',
     perPage: 30,
+    likesApi: (typeof SiteConfig !== 'undefined' && SiteConfig.likesApi) || '',
   };
 
   let comments = [];
   let rawComments = [];   // 原始副本，排序不丢失数据
+  let scfLikes = {};      // SCF 返回的点赞计数 { commentId: count }
   let sortMode = 'latest'; // 'latest' | 'popular'
 
   // ============================================================
@@ -76,7 +78,9 @@ const Comments = (() => {
       const avatar = c.user?.avatar_url || '';
       const date = new Date(c.created_at).toLocaleString('zh-CN');
       const bodyHTML = renderMarkdown(c.body);
-      const likeCount = c.reactions?.['+1'] || 0;
+      const ghLikes = c.reactions?.['+1'] || 0;
+      const scfCount = scfLikes[c.id] || 0;
+      const likeCount = ghLikes + scfCount;
       const hasLikes = likeCount > 0;
 
       return `
@@ -130,14 +134,34 @@ const Comments = (() => {
   }
 
   // ============================================================
-  //  点赞
+  //  点赞 (SCF → 腾讯云 COS 持久化)
   // ============================================================
+  async function fetchLikes() {
+    if (!CONFIG.likesApi) return;
+    try {
+      const res = await fetch(CONFIG.likesApi);
+      if (res.ok) {
+        scfLikes = await res.json();
+        console.log('[Guestbook] Loaded ' + Object.keys(scfLikes).length + ' like entries from SCF');
+      }
+    } catch (err) {
+      console.warn('[Guestbook] Failed to fetch likes from SCF:', err);
+    }
+  }
+
+  function getTotalLikes(comment) {
+    return (comment.reactions?.['+1'] || 0) + (scfLikes[comment.id] || 0);
+  }
+
+  function refreshList() {
+    applySort();
+    const target = document.getElementById('commentsList');
+    if (target) target.innerHTML = renderList();
+  }
+
   async function likeComment(commentId, btn) {
-    const token = (typeof SiteConfig !== 'undefined' && SiteConfig.reactionsToken) || '';
-    if (!token) {
-      // 无 token：跳转 GitHub 页面
-      const c = comments.find(c => c.id === commentId);
-      if (c) window.open(c.html_url, '_blank', 'noopener');
+    if (!CONFIG.likesApi) {
+      window.open(`${CONFIG.issueUrl}#issuecomment-${commentId}`, '_blank', 'noopener');
       return;
     }
 
@@ -145,44 +169,28 @@ const Comments = (() => {
     btn.classList.add('liking');
 
     try {
-      const res = await fetch(
-        `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/issues/comments/${commentId}/reactions`,
-        {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/vnd.github+json',
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ content: '+1' }),
-        }
-      );
+      const res = await fetch(CONFIG.likesApi, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comment_id: commentId }),
+      });
+      const data = await res.json();
 
-      if (res.ok || res.status === 200 || res.status === 201) {
-        // 乐观更新本地计数
-        const cmt = rawComments.find(c => c.id === commentId);
-        if (cmt) {
-          if (!cmt.reactions) cmt.reactions = {};
-          cmt.reactions['+1'] = (cmt.reactions['+1'] || 0) + 1;
-          cmt.reactions.total_count = (cmt.reactions.total_count || 0) + 1;
-          // 同步当前视图数据并重排序
-          comments = [...rawComments];
-          applySort();
-          const target = document.getElementById('commentsList');
-          if (target) target.innerHTML = renderList();
-        }
-        // 短暂视觉反馈
+      if (data.success) {
+        scfLikes[commentId] = data.count;
+        refreshList();
         btn.classList.add('liked');
         setTimeout(() => btn.classList.remove('liked'), 800);
-      } else if (res.status === 422) {
-        // 已经 reaction 过了（GitHub 返回 422 Unprocessable）
+      } else if (data.already) {
+        scfLikes[commentId] = data.count;
+        refreshList();
         btn.classList.add('already-liked');
         setTimeout(() => btn.classList.remove('already-liked'), 1200);
       } else {
-        throw new Error(`HTTP ${res.status}`);
+        throw new Error(data.error || `HTTP ${res.status}`);
       }
     } catch (err) {
-      console.warn('[Guestbook] Failed to like comment:', err);
+      console.warn('[Guestbook] Failed to like:', err);
       btn.classList.add('like-failed');
       setTimeout(() => btn.classList.remove('like-failed'), 1200);
     } finally {
@@ -190,9 +198,10 @@ const Comments = (() => {
       btn.classList.remove('liking');
     }
   }
+
   function applySort() {
     if (sortMode === 'popular') {
-      comments.sort((a, b) => (b.reactions?.['+1'] || 0) - (a.reactions?.['+1'] || 0));
+      comments.sort((a, b) => getTotalLikes(b) - getTotalLikes(a));
     } else {
       comments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
@@ -311,6 +320,8 @@ const Comments = (() => {
     if (!listDiv) return;
 
     await fetchComments();
+    await fetchLikes();
+    applySort();
     listDiv.innerHTML = renderList();
   }
 
