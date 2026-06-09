@@ -107,12 +107,14 @@ const Renderer = (() => {
         const tagsHTML = post.tags.map(t => `<span class="post-tag">${t}</span>`).join('');
         const featuredClass = post.featured ? ' featured' : '';
         return `
-        <article class="post-card${featuredClass}">
-          <div class="post-date">${post.date}</div>
-          <h3 class="post-title">${post.title}</h3>
-          <p class="post-excerpt">${post.excerpt}</p>
-          <div class="post-tags">${tagsHTML}</div>
-        </article>`;
+        <a href="${post.url}" class="post-card-link">
+          <article class="post-card${featuredClass}">
+            <div class="post-date">${post.date}</div>
+            <h3 class="post-title">${post.title}</h3>
+            <p class="post-excerpt">${post.excerpt}</p>
+            <div class="post-tags">${tagsHTML}</div>
+          </article>
+        </a>`;
       })
       .join('');
 
@@ -123,6 +125,24 @@ const Renderer = (() => {
         ${cardsHTML}
       </div>
     </section>`;
+  }
+
+  // ---- 文章详情页 ----
+  function renderPostDetail(post) {
+    const tagsHTML = post.tags.map(t => `<span class="post-tag">${t}</span>`).join('');
+    return `
+    <article class="post-detail fade-in fade-in-1">
+      <a href="#" class="post-detail-back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        返回首页
+      </a>
+      <header class="post-detail-header">
+        <div class="post-date">${post.date}</div>
+        <h1 class="post-detail-title">${post.title}</h1>
+        <div class="post-tags">${tagsHTML}</div>
+      </header>
+      <div class="post-body">${post.content}</div>
+    </article>`;
   }
 
   // ---- Projects 区块（容器，内容由 GitHub API 动态填充）----
@@ -211,5 +231,6 @@ const Renderer = (() => {
     renderSidebar,
     renderFooter,
     renderBackToTop,
+    renderPostDetail,
   };
 })();

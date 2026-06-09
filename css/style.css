@@ -331,6 +331,16 @@ img {
   margin-top: 2px;
 }
 
+/* 文章卡片链接（整张卡片可点击） */
+.post-card-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.post-card-link:hover {
+  text-decoration: none;
+}
+
 /* ===== Blog Post Cards ===== */
 .posts-grid {
   display: grid;
@@ -559,6 +569,147 @@ img {
 .timeline-title a:hover {
   color: var(--color-accent);
   text-decoration: none;
+}
+
+/* ===== Post Detail Page ===== */
+.post-detail {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 100px 24px 60px;
+}
+
+.post-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  margin-bottom: 32px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+.post-detail-back:hover {
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  text-decoration: none;
+}
+
+.post-detail-header {
+  margin-bottom: 36px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--color-border);
+}
+.post-detail-header .post-date {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  margin-bottom: 8px;
+}
+.post-detail-title {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.3;
+  color: var(--color-text-primary);
+  margin-bottom: 16px;
+}
+.post-detail-header .post-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* 文章正文排版 */
+.post-body {
+  font-size: 1.05rem;
+  line-height: 1.85;
+  color: var(--color-text-secondary);
+}
+.post-body h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 40px 0 16px;
+  letter-spacing: -0.02em;
+}
+.post-body h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 28px 0 12px;
+}
+.post-body p {
+  margin-bottom: 16px;
+}
+.post-body ul,
+.post-body ol {
+  margin-bottom: 16px;
+  padding-left: 24px;
+}
+.post-body li {
+  margin-bottom: 6px;
+}
+.post-body strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+.post-body code {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-soft-text);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.88em;
+  font-family: var(--font-mono);
+}
+.post-body pre {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  overflow-x: auto;
+  margin: 16px 0 24px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+.post-body pre code {
+  background: none;
+  padding: 0;
+  color: var(--color-text-primary);
+  font-size: inherit;
+}
+.post-body a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.post-body a:hover {
+  color: var(--color-accent-hover);
+}
+.post-body blockquote {
+  border-left: 3px solid var(--color-accent);
+  margin: 20px 0;
+  padding: 8px 20px;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* 文章详情响应式 */
+@media (max-width: 768px) {
+  .post-detail {
+    padding: 80px 16px 40px;
+  }
+  .post-detail-title {
+    font-size: 1.5rem;
+  }
+  .post-body {
+    font-size: 1rem;
+  }
+  .post-body h2 {
+    font-size: 1.25rem;
+  }
 }
 
 /* ===== Footer ===== */

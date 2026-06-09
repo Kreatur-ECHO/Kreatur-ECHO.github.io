@@ -1,13 +1,13 @@
 /**
  * ============================================================
- *  Main Entry — 初始化 & 事件绑定
+ *  Main Entry — 初始化 & 事件绑定 & 哈希路由
  * ============================================================
  */
 
 (function () {
   'use strict';
 
-  // ---- 主题初始化 ----
+  // ---- 主题初始化（全局，仅一次） ----
   ThemeManager.init();
   ThemeManager.listenSystem();
   ThemeManager.updateToggleIcon();
@@ -22,66 +22,132 @@
     return;
   }
 
-  // ---- 组装页面 ----
   const app = document.getElementById('app');
+  let currentView = null; // 'home' | 'post'
 
-  // 按 sections.order 排序，决定哪些区块渲染
-  const sectionBuilders = {
-    hero:    () => Renderer.renderHero(SiteConfig),
-    blog:    () => Renderer.renderBlogSection(BlogPosts),
-    projects:() => Renderer.renderProjectsSection(),
-    archive: () => Renderer.renderArchiveSection(BlogPosts),
-    comments:() => Renderer.renderCommentsSection(),
-  };
+  // ---- 哈希路由 ----
+  function routeFromHash() {
+    const hash = window.location.hash;
+    const postMatch = hash.match(/^#post\/(.+)$/);
 
-  const enabledSections = Object.entries(SiteConfig.sections)
-    .filter(([_, cfg]) => cfg.enabled)
-    .sort(([, a], [, b]) => a.order - b.order)
-    .map(([name]) => name);
-
-  // 渲染各区块
-  const sectionsHTML = enabledSections
-    .map(name => (sectionBuilders[name] ? sectionBuilders[name]() : ''))
-    .join('\n');
-
-  app.innerHTML = `
-    ${Renderer.renderNavbar(SiteConfig)}
-    <main>
-      ${sectionsHTML}
-    </main>
-    ${Renderer.renderSidebar(SiteConfig)}
-    ${Renderer.renderFooter(SiteConfig)}
-    ${Renderer.renderBackToTop()}
-  `;
-
-  // ---- 事件绑定 ----
-  bindEvents();
-
-  // ---- 启动侧边栏滚动监听 ----
-  initSidebarScrollSpy();
-
-  // ---- 启动留言模块 ----
-  if (typeof Comments !== 'undefined') {
-    Comments.init();
-    Comments.bindEvents();
+    if (postMatch) {
+      const postId = postMatch[1];
+      const post = BlogPosts.find(p => p.id === postId);
+      if (post) {
+        renderPostPage(post);
+      } else {
+        // 文章不存在，回主页
+        window.location.hash = '';
+      }
+    } else {
+      renderHomePage();
+    }
   }
 
-  // ---- 启动鼠标特效 ----
-  if (typeof CursorEffects !== 'undefined') {
-    CursorEffects.init();
+  // 初始路由
+  routeFromHash();
+
+  // 监听哈希变化
+  window.addEventListener('hashchange', routeFromHash);
+
+  // ============================================================
+  //  主页渲染
+  // ============================================================
+  function renderHomePage() {
+    // 离开文章页时清理
+    if (currentView === 'post') {
+      // 文章页没有需要特殊清理的
+    }
+    currentView = 'home';
+
+    const sectionBuilders = {
+      hero:    () => Renderer.renderHero(SiteConfig),
+      blog:    () => Renderer.renderBlogSection(BlogPosts),
+      projects:() => Renderer.renderProjectsSection(),
+      archive: () => Renderer.renderArchiveSection(BlogPosts),
+      comments:() => Renderer.renderCommentsSection(),
+    };
+
+    const enabledSections = Object.entries(SiteConfig.sections)
+      .filter(([_, cfg]) => cfg.enabled)
+      .sort(([, a], [, b]) => a.order - b.order)
+      .map(([name]) => name);
+
+    const sectionsHTML = enabledSections
+      .map(name => (sectionBuilders[name] ? sectionBuilders[name]() : ''))
+      .join('\n');
+
+    app.innerHTML = `
+      ${Renderer.renderNavbar(SiteConfig)}
+      <main>
+        ${sectionsHTML}
+      </main>
+      ${Renderer.renderSidebar(SiteConfig)}
+      ${Renderer.renderFooter(SiteConfig)}
+      ${Renderer.renderBackToTop()}
+    `;
+
+    // ---- 事件绑定 ----
+    bindHomeEvents();
+    initSidebarScrollSpy();
+    initQQButton();
+    loadGitHubData();
+
+    // ---- 留言模块 ----
+    if (typeof Comments !== 'undefined') {
+      Comments.init();
+      Comments.bindEvents();
+    }
+
+    // ---- 鼠标特效 ----
+    if (typeof CursorEffects !== 'undefined') {
+      CursorEffects.init();
+    }
+
+    // 回到顶部
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
-  // ---- QQ 按钮点击处理 ----
-  initQQButton();
+  // ============================================================
+  //  文章详情页渲染
+  // ============================================================
+  function renderPostPage(post) {
+    // 离开主页时清理特效
+    if (currentView === 'home') {
+      if (typeof CursorEffects !== 'undefined') {
+        CursorEffects.destroy();
+      }
+    }
+    currentView = 'post';
 
-  // ---- 加载 GitHub 数据 ----
-  loadGitHubData();
+    app.innerHTML = `
+      ${Renderer.renderNavbar(SiteConfig)}
+      <main>
+        ${Renderer.renderPostDetail(post)}
+      </main>
+      ${Renderer.renderFooter(SiteConfig)}
+      ${Renderer.renderBackToTop()}
+    `;
+
+    // 绑定主题等通用事件
+    bindCommonEvents();
+
+    // 回到顶部
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
 
   // ============================================================
-  //  内部函数
+  //  事件绑定
   // ============================================================
 
-  function bindEvents() {
+  /** 主页特有事件 */
+  function bindHomeEvents() {
+    bindCommonEvents();
+    // 主页额外的特定逻辑在 initSidebarScrollSpy / initQQButton / loadGitHubData 中
+  }
+
+  /** 通用事件（主页和文章页共享） */
+  function bindCommonEvents() {
     // 主题切换
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
@@ -123,6 +189,9 @@
     }
   }
 
+  // ============================================================
+  //  侧边栏滚动监听（仅主页）
+  // ============================================================
   function initSidebarScrollSpy() {
     const sidebar = document.getElementById('sidebar');
     if (!sidebar) return;
@@ -130,7 +199,6 @@
     const dots = sidebar.querySelectorAll('.sidebar-dot');
     if (dots.length === 0) return;
 
-    // 收集各区块的 DOM 元素
     const sectionEls = [];
     dots.forEach(dot => {
       const id = dot.dataset.section;
@@ -138,7 +206,6 @@
       if (el) sectionEls.push({ id, el, dot });
     });
 
-    // 节流滚动处理
     let ticking = false;
     window.addEventListener('scroll', () => {
       if (!ticking) {
@@ -151,11 +218,10 @@
     }, { passive: true });
 
     function updateActive() {
-      const scrollY = window.scrollY + 120; // 偏移量，让高亮更准确
+      const scrollY = window.scrollY + 120;
 
-      // 在 hero 区域以上时隐藏侧边栏
       const heroEl = document.getElementById('about');
-      const heroBottom = heroEl ? heroEl.offsetTop + heroEl.offsetHeight : 400;
+      if (!heroEl) return;
 
       if (window.scrollY < heroEl.offsetTop) {
         sidebar.classList.remove('visible');
@@ -164,7 +230,6 @@
       }
       sidebar.classList.add('visible');
 
-      // 从后往前找第一个在视口上方的区块
       let activeId = null;
       for (let i = sectionEls.length - 1; i >= 0; i--) {
         if (sectionEls[i].el.offsetTop <= scrollY) {
@@ -178,7 +243,6 @@
       });
     }
 
-    // 点击跳转
     dots.forEach(dot => {
       dot.addEventListener('click', () => {
         const target = document.querySelector(dot.dataset.target);
@@ -188,15 +252,16 @@
       });
     });
 
-    // 初始状态
     updateActive();
   }
 
+  // ============================================================
+  //  GitHub 数据加载（仅主页）
+  // ============================================================
   async function loadGitHubData() {
     const username = SiteConfig.github.username;
     const fb = SiteConfig.github.fallback || {};
 
-    // 先立即显示静态兜底值，避免 API 卡住时长期显示 -
     if (fb.public_repos != null) setStat('statRepos', fb.public_repos);
     if (fb.followers != null)    setStat('statFollowers', fb.followers);
     if (fb.following != null)    setStat('statFollowing', fb.following);
@@ -205,27 +270,18 @@
     try {
       const user = await GitHubAPI.fetchUser(username);
 
-      // 更新统计数字
       setStat('statRepos', user.public_repos ?? fb.public_repos ?? 0);
       setStat('statFollowers', user.followers ?? fb.followers ?? 0);
       setStat('statFollowing', user.following ?? fb.following ?? 0);
       setStat('statJoined', (user.created_at || fb.created_at || '').slice(0, 4));
-
-      // 不覆盖 config.js 中手动设置的 bio（如需同步 GitHub bio，取消下面注释）
-      // if (user.bio) {
-      //   const bioEl = document.querySelector('.hero-bio');
-      //   if (bioEl) bioEl.textContent = user.bio;
-      // }
     } catch (err) {
       console.warn('[Blog] Failed to fetch GitHub user data:', err);
-      // 使用静态兜底值
       setStat('statRepos', fb.public_repos ?? '?');
       setStat('statFollowers', fb.followers ?? '?');
       setStat('statFollowing', fb.following ?? '?');
       setStat('statJoined', (fb.created_at || '').slice(0, 4) || '?');
     }
 
-    // 加载仓库
     const reposContainer = document.getElementById('reposContainer');
     if (!reposContainer) return;
 
@@ -251,6 +307,9 @@
     if (el) el.textContent = value;
   }
 
+  // ============================================================
+  //  QQ 按钮（仅主页 Hero 区域）
+  // ============================================================
   function initQQButton() {
     var qqLink = document.querySelector('[data-action="qq"]');
     if (!qqLink) return;
@@ -262,7 +321,7 @@
     var isHoveringBtn = false;
 
     function showPopup() {
-      if (popup) return; // 已显示
+      if (popup) return;
       popup = document.createElement('div');
       popup.className = 'qq-popup';
       popup.innerHTML =
@@ -274,16 +333,14 @@
         '</div>' +
         '<p class="qq-popup-hint">复制后打开 QQ 搜索添加好友</p>';
 
-      // 定位在按钮上方
       var rect = qqLink.getBoundingClientRect();
       popup.style.left = (rect.left + rect.width / 2) + 'px';
       popup.style.bottom = (window.innerHeight - rect.top + 10) + 'px';
 
       document.body.appendChild(popup);
 
-      // 复制按钮事件
       document.getElementById('qqCopyBtn').addEventListener('click', function (e) {
-        e.stopPropagation(); // 防止冒泡触发 tencent:// 跳转
+        e.stopPropagation();
         navigator.clipboard.writeText(qqNumber).then(function () {
           var btn = document.getElementById('qqCopyBtn');
           btn.textContent = '✓ 已复制';
@@ -302,7 +359,6 @@
         });
       });
 
-      // 面板 hover 跟踪
       popup.addEventListener('mouseenter', function () {
         isHoveringPopup = true;
         if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
@@ -323,7 +379,6 @@
       }, 200);
     }
 
-    // 鼠标悬停按钮 → 显示面板
     qqLink.addEventListener('mouseenter', function () {
       isHoveringBtn = true;
       if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
@@ -334,8 +389,5 @@
       isHoveringBtn = false;
       tryHidePopup();
     });
-
-    // 点击按钮 → 不阻止默认行为，让浏览器处理 tencent:// 协议
-    // （原生 <a href> 点击是真实的用户手势，浏览器会允许自定义协议）
   }
 })();
