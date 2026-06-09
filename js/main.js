@@ -196,6 +196,12 @@
     const username = SiteConfig.github.username;
     const fb = SiteConfig.github.fallback || {};
 
+    // 先立即显示静态兜底值，避免 API 卡住时长期显示 -
+    if (fb.public_repos != null) setStat('statRepos', fb.public_repos);
+    if (fb.followers != null)    setStat('statFollowers', fb.followers);
+    if (fb.following != null)    setStat('statFollowing', fb.following);
+    if (fb.created_at)           setStat('statJoined', fb.created_at.slice(0, 4));
+
     try {
       const user = await GitHubAPI.fetchUser(username);
 
