@@ -25,6 +25,10 @@
   const app = document.getElementById('app');
   let currentView = null; // 'home' | 'post'
 
+  // ---- API 地址 ----
+  const VISITS_API = (typeof SiteConfig !== 'undefined' && SiteConfig.likesApi)
+    ? SiteConfig.likesApi + '/visits' : '';
+
   // ---- 哈希路由 ----
   function routeFromHash() {
     const hash = window.location.hash;
@@ -364,9 +368,6 @@
   // ============================================================
   //  累计访问计数（SCF + COS）
   // ============================================================
-  const VISITS_API = (typeof SiteConfig !== 'undefined' && SiteConfig.likesApi)
-    ? SiteConfig.likesApi + '/visits' : '';
-
   async function loadVisitCount() {
     if (!VISITS_API) return;
     try {
