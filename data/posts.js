@@ -16,6 +16,18 @@
 
 const BlogPosts = [
   {
+    id: 'new-post-mq6o4nwv',
+    date: '2026-06-09',
+    title: '',
+    excerpt: '',
+    tags: [],
+    url: '#post/new-post-mq6o4nwv',
+    featured: false,
+    content: `
+      
+    `,
+  },
+  {
     id: 'hello-world',
     date: '2026-06-08',
     title: 'Hello, World! — 博客的第一篇文章',
@@ -58,6 +70,7 @@ const BlogPosts = [
       <p>这个博客会持续迭代。计划中的功能包括：文章标签筛选、RSS 订阅、搜索功能等。如果你有任何建议，欢迎在留言板告诉我！</p>
       
       <p>感谢你的到访，希望你能在这里找到有用的内容 🚀</p>
+      
       
     `,
   },
@@ -121,6 +134,7 @@ const BlogPosts = [
             <h2>结语</h2>
             <p>不需要框架也能写出结构清晰的代码。关键在于遵循好的设计原则：分离关注点、单一职责、数据驱动。这些原则比任何框架都重要。</p>
           
+      
     `,
   },
   {
@@ -160,6 +174,7 @@ const BlogPosts = [
       <p>GitHub 上有数以亿计的开源项目。从学习别人的代码，到贡献自己的项目，GitHub 让全球开发者连接在一起。这也是为什么我把所有项目都放在 GitHub 上——开放、透明、协作。</p>
       
       <p>如果你还没有 GitHub 账号，强烈建议注册一个。它可能会改变你构建软件的方式。</p>
+      
       
     `,
   },
@@ -233,6 +248,7 @@ const BlogPosts = [
       
             <p>这些特效只用不到 100 行代码，却能显著提升页面的精致感。你也可以试试看！</p>
           
+      
     `,
   },
   {
@@ -298,6 +314,7 @@ const BlogPosts = [
             <h2>扩展性</h2>
             <p>如果需要添加更多主题（比如"暖色"、"高对比度"等），只需要新增一组变量值，无需改动任何组件代码。这就是 CSS 变量的力量——<strong>定义一次，处处生效。</strong></p>
           
+      
     `,
   },
   {
@@ -339,6 +356,7 @@ const BlogPosts = [
       <p>这是一个新的开始。感谢你来见证。</p>
       <p>—— YEYU</p>
       
+      
     `,
   },
   {
@@ -351,6 +369,19 @@ const BlogPosts = [
     featured: false,
     content: `
       test
+      
+    `,
+  },
+  {
+    id: 'test2',
+    date: '2026-06-09',
+    title: 'test2',
+    excerpt: 'test2',
+    tags: [],
+    url: '#post/test2',
+    featured: false,
+    content: `
+      test2
     `,
   }
 ];
