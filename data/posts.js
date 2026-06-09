@@ -61,6 +61,7 @@ const BlogPosts = [
       
       
       
+      
     `,
   },
   {
@@ -125,6 +126,7 @@ const BlogPosts = [
           
       
       
+      
     `,
   },
   {
@@ -164,6 +166,7 @@ const BlogPosts = [
       <p>GitHub 上有数以亿计的开源项目。从学习别人的代码，到贡献自己的项目，GitHub 让全球开发者连接在一起。这也是为什么我把所有项目都放在 GitHub 上——开放、透明、协作。</p>
       
       <p>如果你还没有 GitHub 账号，强烈建议注册一个。它可能会改变你构建软件的方式。</p>
+      
       
       
       
@@ -241,6 +244,7 @@ const BlogPosts = [
           
       
       
+      
     `,
   },
   {
@@ -308,6 +312,7 @@ const BlogPosts = [
           
       
       
+      
     `,
   },
   {
@@ -351,6 +356,7 @@ const BlogPosts = [
       
       
       
+      
     `,
   },
   {
@@ -363,6 +369,7 @@ const BlogPosts = [
     featured: true,
     content: `
       test
+      
     `,
   },
   {
@@ -372,10 +379,9 @@ const BlogPosts = [
     excerpt: 'test2',
     tags: [],
     url: '#post/test2',
-    featured: false,
+    featured: true,
     content: `
       test2
-      
     `,
   }
 ];
