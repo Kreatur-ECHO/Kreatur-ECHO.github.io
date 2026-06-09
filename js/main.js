@@ -28,27 +28,44 @@
   // ---- 哈希路由 ----
   function routeFromHash() {
     const hash = window.location.hash;
-    const postMatch = hash.match(/^#post\/(.+)$/);
 
+    // 管理面板
+    if (hash === '#admin') {
+      renderAdminPage();
+      return;
+    }
+
+    // 文章详情
+    const postMatch = hash.match(/^#post\/(.+)$/);
     if (postMatch) {
       const postId = postMatch[1];
       const post = BlogPosts.find(p => p.id === postId);
       if (post) {
         renderPostPage(post);
       } else {
-        // 文章不存在，回主页
         window.location.hash = '';
       }
-    } else {
-      renderHomePage();
+      return;
     }
+
+    // 主页
+    renderHomePage();
   }
 
   // 初始路由
   routeFromHash();
 
-  // 监听哈希变化
-  window.addEventListener('hashchange', routeFromHash);
+  // 监听哈希变化（带防抖，快速连续点击只执行最后一次）
+  let routeDebounce = null;
+  window.addEventListener('hashchange', () => {
+    clearTimeout(routeDebounce);
+    routeDebounce = setTimeout(() => {
+      if (currentView === 'admin') {
+        if (typeof Admin !== 'undefined') Admin.destroy();
+      }
+      routeFromHash();
+    }, 80);
+  });
 
   // ============================================================
   //  主页渲染
@@ -134,6 +151,25 @@
 
     // 回到顶部
     window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  // ============================================================
+  //  管理面板渲染
+  // ============================================================
+  function renderAdminPage() {
+    // 离开主页时清理特效
+    if (currentView === 'home') {
+      if (typeof CursorEffects !== 'undefined') {
+        CursorEffects.destroy();
+      }
+    }
+    currentView = 'admin';
+
+    if (typeof Admin !== 'undefined') {
+      Admin.init();
+    } else {
+      app.innerHTML = '<div style="text-align:center;padding:4rem;color:var(--color-text-muted);">管理模块加载失败，请刷新页面重试。</div>';
+    }
   }
 
   // ============================================================
