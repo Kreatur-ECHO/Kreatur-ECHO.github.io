@@ -243,83 +243,90 @@
   }
 
   function initQQButton() {
-    const qqLink = document.querySelector('[data-action="qq"]');
+    var qqLink = document.querySelector('[data-action="qq"]');
     if (!qqLink) return;
 
-    // 移除默认的链接行为
-    qqLink.removeAttribute('target');
-    qqLink.removeAttribute('rel');
+    var qqNumber = qqLink.getAttribute('data-qq');
+    var popup = null;
+    var hideTimer = null;
+    var isHoveringPopup = false;
+    var isHoveringBtn = false;
 
-    qqLink.addEventListener('click', function (e) {
-      e.preventDefault();
+    function showPopup() {
+      if (popup) return; // 已显示
+      popup = document.createElement('div');
+      popup.className = 'qq-popup';
+      popup.innerHTML =
+        '<div class="qq-popup-arrow"></div>' +
+        '<p class="qq-popup-title">QQ 号</p>' +
+        '<div class="qq-popup-row">' +
+          '<code class="qq-popup-number">' + qqNumber + '</code>' +
+          '<button class="qq-popup-copy" id="qqCopyBtn">复制</button>' +
+        '</div>' +
+        '<p class="qq-popup-hint">复制后打开 QQ 搜索添加好友</p>';
 
-      const qqNumber = this.getAttribute('data-qq');
+      // 定位在按钮上方
+      var rect = qqLink.getBoundingClientRect();
+      popup.style.left = (rect.left + rect.width / 2) + 'px';
+      popup.style.bottom = (window.innerHeight - rect.top + 10) + 'px';
 
-      // 尝试唤起 QQ 桌面端
-      const tencentUrl = 'tencent://AddContact/?fromId=45&fromSubId=1&subcmd=all&uin=' + qqNumber;
-      const start = Date.now();
-      window.location.href = tencentUrl;
+      document.body.appendChild(popup);
 
-      // 1.5 秒后如果页面还在（说明 tencent:// 未生效），则弹出面板
-      setTimeout(function () {
-        if (Date.now() - start < 2000) {
-          showQQPopup(qqLink, qqNumber);
-        }
-      }, 1500);
-    });
-  }
-
-  function showQQPopup(anchor, qqNumber) {
-    // 如果已有弹出面板，先移除
-    var existing = document.querySelector('.qq-popup');
-    if (existing) { existing.remove(); return; }
-
-    var popup = document.createElement('div');
-    popup.className = 'qq-popup';
-    popup.innerHTML =
-      '<div class="qq-popup-arrow"></div>' +
-      '<p class="qq-popup-title">QQ 号</p>' +
-      '<div class="qq-popup-row">' +
-        '<code class="qq-popup-number">' + qqNumber + '</code>' +
-        '<button class="qq-popup-copy" id="qqCopyBtn">复制</button>' +
-      '</div>' +
-      '<p class="qq-popup-hint">复制后打开 QQ 搜索添加好友</p>';
-
-    // 定位在按钮上方
-    var rect = anchor.getBoundingClientRect();
-    popup.style.left = (rect.left + rect.width / 2) + 'px';
-    popup.style.bottom = (window.innerHeight - rect.top + 10) + 'px';
-
-    document.body.appendChild(popup);
-
-    // 复制按钮事件
-    document.getElementById('qqCopyBtn').addEventListener('click', function () {
-      navigator.clipboard.writeText(qqNumber).then(function () {
-        var btn = document.getElementById('qqCopyBtn');
-        btn.textContent = '✓ 已复制';
-        btn.classList.add('copied');
-        setTimeout(function () {
-          if (popup.parentNode) popup.remove();
-        }, 1500);
-      }).catch(function () {
-        // fallback: 选中文本让用户手动复制
-        var range = document.createRange();
-        range.selectNodeContents(document.querySelector('.qq-popup-number'));
-        var sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-        document.getElementById('qqCopyBtn').textContent = '已选中，Ctrl+C 复制';
+      // 复制按钮事件
+      document.getElementById('qqCopyBtn').addEventListener('click', function (e) {
+        e.stopPropagation(); // 防止冒泡触发 tencent:// 跳转
+        navigator.clipboard.writeText(qqNumber).then(function () {
+          var btn = document.getElementById('qqCopyBtn');
+          btn.textContent = '✓ 已复制';
+          btn.classList.add('copied');
+          setTimeout(function () {
+            if (popup && popup.parentNode) popup.remove();
+            popup = null;
+          }, 1200);
+        }).catch(function () {
+          var range = document.createRange();
+          range.selectNodeContents(document.querySelector('.qq-popup-number'));
+          var sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          document.getElementById('qqCopyBtn').textContent = '已选中';
+        });
       });
-    });
 
-    // 点击空白处关闭
-    setTimeout(function () {
-      document.addEventListener('click', function closePopup(e) {
-        if (!popup.contains(e.target) && e.target !== anchor) {
+      // 面板 hover 跟踪
+      popup.addEventListener('mouseenter', function () {
+        isHoveringPopup = true;
+        if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+      });
+      popup.addEventListener('mouseleave', function () {
+        isHoveringPopup = false;
+        tryHidePopup();
+      });
+    }
+
+    function tryHidePopup() {
+      if (hideTimer) clearTimeout(hideTimer);
+      hideTimer = setTimeout(function () {
+        if (!isHoveringBtn && !isHoveringPopup && popup) {
           popup.remove();
-          document.removeEventListener('click', closePopup);
+          popup = null;
         }
-      });
-    }, 0);
+      }, 200);
+    }
+
+    // 鼠标悬停按钮 → 显示面板
+    qqLink.addEventListener('mouseenter', function () {
+      isHoveringBtn = true;
+      if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+      showPopup();
+    });
+
+    qqLink.addEventListener('mouseleave', function () {
+      isHoveringBtn = false;
+      tryHidePopup();
+    });
+
+    // 点击按钮 → 不阻止默认行为，让浏览器处理 tencent:// 协议
+    // （原生 <a href> 点击是真实的用户手势，浏览器会允许自定义协议）
   }
 })();

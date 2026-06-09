@@ -44,7 +44,7 @@ const SiteConfig = {
     {
       icon: 'qq',
       label: 'QQ',
-      url: '#',
+      url: 'tencent://AddContact/?fromId=45&fromSubId=1&subcmd=all&uin=2476484290',
       qq: '2476484290',
     },
     // 示例: 将来添加其他平台，取消注释即可
