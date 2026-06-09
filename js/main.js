@@ -215,6 +215,7 @@
   function bindHomeEvents() {
     bindCommonEvents();
     bindBlogSortBar();
+    bindShowAll();
     // 主页额外的特定逻辑在 initSidebarScrollSpy / initQQButton / loadGitHubData 中
   }
 
@@ -459,6 +460,32 @@
         blogSection.parentNode.replaceChild(newSection, blogSection);
         // 重新绑定排序事件
         bindBlogSortBar();
+        bindShowAll();
+      }
+    });
+  }
+
+  function bindShowAll() {
+    const btn = document.getElementById('showAllBtn');
+    if (!btn) return;
+
+    btn.addEventListener('click', () => {
+      const hidden = document.getElementById('postsHidden');
+      if (!hidden) return;
+
+      const isOpen = hidden.classList.contains('open');
+      if (isOpen) {
+        // 收起
+        hidden.style.display = 'none';
+        hidden.classList.remove('open');
+        btn.innerHTML = `显示全部 <span class="show-all-count">(${hidden.children.length})</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>`;
+      } else {
+        // 展开
+        hidden.style.display = 'grid';
+        hidden.classList.add('open');
+        btn.innerHTML = `收起
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 15 12 9 18 15"/></svg>`;
       }
     });
   }

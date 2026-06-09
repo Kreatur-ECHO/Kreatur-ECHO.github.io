@@ -137,12 +137,10 @@ const Renderer = (() => {
     // 排序
     const sorted = sortPosts(validPosts, sortMode || 'latest', articleViews || {});
 
-    const cardsHTML = sorted
-      .map(post => {
-        const tagsHTML = post.tags.map(t => `<span class="post-tag">${t}</span>`).join('');
-        const featuredClass = post.featured ? ' featured' : '';
-        const viewCount = (articleViews && articleViews[post.id]) ? articleViews[post.id].count || 0 : 0;
-        return `
+    const renderCard = post => {
+      const tagsHTML = post.tags.map(t => `<span class="post-tag">${t}</span>`).join('');
+      const featuredClass = post.featured ? ' featured' : '';
+      return `
         <a href="${post.url}" class="post-card-link" data-post-id="${post.id}">
           <article class="post-card${featuredClass}">
             <div class="post-date">${post.date}</div>
@@ -151,8 +149,12 @@ const Renderer = (() => {
             <div class="post-tags">${tagsHTML}</div>
           </article>
         </a>`;
-      })
-      .join('');
+    };
+
+    const INITIAL_COUNT = 6;
+    const hasMore = sorted.length > INITIAL_COUNT;
+    const visibleCards = sorted.slice(0, INITIAL_COUNT).map(renderCard).join('');
+    const hiddenCards = hasMore ? sorted.slice(INITIAL_COUNT).map(renderCard).join('') : '';
 
     return `
     <section class="section fade-in fade-in-2" id="blog">
@@ -169,9 +171,17 @@ const Renderer = (() => {
           </button>
         </div>
       </div>
-      <div class="posts-grid">
-        ${cardsHTML}
+      <div class="posts-grid" id="postsGrid">
+        ${visibleCards}
+        ${hiddenCards ? `<div class="posts-hidden" id="postsHidden" style="display:none">${hiddenCards}</div>` : ''}
       </div>
+      ${hasMore ? `
+      <div class="posts-show-all-wrap">
+        <button class="posts-show-all-btn" id="showAllBtn">
+          显示全部 <span class="show-all-count">(${sorted.length - INITIAL_COUNT})</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>` : ''}
     </section>`;
   }
 
