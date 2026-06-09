@@ -60,6 +60,7 @@ const BlogPosts = [
       <p>感谢你的到访，希望你能在这里找到有用的内容 🚀</p>
       
       
+      
     `,
   },
   {
@@ -123,6 +124,7 @@ const BlogPosts = [
             <p>不需要框架也能写出结构清晰的代码。关键在于遵循好的设计原则：分离关注点、单一职责、数据驱动。这些原则比任何框架都重要。</p>
           
       
+      
     `,
   },
   {
@@ -162,6 +164,7 @@ const BlogPosts = [
       <p>GitHub 上有数以亿计的开源项目。从学习别人的代码，到贡献自己的项目，GitHub 让全球开发者连接在一起。这也是为什么我把所有项目都放在 GitHub 上——开放、透明、协作。</p>
       
       <p>如果你还没有 GitHub 账号，强烈建议注册一个。它可能会改变你构建软件的方式。</p>
+      
       
       
     `,
@@ -237,6 +240,7 @@ const BlogPosts = [
             <p>这些特效只用不到 100 行代码，却能显著提升页面的精致感。你也可以试试看！</p>
           
       
+      
     `,
   },
   {
@@ -303,6 +307,7 @@ const BlogPosts = [
             <p>如果需要添加更多主题（比如"暖色"、"高对比度"等），只需要新增一组变量值，无需改动任何组件代码。这就是 CSS 变量的力量——<strong>定义一次，处处生效。</strong></p>
           
       
+      
     `,
   },
   {
@@ -345,6 +350,7 @@ const BlogPosts = [
       <p>—— YEYU</p>
       
       
+      
     `,
   },
   {
@@ -354,10 +360,9 @@ const BlogPosts = [
     excerpt: 'test',
     tags: ['test'],
     url: '#post/test-test',
-    featured: false,
+    featured: true,
     content: `
       test
-      
     `,
   },
   {
@@ -370,6 +375,7 @@ const BlogPosts = [
     featured: false,
     content: `
       test2
+      
     `,
   }
 ];
