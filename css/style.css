@@ -202,6 +202,41 @@ img {
   background: radial-gradient(circle, var(--color-accent-glow) 0%, transparent 70%);
   pointer-events: none;
 }
+.hero::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 2px; height: 2px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.6);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.3;
+  box-shadow:
+     5% 5% 0 0 rgba(255,255,255,0.4),
+    15% 25% 0 0 rgba(255,255,255,0.5),
+    25% 10% 0 0 rgba(255,255,255,0.3),
+    38% 40% 0 0 rgba(255,255,255,0.35),
+    50% 15% 0 0 rgba(255,255,255,0.5),
+    62% 55% 0 0 rgba(255,255,255,0.3),
+    75% 35% 0 0 rgba(255,255,255,0.45),
+    88% 70% 0 0 rgba(255,255,255,0.35),
+    10% 80% 0 0 rgba(255,255,255,0.4),
+    32% 65% 0 0 rgba(255,255,255,0.3),
+    55% 90% 0 0 rgba(255,255,255,0.35),
+    70% 20% 0 0 rgba(255,255,255,0.5),
+    90% 50% 0 0 rgba(255,255,255,0.3),
+    20% 95% 0 0 rgba(255,255,255,0.4),
+    80% 85% 0 0 rgba(255,255,255,0.35),
+  ;
+  animation: heroStarfall 14s linear infinite;
+}
+@keyframes heroStarfall {
+  from { transform: translateY(-80px); opacity: 0.25; }
+  10%  { opacity: 0.35; }
+  90%  { opacity: 0.35; }
+  to   { transform: translateY(calc(100vh + 80px)); opacity: 0.2; }
+}
 
 /* 头像外层包裹（用于添加轨道旋转辉光） */
 .hero-avatar-wrapper {
