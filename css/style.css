@@ -357,6 +357,7 @@ img {
   border-radius: var(--radius-lg);
   padding: 28px;
   box-shadow: var(--shadow-card);
+  box-sizing: border-box;
   transition: all var(--transition-base);
   cursor: pointer;
   position: relative;
@@ -364,22 +365,9 @@ img {
 }
 .post-card:hover {
   box-shadow: var(--shadow-card-hover);
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.05);
   border-color: var(--color-accent);
-}
-.post-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--gradient-hero);
-  opacity: 0;
-  transition: opacity var(--transition-base);
-}
-.post-card:hover::before {
-  opacity: 1;
+  border-width: 2px;
 }
 
 .post-card {
