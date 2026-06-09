@@ -278,6 +278,7 @@ const Comments = (() => {
         // 点赞按钮
         const likeBtn = e.target.closest('.comment-reaction-btn');
         if (likeBtn) {
+          if (likeBtn.disabled) return;
           const cid = parseInt(likeBtn.dataset.cid);
           if (cid) likeComment(cid, likeBtn);
           return;
