@@ -379,7 +379,7 @@ const BlogPosts = [
     excerpt: 'test',
     tags: ['test'],
     url: '#post/test',
-    featured: false,
+    featured: true,
     content: `
       test
       
@@ -392,7 +392,7 @@ const BlogPosts = [
     excerpt: 'test2',
     tags: ['test'],
     url: '#post/test2',
-    featured: false,
+    featured: true,
     content: `
       test2
     `,
