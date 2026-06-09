@@ -399,11 +399,15 @@ img {
 }
 
 /* 初始折叠的文章卡片 */
-.post-card-hidden {
-  animation: none;
+.post-card-link.post-card-hidden {
+  display: none;
+}
+.post-card-link.post-card-hidden.expanded {
+  display: block;
+  animation: posts-expand 0.4s ease;
 }
 @keyframes posts-expand {
-  from { opacity: 0; transform: translateY(-12px); }
+  from { opacity: 0; transform: translateY(-16px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 

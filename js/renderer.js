@@ -155,7 +155,7 @@ const Renderer = (() => {
     const hasMore = sorted.length > INITIAL_COUNT;
     const visibleCards = sorted.slice(0, INITIAL_COUNT).map(renderCard).join('');
     const hiddenCards = hasMore
-      ? sorted.slice(INITIAL_COUNT).map(p => `<span class="post-card-hidden" style="display:none">${renderCard(p)}</span>`).join('')
+      ? sorted.slice(INITIAL_COUNT).map(p => renderCard(p).replace('post-card-link', 'post-card-link post-card-hidden')).join('')
       : '';
 
     return `
