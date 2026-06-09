@@ -917,6 +917,81 @@ img {
   margin-left: 2px;
 }
 
+/* ===== QQ 弹出面板 ===== */
+.qq-popup {
+  position: fixed;
+  transform: translateX(-50%);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  z-index: 9999;
+  text-align: center;
+  min-width: 220px;
+  animation: qqPopupIn 0.2s ease;
+}
+@keyframes qqPopupIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+.qq-popup-arrow {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  rotate: 45deg;
+}
+.qq-popup-title {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+}
+.qq-popup-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.qq-popup-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--color-text-primary);
+  background: var(--color-bg-primary);
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  user-select: all;
+}
+.qq-popup-copy {
+  padding: 6px 16px;
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  font-family: var(--font-sans);
+}
+.qq-popup-copy:hover {
+  background: var(--color-accent-hover);
+}
+.qq-popup-copy.copied {
+  background: #27ae60;
+}
+.qq-popup-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
 /* 侧边栏响应式: 小屏隐藏 */
 @media (max-width: 1024px) {
   .sidebar {

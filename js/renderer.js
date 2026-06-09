@@ -56,7 +56,9 @@ const Renderer = (() => {
       .filter(s => s.url && s.icon)
       .map(s => {
         const svg = SOCIAL_ICONS[s.icon] || s.icon;
-        return `<a href="${s.url}" class="hero-social-link" target="_blank" rel="noopener" title="${s.label || ''}">${svg}</a>`;
+        const qqAttr = s.qq ? ` data-action="qq" data-qq="${s.qq}"` : '';
+        const targetAttr = s.qq ? '' : ' target="_blank" rel="noopener"';
+        return `<a href="${s.url}" class="hero-social-link"${targetAttr} title="${s.label || ''}"${qqAttr}>${svg}</a>`;
       })
       .join('');
 
