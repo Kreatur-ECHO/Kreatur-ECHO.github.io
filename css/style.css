@@ -403,7 +403,7 @@ img {
   display: none;
 }
 .post-card-link.post-card-hidden.expanded {
-  display: block;
+  display: flex;
   animation: posts-expand 0.4s ease;
 }
 @keyframes posts-expand {
