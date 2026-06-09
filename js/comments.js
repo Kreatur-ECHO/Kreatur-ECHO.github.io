@@ -4,10 +4,11 @@
  * ============================================================
  *
  * 原理:
- *   读取: GitHub Issues API (公开，无需认证，所有浏览器可用)
+ *   读取: 浏览器直接从 GitHub Issues API 拉取（实时，无延迟）
+ *   回退: API 不可用时读取本地 data/comments.json
  *   发布: 点击按钮跳转 GitHub Issue 页面直接评论
  *
- * 不会因浏览器跟踪防护而被拦截。
+ * GitHub API 对未认证请求限制 60 次/小时，个人博客足够用。
  */
 
 const Comments = (() => {
@@ -109,15 +110,29 @@ const Comments = (() => {
   }
 
   // ============================================================
-  //  加载评论 (从本地 JSON 文件，由 GitHub Action 定时更新)
+  //  加载评论 (直接从 GitHub Issues API 获取，零延迟实时同步)
+  //  失败时回退到本地 comments.json
   // ============================================================
   async function fetchComments() {
+    // 1) 优先：直接从 GitHub API 获取（实时）
+    try {
+      const res = await fetch(CONFIG.commentsUrl + '?per_page=' + CONFIG.perPage);
+      if (res.ok) {
+        comments = await res.json();
+        return;
+      }
+      throw new Error(`HTTP ${res.status}`);
+    } catch (err) {
+      console.warn('[Guestbook] GitHub API failed, trying local fallback:', err.message);
+    }
+
+    // 2) 回退：本地 JSON（由 GitHub Action 更新的静态副本）
     try {
       const res = await fetch('data/comments.json');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       comments = await res.json();
     } catch (err) {
-      console.warn('[Guestbook] Failed to fetch comments:', err);
+      console.warn('[Guestbook] Local fallback also failed:', err);
       comments = [];
     }
   }
