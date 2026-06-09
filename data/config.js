@@ -71,7 +71,7 @@ const SiteConfig = {
   // ---- 评论点赞 ----
   // 前端点赞走 SCF 云函数 → 腾讯云 COS 持久化存储
   // GitHub Token 仍用于部署时从私有 repo 获取数据（如有需要）
-  likesApi: 'https://1441674200-gt37s9jbcv.in.ap-guangzhou.tencentscf.com',
+  likesApi: 'https://1441674200-buqu8i9sqn.ap-guangzhou.tencentscf.com',
   reactionsToken: 'REACTIONS_TOKEN_PLACEHOLDER',
 
   // ---- 区块配置 ----
