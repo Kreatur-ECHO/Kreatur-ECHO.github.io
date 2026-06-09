@@ -27,6 +27,7 @@ const Comments = (() => {
   let scfLikes = {};      // SCF 返回的点赞计数 { commentId: count }
   let sortMode = 'latest'; // 'latest' | 'popular'
   let likedByMe = new Set(); // localStorage 记住已点赞的评论 ID
+  let lastTipTime = 0;         // 防止提示刷屏的冷却计时
 
   function loadLikedByMe() {
     try {
@@ -168,6 +169,15 @@ const Comments = (() => {
     return (comment.reactions?.['+1'] || 0) + (scfLikes[comment.id] || 0);
   }
 
+  // 显示「已赞过」提示动画（带冷却，防止连续点击刷屏）
+  function showAlreadyTip(btn) {
+    const now = Date.now();
+    if (now - lastTipTime < 2000) return; // 2 秒冷却
+    lastTipTime = now;
+    btn.classList.add('show-tip');
+    setTimeout(() => btn.classList.remove('show-tip'), 1000);
+  }
+
   function refreshList() {
     applySort();
     const target = document.getElementById('commentsList');
@@ -204,6 +214,9 @@ const Comments = (() => {
         saveLikedByMe();
         scfLikes[commentId] = data.count;
         refreshList();
+        // 刷新后找到新按钮显示提示
+        const newBtn = document.querySelector(`.comment-reaction-btn[data-cid="${commentId}"]`);
+        if (newBtn) showAlreadyTip(newBtn);
       } else {
         throw new Error(data.error || `HTTP ${res.status}`);
       }
@@ -278,7 +291,10 @@ const Comments = (() => {
         // 点赞按钮
         const likeBtn = e.target.closest('.comment-reaction-btn');
         if (likeBtn) {
-          if (likeBtn.disabled) return;
+          if (likeBtn.disabled) {
+            showAlreadyTip(likeBtn);
+            return;
+          }
           const cid = parseInt(likeBtn.dataset.cid);
           if (cid) likeComment(cid, likeBtn);
           return;

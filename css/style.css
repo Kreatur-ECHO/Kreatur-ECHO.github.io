@@ -1127,10 +1127,12 @@ img {
   color: #e67e22 !important;
   background: transparent !important;
 }
+
+/* 已赞过提示 — 默认隐藏，.show-tip 时触发 1s 动画（0.3s 淡入 + 0.4s 停留 + 0.3s 淡出） */
 .comment-reaction-btn.already-liked::after {
   content: '已赞过';
   position: absolute;
-  top: -22px;
+  top: -24px;
   left: 50%;
   transform: translateX(-50%);
   background: #e67e22;
@@ -1140,6 +1142,17 @@ img {
   border-radius: 4px;
   white-space: nowrap;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.comment-reaction-btn.already-liked.show-tip::after {
+  animation: tip-fade 1s ease forwards;
+}
+@keyframes tip-fade {
+  0%   { opacity: 0; }
+  30%  { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
 }
 .comment-reaction-btn.like-failed {
   color: #999 !important;
