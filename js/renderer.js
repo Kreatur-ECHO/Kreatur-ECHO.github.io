@@ -96,6 +96,10 @@ const Renderer = (() => {
           <div class="stat-num" id="statJoined">-</div>
           <div class="stat-label">Joined</div>
         </div>
+        <div class="hero-stat">
+          <div class="stat-num" id="statVisits">-</div>
+          <div class="stat-label">Visits</div>
+        </div>
       </div>
     </section>`;
   }

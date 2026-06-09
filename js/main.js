@@ -126,6 +126,7 @@
     initSidebarScrollSpy();
     initQQButton();
     loadGitHubData();
+    loadVisitCount();
 
     // ---- 留言模块 ----
     if (typeof Comments !== 'undefined') {
@@ -358,6 +359,32 @@
   function setStat(id, value) {
     const el = document.getElementById(id);
     if (el) el.textContent = value;
+  }
+
+  // ============================================================
+  //  累计访问计数（SCF + COS）
+  // ============================================================
+  const VISITS_API = (typeof SiteConfig !== 'undefined' && SiteConfig.likesApi)
+    ? SiteConfig.likesApi + '/visits' : '';
+
+  async function loadVisitCount() {
+    if (!VISITS_API) return;
+    try {
+      // 记录本次访问（每日每 IP 去重）
+      await fetch(VISITS_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visit: true }),
+      });
+      // 获取累计数
+      const res = await fetch(VISITS_API);
+      if (res.ok) {
+        const data = await res.json();
+        setStat('statVisits', data.total ?? '?');
+      }
+    } catch (err) {
+      console.warn('[Blog] Failed to load visit count:', err);
+    }
   }
 
   // ============================================================
