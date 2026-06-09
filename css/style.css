@@ -214,6 +214,8 @@ img {
   margin-bottom: 28px;
   transition: transform var(--transition-base);
   object-fit: cover;
+  position: relative;
+  z-index: 1;
 }
 .hero-avatar:hover {
   transform: scale(1.05);
