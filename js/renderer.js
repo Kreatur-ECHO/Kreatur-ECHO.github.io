@@ -218,20 +218,37 @@ const Renderer = (() => {
 
   // ---- 归档时间线区块 ----
   function renderArchiveSection(posts) {
-    const itemsHTML = filterNonBlank(posts)
-      .map(post => `
+    const validPosts = filterNonBlank(posts);
+    const ARCHIVE_COUNT = 10;
+    const hasMore = validPosts.length > ARCHIVE_COUNT;
+    const visibleItems = validPosts.slice(0, ARCHIVE_COUNT);
+    const hiddenItems = validPosts.slice(ARCHIVE_COUNT);
+
+    const renderItem = p => `
         <div class="timeline-item">
-          <div class="timeline-date">${post.date}</div>
-          <div class="timeline-title"><a href="${post.url}">${post.title}</a></div>
-        </div>`)
-      .join('');
+          <div class="timeline-date">${p.date}</div>
+          <div class="timeline-title"><a href="${p.url}">${p.title}</a></div>
+        </div>`;
+
+    const visibleHTML = visibleItems.map(renderItem).join('');
+    const hiddenHTML = hasMore
+      ? hiddenItems.map(p => `<span class="timeline-hidden" style="display:none">${renderItem(p)}</span>`).join('')
+      : '';
 
     return `
     <section class="section fade-in fade-in-4" id="archive">
       <h2 class="section-title">📚 Archive</h2>
-      <div class="timeline">
-        ${itemsHTML}
+      <div class="timeline" id="archiveTimeline">
+        ${visibleHTML}
+        ${hiddenHTML}
       </div>
+      ${hasMore ? `
+      <div class="posts-show-all-wrap">
+        <button class="posts-show-all-btn" id="archiveShowAllBtn">
+          显示全部 <span class="show-all-count">(${hiddenItems.length})</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>` : ''}
     </section>`;
   }
 

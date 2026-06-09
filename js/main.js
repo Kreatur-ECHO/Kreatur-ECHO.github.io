@@ -216,6 +216,7 @@
     bindCommonEvents();
     bindBlogSortBar();
     bindShowAll();
+    bindArchiveShowAll();
     // 主页额外的特定逻辑在 initSidebarScrollSpy / initQQButton / loadGitHubData 中
   }
 
@@ -461,6 +462,29 @@
         // 重新绑定排序事件
         bindBlogSortBar();
         bindShowAll();
+      }
+    });
+  }
+
+  function bindArchiveShowAll() {
+    const btn = document.getElementById('archiveShowAllBtn');
+    if (!btn) return;
+
+    const hiddenItems = document.querySelectorAll('.timeline-hidden');
+
+    btn.addEventListener('click', () => {
+      const isOpen = btn.dataset.open === 'true';
+
+      if (isOpen) {
+        hiddenItems.forEach(el => { el.style.display = 'none'; });
+        btn.dataset.open = 'false';
+        btn.innerHTML = `显示全部 <span class="show-all-count">(${hiddenItems.length})</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>`;
+      } else {
+        hiddenItems.forEach(el => { el.style.display = 'inline'; });
+        btn.dataset.open = 'true';
+        btn.innerHTML = `收起
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 15 12 9 18 15"/></svg>`;
       }
     });
   }
