@@ -28,7 +28,7 @@ const SiteConfig = {
   // ---- 作者信息 ----
   author: {
     name: 'YEYU',
-    bio: 'Developer, creator, and lifelong learner. Building things that matter.',
+    bio: 'life lover --AAA鱼子杂货',
     avatar: 'https://avatars.githubusercontent.com/u/291270204?v=4',
   },
 
