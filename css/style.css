@@ -392,15 +392,16 @@ img {
   position: absolute;
   top: 0;
   right: 0;
-  font-size: 14px;
+  width: 60px;
+  height: 60px;
+  font-size: 22px;
+  line-height: 1;
   color: #f5c842;
+  text-shadow: 0 0 4px rgba(245, 200, 66, 0.5);
   background: var(--color-accent);
   clip-path: polygon(0 0, 100% 0, 100% 100%);
-  width: 36px;
-  height: 36px;
-  line-height: 18px;
   text-align: right;
-  padding: 3px 5px 0 0;
+  padding: 5px 6px 0 0;
   box-sizing: border-box;
   z-index: 1;
 }
