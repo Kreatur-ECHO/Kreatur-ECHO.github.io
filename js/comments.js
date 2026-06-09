@@ -22,6 +22,8 @@ const Comments = (() => {
   };
 
   let comments = [];
+  let rawComments = [];   // 原始副本，排序不丢失数据
+  let sortMode = 'latest'; // 'latest' | 'popular'
 
   // ============================================================
   //  渲染
@@ -42,6 +44,18 @@ const Comments = (() => {
         <span class="guestbook-post-hint">Opens GitHub — you can upload images &amp; use Markdown</span>
       </div>
 
+      <!-- 排序切换 -->
+      <div class="comments-sort-bar">
+        <button class="sort-btn active" data-sort="latest">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          最新
+        </button>
+        <button class="sort-btn" data-sort="popular">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          最多点赞
+        </button>
+      </div>
+
       <!-- 评论列表 -->
       <div class="comments-list" id="commentsList">
         <div class="repo-loading">
@@ -57,11 +71,13 @@ const Comments = (() => {
       return '<div class="comments-empty">No comments yet. Be the first! ✨</div>';
     }
 
-    return comments.map((c, i) => {
+    return comments.map((c) => {
       const name = c.user?.login || 'unknown';
       const avatar = c.user?.avatar_url || '';
       const date = new Date(c.created_at).toLocaleString('zh-CN');
       const bodyHTML = renderMarkdown(c.body);
+      const likeCount = c.reactions?.['+1'] || 0;
+      const hasLikes = likeCount > 0;
 
       return `
       <div class="comment-card gh-comment">
@@ -74,14 +90,18 @@ const Comments = (() => {
           </div>
           <div class="comment-text gh-markdown">${bodyHTML}</div>
           <div class="comment-actions">
-            <button class="comment-action-btn copy-msg" data-idx="${i}">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-              Copy
-            </button>
+            <a href="${c.html_url}" target="_blank" rel="noopener" class="comment-action-btn comment-reaction-btn${hasLikes ? ' has-likes' : ''}" title="Like on GitHub">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="${hasLikes ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>
+              ${likeCount > 0 ? `<span class="reaction-count">${likeCount}</span>` : ''}
+            </a>
             <a href="${c.html_url}" target="_blank" rel="noopener" class="comment-action-btn">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
               View on GitHub
             </a>
+            <button class="comment-action-btn copy-msg" data-body="${escapeHTML(c.body).replace(/"/g, '&quot;')}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              Copy
+            </button>
           </div>
         </div>
       </div>`;
@@ -110,6 +130,17 @@ const Comments = (() => {
   }
 
   // ============================================================
+  //  排序
+  // ============================================================
+  function applySort() {
+    if (sortMode === 'popular') {
+      comments.sort((a, b) => (b.reactions?.['+1'] || 0) - (a.reactions?.['+1'] || 0));
+    } else {
+      comments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }
+  }
+
+  // ============================================================
   //  加载评论 (直接从 GitHub Issues API 获取，零延迟实时同步)
   //  失败时回退到本地 comments.json
   // ============================================================
@@ -118,7 +149,9 @@ const Comments = (() => {
     try {
       const res = await fetch(CONFIG.commentsUrl + '?per_page=' + CONFIG.perPage);
       if (res.ok) {
-        comments = await res.json();
+        rawComments = await res.json();
+        comments = [...rawComments];
+        applySort();
         return;
       }
       throw new Error(`HTTP ${res.status}`);
@@ -130,9 +163,12 @@ const Comments = (() => {
     try {
       const res = await fetch('data/comments.json');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      comments = await res.json();
+      rawComments = await res.json();
+      comments = [...rawComments];
+      applySort();
     } catch (err) {
       console.warn('[Guestbook] Local fallback also failed:', err);
+      rawComments = [];
       comments = [];
     }
   }
@@ -141,17 +177,37 @@ const Comments = (() => {
   //  事件绑定
   // ============================================================
   function bindEvents() {
-    const listDiv = document.getElementById('commentsList');
-    if (!listDiv) return;
+    // 复制评论 (data-body 存有完整原文)
+    const listEl = document.getElementById('commentsList');
+    if (listEl) {
+      listEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('.copy-msg');
+        if (!btn) return;
+        const body = btn.dataset.body;
+        if (!body) return;
+        copy(body, btn);
+      });
+    }
 
-    // 复制评论
-    listDiv.addEventListener('click', (e) => {
-      const btn = e.target.closest('.copy-msg');
-      if (!btn) return;
-      const idx = parseInt(btn.dataset.idx);
-      const c = comments[idx];
-      if (!c) return;
-      copy(c.body, btn);
+    // 排序切换
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const newMode = btn.dataset.sort;
+        if (sortMode === newMode) return;
+        sortMode = newMode;
+
+        // 用原始数据重新排序
+        comments = [...rawComments];
+        applySort();
+
+        // 更新按钮状态
+        document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // 重新渲染
+        const target = document.getElementById('commentsList');
+        if (target) target.innerHTML = renderList();
+      });
     });
   }
 

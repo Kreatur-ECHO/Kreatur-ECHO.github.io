@@ -1003,6 +1003,53 @@ img {
   background: #fdecea;
 }
 
+/* 排序切换栏 */
+.comments-sort-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+.sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 0.825rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.sort-btn:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+.sort-btn.active {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+
+/* 点赞按钮 */
+.comment-reaction-btn {
+  text-decoration: none;
+}
+.comment-reaction-btn.has-likes {
+  color: #e74c3c;
+}
+.comment-reaction-btn:hover {
+  color: #e74c3c !important;
+  background: #fdecea !important;
+}
+.reaction-count {
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
 /* 留言响应式 */
 @media (max-width: 768px) {
   .comment-form-actions {
