@@ -110,7 +110,7 @@ const Comments = (() => {
           </div>
           <div class="comment-text gh-markdown">${bodyHTML}</div>
           <div class="comment-actions">
-            <button class="comment-action-btn comment-reaction-btn${hasLikes ? ' has-likes' : ''}${alreadyLiked ? ' already-liked' : ''}" data-cid="${c.id}" title="${alreadyLiked ? '已点赞' : '👍 Like'}"${alreadyLiked ? ' disabled' : ''}>
+            <button class="comment-action-btn comment-reaction-btn${hasLikes ? ' has-likes' : ''}${alreadyLiked ? ' already-liked' : ''}" data-cid="${c.id}" title="${alreadyLiked ? '已点赞' : '👍 Like'}">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="${hasLikes ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>
               ${likeCount > 0 ? `<span class="reaction-count">${likeCount}</span>` : ''}
             </button>
@@ -190,7 +190,12 @@ const Comments = (() => {
       return;
     }
 
-    btn.disabled = true;
+    // 双重检查：已点赞则只显示提示
+    if (btn.classList.contains('already-liked') || likedByMe.has(String(commentId))) {
+      showAlreadyTip(btn);
+      return;
+    }
+
     btn.classList.add('liking');
 
     try {
@@ -225,7 +230,6 @@ const Comments = (() => {
       btn.classList.add('like-failed');
       setTimeout(() => btn.classList.remove('like-failed'), 1200);
     } finally {
-      btn.disabled = false;
       btn.classList.remove('liking');
     }
   }
@@ -291,7 +295,8 @@ const Comments = (() => {
         // 点赞按钮
         const likeBtn = e.target.closest('.comment-reaction-btn');
         if (likeBtn) {
-          if (likeBtn.disabled) {
+          // 已点赞：显示提示，不发请求
+          if (likeBtn.classList.contains('already-liked')) {
             showAlreadyTip(likeBtn);
             return;
           }

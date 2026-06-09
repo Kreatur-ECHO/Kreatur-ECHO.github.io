@@ -50,7 +50,13 @@ function readBody(req) {
 }
 
 function getClientIP(req) {
-  return req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.socket.remoteAddress || '0.0.0.0';
+  const xff = req.headers['x-forwarded-for'];
+  // 只取第一个 IP（真实客户端），忽略代理链
+  const ip = (typeof xff === 'string' ? xff.split(',')[0].trim() : '') ||
+    req.headers['x-real-ip'] ||
+    (req.socket && req.socket.remoteAddress) ||
+    '0.0.0.0';
+  return ip;
 }
 
 function cosSign(method, key) {
@@ -245,9 +251,18 @@ const server = http.createServer(async (req, res) => {
 
   console.log(`[${method}] ${path}`);
 
-async function handleDebug() {
-  const auth = cosSign('put', 'test.json');
-  return [200, { authorization: auth, timestamp: Math.floor(Date.now() / 1000) }];
+async function handleDebug(req) {
+  const ip = getClientIP(req || {});
+  return [200, {
+    ip: ip,
+    ipMd5: md5(ip),
+    headers: {
+      'x-forwarded-for': (req && req.headers && req.headers['x-forwarded-for']) || '(none)',
+      'x-real-ip': (req && req.headers && req.headers['x-real-ip']) || '(none)',
+      remoteAddress: (req && req.socket && req.socket.remoteAddress) || '(none)',
+    },
+    timestamp: Math.floor(Date.now() / 1000),
+  }];
 }
 
 // ... (keep existing handlers)
@@ -256,7 +271,7 @@ async function handleDebug() {
 
   try {
     if (path === '/debug') {
-      [statusCode, responseBody] = await handleDebug();
+      [statusCode, responseBody] = await handleDebug(req);
     } else if (path === '/' || path === '') {
       [statusCode, responseBody] = await handleRoot(method, body, ip);
     } else if (path === '/visits') {
