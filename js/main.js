@@ -204,11 +204,11 @@
       setStat('statFollowing', user.following ?? 0);
       setStat('statJoined', (user.created_at || '').slice(0, 4));
 
-      // 如果 GitHub 上有 bio，更新 hero 中的描述
-      if (user.bio) {
-        const bioEl = document.querySelector('.hero-bio');
-        if (bioEl) bioEl.textContent = user.bio;
-      }
+      // 不覆盖 config.js 中手动设置的 bio（如需同步 GitHub bio，取消下面注释）
+      // if (user.bio) {
+      //   const bioEl = document.querySelector('.hero-bio');
+      //   if (bioEl) bioEl.textContent = user.bio;
+      // }
     } catch (err) {
       console.warn('[Blog] Failed to fetch GitHub user data:', err);
       setStat('statRepos', '?');
