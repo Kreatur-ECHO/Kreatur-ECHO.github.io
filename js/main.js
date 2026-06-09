@@ -194,15 +194,16 @@
 
   async function loadGitHubData() {
     const username = SiteConfig.github.username;
+    const fb = SiteConfig.github.fallback || {};
 
     try {
       const user = await GitHubAPI.fetchUser(username);
 
       // 更新统计数字
-      setStat('statRepos', user.public_repos ?? 0);
-      setStat('statFollowers', user.followers ?? 0);
-      setStat('statFollowing', user.following ?? 0);
-      setStat('statJoined', (user.created_at || '').slice(0, 4));
+      setStat('statRepos', user.public_repos ?? fb.public_repos ?? 0);
+      setStat('statFollowers', user.followers ?? fb.followers ?? 0);
+      setStat('statFollowing', user.following ?? fb.following ?? 0);
+      setStat('statJoined', (user.created_at || fb.created_at || '').slice(0, 4));
 
       // 不覆盖 config.js 中手动设置的 bio（如需同步 GitHub bio，取消下面注释）
       // if (user.bio) {
@@ -211,9 +212,11 @@
       // }
     } catch (err) {
       console.warn('[Blog] Failed to fetch GitHub user data:', err);
-      setStat('statRepos', '?');
-      setStat('statFollowers', '?');
-      setStat('statFollowing', '?');
+      // 使用静态兜底值
+      setStat('statRepos', fb.public_repos ?? '?');
+      setStat('statFollowers', fb.followers ?? '?');
+      setStat('statFollowing', fb.following ?? '?');
+      setStat('statJoined', (fb.created_at || '').slice(0, 4) || '?');
     }
 
     // 加载仓库

@@ -59,6 +59,13 @@ const SiteConfig = {
     reposApiUrl: 'https://api.github.com/users/Kreatur-ECHO/repos',
     reposPerPage: 6,
     reposSort: 'updated',
+    // 静态统计值兜底（API 限流时显示此值，定期手动更新即可）
+    fallback: {
+      public_repos: 4,
+      followers: 0,
+      following: 0,
+      created_at: '2025',
+    },
   },
 
   // ---- 区块配置 ----
