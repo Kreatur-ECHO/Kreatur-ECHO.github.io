@@ -96,7 +96,6 @@ const Comments = (() => {
       const ghLikes = c.reactions?.['+1'] || 0;
       const scfCount = scfLikes[c.id] || 0;
       const likeCount = ghLikes + scfCount;
-      const hasLikes = likeCount > 0;
       const alreadyLiked = likedByMe.has(String(c.id));
 
       return `
@@ -110,8 +109,8 @@ const Comments = (() => {
           </div>
           <div class="comment-text gh-markdown">${bodyHTML}</div>
           <div class="comment-actions">
-            <button class="comment-action-btn comment-reaction-btn${hasLikes ? ' has-likes' : ''}${alreadyLiked ? ' already-liked' : ''}" data-cid="${c.id}" title="${alreadyLiked ? '已点赞' : '👍 Like'}">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="${hasLikes ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>
+            <button class="comment-action-btn comment-reaction-btn${alreadyLiked ? ' already-liked' : ''}" data-cid="${c.id}" title="${alreadyLiked ? '已点赞' : '👍 Like'}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="${alreadyLiked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>
               ${likeCount > 0 ? `<span class="reaction-count">${likeCount}</span>` : ''}
             </button>
             <a href="${c.html_url}" target="_blank" rel="noopener" class="comment-action-btn">

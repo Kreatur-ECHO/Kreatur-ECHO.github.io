@@ -1118,13 +1118,12 @@ img {
   animation: pop-like 0.3s ease-out;
 }
 .comment-reaction-btn.already-liked {
-  color: #e67e22 !important;
+  color: #e74c3c !important;
   cursor: default;
-  opacity: 0.75;
 }
 .comment-reaction-btn.already-liked:hover {
-  color: #e67e22 !important;
-  background: transparent !important;
+  color: #e74c3c !important;
+  background: #fdecea !important;
 }
 
 /* 已赞过提示 — 默认隐藏，.show-tip 时触发 1s 动画（0.3s 淡入 + 0.4s 停留 + 0.3s 淡出） */
@@ -1134,7 +1133,7 @@ img {
   top: -24px;
   left: 50%;
   transform: translateX(-50%);
-  background: #e67e22;
+  background: #e74c3c;
   color: #fff;
   font-size: 0.7rem;
   padding: 2px 8px;
