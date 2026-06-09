@@ -64,6 +64,8 @@ const CursorEffects = (() => {
   //  初始化
   // ============================================================
   function init() {
+    // 防止重复初始化（页面内导航会多次触发 renderHomePage）
+    if (running) destroy();
     canvas = document.createElement('canvas');
     canvas.id = 'cursor-fx-canvas';
     canvas.setAttribute('aria-hidden', 'true');

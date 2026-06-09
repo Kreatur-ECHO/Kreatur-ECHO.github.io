@@ -48,8 +48,25 @@
       return;
     }
 
-    // 主页
+    // 主页：如果已经在主页，只滚动到锚点，不重渲染
+    if (currentView === 'home') {
+      scrollToHash(hash);
+      return;
+    }
+
     renderHomePage();
+    // 渲染完成后滚动到锚点
+    setTimeout(() => scrollToHash(hash), 50);
+  }
+
+  function scrollToHash(hash) {
+    if (!hash) return;
+    const id = hash.replace('#', '');
+    if (!id) return;
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
   }
 
   // 初始路由
