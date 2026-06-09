@@ -377,5 +377,17 @@ const BlogPosts = [
     content: `
       test
     `,
+  },
+  {
+    id: 'test2',
+    date: '2026-06-09',
+    title: 'test2',
+    excerpt: 'test2',
+    tags: [],
+    url: '#post/test2',
+    featured: false,
+    content: `
+      test2
+    `,
   }
 ];
