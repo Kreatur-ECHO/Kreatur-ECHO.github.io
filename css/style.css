@@ -206,36 +206,34 @@ img {
   content: '';
   position: absolute;
   top: 0; left: 0;
-  width: 2px; height: 2px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.6);
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.3;
-  box-shadow:
-     5% 5% 0 0 rgba(255,255,255,0.4),
-    15% 25% 0 0 rgba(255,255,255,0.5),
-    25% 10% 0 0 rgba(255,255,255,0.3),
-    38% 40% 0 0 rgba(255,255,255,0.35),
-    50% 15% 0 0 rgba(255,255,255,0.5),
-    62% 55% 0 0 rgba(255,255,255,0.3),
-    75% 35% 0 0 rgba(255,255,255,0.45),
-    88% 70% 0 0 rgba(255,255,255,0.35),
-    10% 80% 0 0 rgba(255,255,255,0.4),
-    32% 65% 0 0 rgba(255,255,255,0.3),
-    55% 90% 0 0 rgba(255,255,255,0.35),
-    70% 20% 0 0 rgba(255,255,255,0.5),
-    90% 50% 0 0 rgba(255,255,255,0.3),
-    20% 95% 0 0 rgba(255,255,255,0.4),
-    80% 85% 0 0 rgba(255,255,255,0.35),
+  opacity: 0.35;
+  background-image:
+    radial-gradient(1px 1px at 5% 5%,   rgba(255,255,255,0.7), transparent),
+    radial-gradient(1.5px 1.5px at 15% 25%, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1px 1px at 25% 8%,   rgba(255,255,255,0.5), transparent),
+    radial-gradient(2px 2px at 38% 35%,   rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 50% 12%,   rgba(255,255,255,0.8), transparent),
+    radial-gradient(1.5px 1.5px at 62% 50%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 75% 30%,   rgba(255,255,255,0.7), transparent),
+    radial-gradient(2px 2px at 88% 65%,    rgba(255,255,255,0.55), transparent),
+    radial-gradient(1px 1px at 10% 75%,   rgba(255,255,255,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 32% 60%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 55% 85%,   rgba(255,255,255,0.55), transparent),
+    radial-gradient(2px 2px at 70% 15%,    rgba(255,255,255,0.7), transparent),
+    radial-gradient(1px 1px at 90% 45%,    rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 20% 90%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 80% 80%,    rgba(255,255,255,0.55), transparent),
   ;
-  animation: heroStarfall 14s linear infinite;
+  background-size: 100% 200%;
+  animation: heroStarfall 16s linear infinite;
 }
 @keyframes heroStarfall {
-  from { transform: translateY(-80px); opacity: 0.25; }
-  10%  { opacity: 0.35; }
-  90%  { opacity: 0.35; }
-  to   { transform: translateY(calc(100vh + 80px)); opacity: 0.2; }
+  from { background-position: 0 0; }
+  to   { background-position: 0 100%; }
 }
 
 /* 头像外层包裹（用于添加轨道旋转辉光） */
