@@ -64,13 +64,15 @@ const Renderer = (() => {
 
     return `
     <section class="hero fade-in fade-in-1" id="about">
-      <img
-        class="hero-avatar"
-        src="${config.author.avatar}"
-        alt="${config.author.name} avatar"
-        width="120" height="120"
-        onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%236c63ff%22 width=%22100%22 height=%22100%22 rx=%2250%22/><text x=%2250%22 y=%2255%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2240%22 font-family=%22sans-serif%22>Y</text></svg>'"
-      />
+      <div class="hero-avatar-wrapper">
+        <img
+          class="hero-avatar"
+          src="${config.author.avatar}"
+          alt="${config.author.name} avatar"
+          width="120" height="120"
+          onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%236c63ff%22 width=%22100%22 height=%22100%22 rx=%2250%22/><text x=%2250%22 y=%2255%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2240%22 font-family=%22sans-serif%22>Y</text></svg>'"
+        />
+      </div>
       <h1 class="hero-name">${config.author.name}</h1>
       <p class="hero-username">
         <a href="https://github.com/${config.github.username}" target="_blank" rel="noopener">@${config.github.username}</a>

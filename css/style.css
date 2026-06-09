@@ -203,6 +203,37 @@ img {
   pointer-events: none;
 }
 
+/* 头像外层包裹（用于添加轨道旋转辉光） */
+.hero-avatar-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 28px;
+}
+/* 旋转的紫色辉光小圆 */
+.hero-avatar-wrapper::before {
+  content: '';
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #9b6dff;
+  box-shadow:
+    0 0 8px 2px rgba(155, 109, 255, 0.9),
+    0 0 20px 6px rgba(108, 99, 255, 0.5);
+  top: -4px;
+  left: 50%;
+  margin-left: -3.5px;
+  transform-origin: 3.5px 64px;
+  animation: orbitAvatar 4s linear infinite;
+  z-index: 2;
+}
+@keyframes orbitAvatar {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 .hero-avatar {
   width: 120px;
   height: 120px;
@@ -211,7 +242,6 @@ img {
   box-shadow:
     0 0 0 3px var(--color-accent),
     0 8px 32px var(--color-accent-glow);
-  margin-bottom: 28px;
   transition: transform var(--transition-base);
   object-fit: cover;
   position: relative;
