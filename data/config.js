@@ -68,6 +68,11 @@ const SiteConfig = {
     },
   },
 
+  // ---- 评论点赞用 GitHub Token ----
+  // 仅需 reactions:write 权限，限定 Kreatur-ECHO.github.io 仓库
+  // 在 https://github.com/settings/tokens?type=beta 创建 fine-grained token
+  reactionsToken: '',
+
   // ---- 区块配置 ----
   // enabled: true/false 控制显示/隐藏
   // order: 数字越小越靠前

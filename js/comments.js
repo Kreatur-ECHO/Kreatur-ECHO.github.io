@@ -90,10 +90,10 @@ const Comments = (() => {
           </div>
           <div class="comment-text gh-markdown">${bodyHTML}</div>
           <div class="comment-actions">
-            <a href="${c.html_url}" target="_blank" rel="noopener" class="comment-action-btn comment-reaction-btn${hasLikes ? ' has-likes' : ''}" title="Like on GitHub">
+            <button class="comment-action-btn comment-reaction-btn${hasLikes ? ' has-likes' : ''}" data-cid="${c.id}" title="👍 Like">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="${hasLikes ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>
               ${likeCount > 0 ? `<span class="reaction-count">${likeCount}</span>` : ''}
-            </a>
+            </button>
             <a href="${c.html_url}" target="_blank" rel="noopener" class="comment-action-btn">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
               View on GitHub
@@ -130,8 +130,66 @@ const Comments = (() => {
   }
 
   // ============================================================
-  //  排序
+  //  点赞
   // ============================================================
+  async function likeComment(commentId, btn) {
+    const token = (typeof SiteConfig !== 'undefined' && SiteConfig.reactionsToken) || '';
+    if (!token) {
+      // 无 token：跳转 GitHub 页面
+      const c = comments.find(c => c.id === commentId);
+      if (c) window.open(c.html_url, '_blank', 'noopener');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.classList.add('liking');
+
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/issues/comments/${commentId}/reactions`,
+        {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/vnd.github+json',
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ content: '+1' }),
+        }
+      );
+
+      if (res.ok || res.status === 200 || res.status === 201) {
+        // 乐观更新本地计数
+        const cmt = rawComments.find(c => c.id === commentId);
+        if (cmt) {
+          if (!cmt.reactions) cmt.reactions = {};
+          cmt.reactions['+1'] = (cmt.reactions['+1'] || 0) + 1;
+          cmt.reactions.total_count = (cmt.reactions.total_count || 0) + 1;
+          // 同步当前视图数据并重排序
+          comments = [...rawComments];
+          applySort();
+          const target = document.getElementById('commentsList');
+          if (target) target.innerHTML = renderList();
+        }
+        // 短暂视觉反馈
+        btn.classList.add('liked');
+        setTimeout(() => btn.classList.remove('liked'), 800);
+      } else if (res.status === 422) {
+        // 已经 reaction 过了（GitHub 返回 422 Unprocessable）
+        btn.classList.add('already-liked');
+        setTimeout(() => btn.classList.remove('already-liked'), 1200);
+      } else {
+        throw new Error(`HTTP ${res.status}`);
+      }
+    } catch (err) {
+      console.warn('[Guestbook] Failed to like comment:', err);
+      btn.classList.add('like-failed');
+      setTimeout(() => btn.classList.remove('like-failed'), 1200);
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('liking');
+    }
+  }
   function applySort() {
     if (sortMode === 'popular') {
       comments.sort((a, b) => (b.reactions?.['+1'] || 0) - (a.reactions?.['+1'] || 0));
@@ -177,15 +235,24 @@ const Comments = (() => {
   //  事件绑定
   // ============================================================
   function bindEvents() {
-    // 复制评论 (data-body 存有完整原文)
+    // 复制评论 & 点赞 (事件委托)
     const listEl = document.getElementById('commentsList');
     if (listEl) {
       listEl.addEventListener('click', (e) => {
-        const btn = e.target.closest('.copy-msg');
-        if (!btn) return;
-        const body = btn.dataset.body;
-        if (!body) return;
-        copy(body, btn);
+        // 复制按钮
+        const copyBtn = e.target.closest('.copy-msg');
+        if (copyBtn) {
+          const body = copyBtn.dataset.body;
+          if (body) copy(body, copyBtn);
+          return;
+        }
+        // 点赞按钮
+        const likeBtn = e.target.closest('.comment-reaction-btn');
+        if (likeBtn) {
+          const cid = parseInt(likeBtn.dataset.cid);
+          if (cid) likeComment(cid, likeBtn);
+          return;
+        }
       });
     }
 

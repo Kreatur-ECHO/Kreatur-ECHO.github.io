@@ -1037,17 +1037,71 @@ img {
 /* 点赞按钮 */
 .comment-reaction-btn {
   text-decoration: none;
+  position: relative;
 }
 .comment-reaction-btn.has-likes {
   color: #e74c3c;
 }
-.comment-reaction-btn:hover {
+.comment-reaction-btn:hover:not(:disabled) {
   color: #e74c3c !important;
   background: #fdecea !important;
+}
+/* 点赞动画状态 */
+.comment-reaction-btn.liking {
+  animation: pulse-like 0.6s ease-in-out infinite;
+}
+.comment-reaction-btn.liked {
+  color: #e74c3c !important;
+  background: #fdecea !important;
+  animation: pop-like 0.3s ease-out;
+}
+.comment-reaction-btn.already-liked {
+  color: #e67e22 !important;
+}
+.comment-reaction-btn.already-liked::after {
+  content: '已赞过';
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #e67e22;
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.comment-reaction-btn.like-failed {
+  color: #999 !important;
+}
+.comment-reaction-btn.like-failed::after {
+  content: '失败';
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #999;
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
 }
 .reaction-count {
   font-weight: 600;
   font-size: 0.8rem;
+}
+
+@keyframes pulse-like {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+@keyframes pop-like {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+  100% { transform: scale(1); }
 }
 
 /* 留言响应式 */
