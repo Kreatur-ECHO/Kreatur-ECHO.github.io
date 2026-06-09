@@ -211,6 +211,10 @@ img {
   height: 120px;
   margin-bottom: 28px;
   z-index: 0;
+  transition: transform 0.35s ease;
+}
+.hero-avatar-wrapper:hover {
+  transform: scale(1.08);
 }
 /* 旋转的紫色辉光小圆 */
 .hero-avatar-wrapper::before {
@@ -249,13 +253,9 @@ img {
   box-shadow:
     0 0 0 3px var(--color-accent),
     0 8px 32px var(--color-accent-glow);
-  transition: transform var(--transition-base);
   object-fit: cover;
   position: relative;
   z-index: 1;
-}
-.hero-avatar:hover {
-  transform: scale(1.05);
 }
 
 .hero-name {
