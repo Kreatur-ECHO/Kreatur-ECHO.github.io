@@ -171,13 +171,13 @@
     "pin": null,
     "reactions": {
       "url": "https://api.github.com/repos/Kreatur-ECHO/Kreatur-ECHO.github.io/issues/comments/4656116645/reactions",
-      "total_count": 0,
+      "total_count": 1,
       "+1": 0,
       "-1": 0,
       "laugh": 0,
       "hooray": 0,
       "confused": 0,
-      "heart": 0,
+      "heart": 1,
       "rocket": 0,
       "eyes": 0
     },
