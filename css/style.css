@@ -210,6 +210,7 @@ img {
   width: 120px;
   height: 120px;
   margin-bottom: 28px;
+  z-index: 0;
 }
 /* 旋转的紫色辉光小圆 */
 .hero-avatar-wrapper::before {
@@ -218,20 +219,21 @@ img {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #9b6dff;
+  background: var(--color-accent);
   box-shadow:
-    0 0 8px 2px rgba(155, 109, 255, 0.9),
-    0 0 20px 6px rgba(108, 99, 255, 0.5);
-  top: -4px;
+    0 0 8px 3px var(--color-accent-glow),
+    0 0 24px 8px var(--color-accent-glow);
+  /* 锚定在 wrapper 中心 */
+  top: 50%;
   left: 50%;
+  margin-top: -3.5px;
   margin-left: -3.5px;
-  transform-origin: 3.5px 64px;
   animation: orbitAvatar 4s linear infinite;
   z-index: 2;
 }
 @keyframes orbitAvatar {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from { transform: rotate(0deg) translateX(64px); }
+  to   { transform: rotate(360deg) translateX(64px); }
 }
 
 .hero-avatar {
