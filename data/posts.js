@@ -63,6 +63,7 @@ const BlogPosts = [
       
       
       
+      
     `,
   },
   {
@@ -124,6 +125,7 @@ const BlogPosts = [
       
             <h2>结语</h2>
             <p>不需要框架也能写出结构清晰的代码。关键在于遵循好的设计原则：分离关注点、单一职责、数据驱动。这些原则比任何框架都重要。</p>
+      
     `,
   },
   {
@@ -163,6 +165,7 @@ const BlogPosts = [
       <p>GitHub 上有数以亿计的开源项目。从学习别人的代码，到贡献自己的项目，GitHub 让全球开发者连接在一起。这也是为什么我把所有项目都放在 GitHub 上——开放、透明、协作。</p>
       
       <p>如果你还没有 GitHub 账号，强烈建议注册一个。它可能会改变你构建软件的方式。</p>
+      
       
       
       
@@ -244,6 +247,7 @@ const BlogPosts = [
       
       
       
+      
     `,
   },
   {
@@ -313,6 +317,7 @@ const BlogPosts = [
       
       
       
+      
     `,
   },
   {
@@ -358,6 +363,19 @@ const BlogPosts = [
       
       
       
+      
+    `,
+  },
+  {
+    id: 'test',
+    date: '2026-06-09',
+    title: 'test',
+    excerpt: 'test',
+    tags: ['test'],
+    url: '#post/test',
+    featured: false,
+    content: `
+      test
     `,
   }
 ];
