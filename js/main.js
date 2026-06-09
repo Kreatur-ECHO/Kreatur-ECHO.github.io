@@ -58,9 +58,12 @@
       return;
     }
 
+    // 首次加载 → 回到顶部；导航切换 → 滚动到锚点
+    const isInitialLoad = (currentView === null);
     renderHomePage();
-    // 渲染完成后滚动到锚点
-    setTimeout(() => scrollToHash(hash), 50);
+    if (!isInitialLoad) {
+      setTimeout(() => scrollToHash(hash), 50);
+    }
   }
 
   function scrollToHash(hash) {
