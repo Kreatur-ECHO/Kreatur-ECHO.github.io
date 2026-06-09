@@ -326,7 +326,7 @@
       setStat('statRepos', user.public_repos ?? fb.public_repos ?? 0);
       setStat('statFollowers', user.followers ?? fb.followers ?? 0);
       setStat('statFollowing', user.following ?? fb.following ?? 0);
-      setStat('statJoined', (user.created_at || fb.created_at || '').slice(0, 4));
+      // Joined 年份用 config fallback，不被 API 覆盖（固定值，不需实时更新）
     } catch (err) {
       console.warn('[Blog] Failed to fetch GitHub user data:', err);
       setStat('statRepos', fb.public_repos ?? '?');
