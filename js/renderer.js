@@ -154,7 +154,9 @@ const Renderer = (() => {
     const INITIAL_COUNT = 6;
     const hasMore = sorted.length > INITIAL_COUNT;
     const visibleCards = sorted.slice(0, INITIAL_COUNT).map(renderCard).join('');
-    const hiddenCards = hasMore ? sorted.slice(INITIAL_COUNT).map(renderCard).join('') : '';
+    const hiddenCards = hasMore
+      ? sorted.slice(INITIAL_COUNT).map(p => `<span class="post-card-hidden" style="display:none">${renderCard(p)}</span>`).join('')
+      : '';
 
     return `
     <section class="section fade-in fade-in-2" id="blog">
@@ -173,7 +175,7 @@ const Renderer = (() => {
       </div>
       <div class="posts-grid" id="postsGrid">
         ${visibleCards}
-        ${hiddenCards ? `<div class="posts-hidden" id="postsHidden" style="display:none">${hiddenCards}</div>` : ''}
+        ${hiddenCards}
       </div>
       ${hasMore ? `
       <div class="posts-show-all-wrap">

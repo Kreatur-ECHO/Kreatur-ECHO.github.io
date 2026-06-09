@@ -469,21 +469,21 @@
     const btn = document.getElementById('showAllBtn');
     if (!btn) return;
 
-    btn.addEventListener('click', () => {
-      const hidden = document.getElementById('postsHidden');
-      if (!hidden) return;
+    const hiddenCards = document.querySelectorAll('.post-card-hidden');
 
-      const isOpen = hidden.classList.contains('open');
+    btn.addEventListener('click', () => {
+      const isOpen = btn.dataset.open === 'true';
+
       if (isOpen) {
         // 收起
-        hidden.style.display = 'none';
-        hidden.classList.remove('open');
-        btn.innerHTML = `显示全部 <span class="show-all-count">(${hidden.children.length})</span>
+        hiddenCards.forEach(el => { el.style.display = 'none'; });
+        btn.dataset.open = 'false';
+        btn.innerHTML = `显示全部 <span class="show-all-count">(${hiddenCards.length})</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>`;
       } else {
         // 展开
-        hidden.style.display = 'grid';
-        hidden.classList.add('open');
+        hiddenCards.forEach(el => { el.style.display = 'contents'; });
+        btn.dataset.open = 'true';
         btn.innerHTML = `收起
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 15 12 9 18 15"/></svg>`;
       }
