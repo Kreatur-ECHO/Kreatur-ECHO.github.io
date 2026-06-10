@@ -12,6 +12,15 @@
  */
 
 const Comments = (() => {
+  // ---- 认证（部署时注入 token，本地退回未认证 60/hr） ----
+  function authHeaders() {
+    const token = (typeof SiteConfig !== 'undefined'
+      && SiteConfig.reactionsToken
+      && SiteConfig.reactionsToken !== 'REACTIONS_TOKEN_PLACEHOLDER')
+      ? SiteConfig.reactionsToken : '';
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
   const CONFIG = {
     owner: 'Kreatur-ECHO',
     repo: 'Kreatur-ECHO.github.io',
@@ -248,7 +257,7 @@ const Comments = (() => {
   async function fetchComments() {
     // 1) 优先：直接从 GitHub API 获取（实时）
     try {
-      const res = await fetch(CONFIG.commentsUrl + '?per_page=' + CONFIG.perPage + '&t=' + Date.now());
+      const res = await fetch(CONFIG.commentsUrl + '?per_page=' + CONFIG.perPage + '&t=' + Date.now(), { headers: authHeaders() });
       if (res.ok) {
         rawComments = await res.json();
         comments = [...rawComments];

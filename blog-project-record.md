@@ -326,6 +326,7 @@ likesApi: 'https://1441674200-buqu8i9sqn.ap-guangzhou.tencentscf.com',
 | 06-10 | 展开卡片排版错乱 | `display:contents` 兼容问题 | 直接给 `<a>` 加 class |
 | 06-10 | 展开卡片大小不一致 | `display:block` 覆盖了 `display:flex` | 改为 `display:flex` |
 | 06-10 | test/test2 文章丢失 | git merge 冲突解决失误 | 手动恢复 |
+| 06-10 | GitHub API 403 限流 → 评论不更新 | 3 个未认证 API 调用共享 60/hr 配额 | github.js + comments.js 加 Bearer token 认证 (5000/hr) |
 
 ---
 
@@ -352,9 +353,9 @@ likesApi: 'https://1441674200-buqu8i9sqn.ap-guangzhou.tencentscf.com',
 | `data/config.js` | v=7 | 网站配置 |
 | `data/posts.js` | v=9 | 文章数据 |
 | `js/theme.js` | v=7 | 主题切换 |
-| `js/github.js` | v=7 | GitHub API |
+| `js/github.js` | v=8 | GitHub API |
 | `js/renderer.js` | v=14 | 组件渲染 |
-| `js/comments.js` | v=12 | 留言+点赞 |
+| `js/comments.js` | v=13 | 留言+点赞 |
 | `js/effects.js` | v=7 | 粒子特效 |
 | `js/admin.js` | v=7 | 管理面板 |
 | `js/main.js` | v=14 | 主入口 |

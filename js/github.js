@@ -5,6 +5,15 @@
  */
 
 const GitHubAPI = (() => {
+  // ---- 认证（部署时注入 token，本地退回未认证 60/hr） ----
+  function authHeaders() {
+    const token = (typeof SiteConfig !== 'undefined'
+      && SiteConfig.reactionsToken
+      && SiteConfig.reactionsToken !== 'REACTIONS_TOKEN_PLACEHOLDER')
+      ? SiteConfig.reactionsToken : '';
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
   // ---- 语言颜色映射 ----
   const LANG_COLORS = {
     JavaScript: '#f1e05a', TypeScript: '#3178c6', Python: '#3572A5',
@@ -17,7 +26,7 @@ const GitHubAPI = (() => {
 
   // ---- 获取用户信息 ----
   async function fetchUser(username) {
-    const res = await fetch(`https://api.github.com/users/${username}`);
+    const res = await fetch(`https://api.github.com/users/${username}`, { headers: authHeaders() });
     if (!res.ok) throw new Error(`GitHub user API returned ${res.status}`);
     return res.json();
   }
@@ -25,7 +34,8 @@ const GitHubAPI = (() => {
   // ---- 获取仓库列表 ----
   async function fetchRepos(username, { sort = 'updated', perPage = 6 } = {}) {
     const res = await fetch(
-      `https://api.github.com/users/${username}/repos?sort=${sort}&per_page=${perPage}`
+      `https://api.github.com/users/${username}/repos?sort=${sort}&per_page=${perPage}`,
+      { headers: authHeaders() }
     );
     if (!res.ok) throw new Error(`GitHub repos API returned ${res.status}`);
     return res.json();
