@@ -581,8 +581,13 @@
 
       // 点击：有音源 → 播放/暂停，无音源 → 打开网易云
       let playing = false;
+      let clickLock = false;
       disc.addEventListener('click', (e) => {
         if (e.target.closest('.vinyl-popup')) return;
+        if (clickLock) return;
+        clickLock = true;
+        setTimeout(() => { clickLock = false; }, 100);
+
         if (musicAudio && musicAudio.src) {
           if (playing) {
             musicAudio.pause();
@@ -593,6 +598,9 @@
           window.open(`https://music.163.com/#/song?id=${songId}`, '_blank');
         }
       });
+
+      // 进入页面自动播放
+      musicAudio.play().catch(() => {});
     } catch (err) {
       console.warn('[Blog] Failed to search music:', err);
     }
