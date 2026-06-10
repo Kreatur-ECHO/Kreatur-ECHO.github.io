@@ -348,14 +348,14 @@ likesApi: 'https://1441674200-buqu8i9sqn.ap-guangzhou.tencentscf.com',
 | 文件 | 版本 | 用途 |
 |------|------|------|
 | `css/themes.css` | v=6 | 主题变量 |
-| `css/style.css` | v=13 | 布局样式 |
+| `css/style.css` | v=14 | 布局样式 |
 | `css/admin.css` | v=6 | 管理面板 |
 | `data/config.js` | v=7 | 网站配置 |
 | `data/posts.js` | v=9 | 文章数据 |
 | `js/theme.js` | v=7 | 主题切换 |
 | `js/github.js` | v=8 | GitHub API |
-| `js/renderer.js` | v=15 | 组件渲染 |
+| `js/renderer.js` | v=16 | 组件渲染 |
 | `js/comments.js` | v=13 | 留言+点赞 |
-| `js/effects.js` | v=8 | 粒子特效 |
+| `js/effects.js` | v=9 | 粒子特效 |
 | `js/admin.js` | v=7 | 管理面板 |
 | `js/main.js` | v=14 | 主入口 |
