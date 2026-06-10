@@ -479,6 +479,10 @@
       disc.title = `${latest.name} — ${latest.artist}`;
       disc.style.cursor = 'pointer';
 
+      // 存储歌单用于列表循环
+      songList = songs;
+      currentIndex = 0;
+
       // 构建弹出播放列表（全部 5 首）
       let popupHTML = '<div class="vinyl-popup">';
       popupHTML += '<div class="vinyl-popup-title">最近喜欢</div>';
@@ -512,9 +516,13 @@
           if (!item) return;
           try {
             const songInfo = JSON.parse(decodeURIComponent(item.dataset.song));
+            // 更新当前索引
+            const items = popupEl.querySelectorAll('.vinyl-popup-item');
+            const idx = Array.from(items).indexOf(item);
+            if (idx >= 0) currentIndex = idx;
             switchToSong(songInfo.name, songInfo.artist, songInfo.cover, songInfo.id);
             // 更新高亮
-            popupEl.querySelectorAll('.vinyl-popup-item').forEach(el => el.classList.remove('vinyl-popup-current'));
+            items.forEach(el => el.classList.remove('vinyl-popup-current'));
             item.classList.add('vinyl-popup-current');
           } catch (_) {}
         });
@@ -557,11 +565,13 @@
   }
 
   // ============================================================
-  //  音乐搜索播放（at38.cn 代理）+ 切换歌曲
+  //  音乐搜索播放（at38.cn 代理）+ 切换歌曲 + 列表循环
   // ============================================================
   let musicAudio = null;
   let playing = false;
   let clickLock = false;
+  let songList = [];
+  let currentIndex = 0;
 
   function setupDiscClick(songId) {
     const disc = document.getElementById('musicDisc');
@@ -585,6 +595,20 @@
     });
   }
 
+  function playNext() {
+    if (!songList.length) return;
+    currentIndex = (currentIndex + 1) % songList.length;
+    const s = songList[currentIndex];
+    switchToSong(s.name, s.artist, s.cover, s.id);
+    // 更新列表高亮
+    const popupEl = document.querySelector('.vinyl-popup');
+    if (popupEl) {
+      const items = popupEl.querySelectorAll('.vinyl-popup-item');
+      items.forEach(el => el.classList.remove('vinyl-popup-current'));
+      if (items[currentIndex]) items[currentIndex].classList.add('vinyl-popup-current');
+    }
+  }
+
   async function switchToSong(name, artist, cover, songId) {
     if (!MUSIC_PLAY_API) return;
     const disc = document.getElementById('musicDisc');
@@ -605,7 +629,11 @@
       const res = await fetch(`${MUSIC_PLAY_API}?keyword=${keyword}`);
       if (!res.ok) return;
       const data = await res.json();
-      if (!data.found || !data.audioUrl) return;
+      if (!data.found || !data.audioUrl) {
+        // 当前歌曲无音源 → 自动跳到下一首
+        if (songList.length) playNext();
+        return;
+      }
 
       // 切换音频
       if (musicAudio) {
@@ -629,6 +657,7 @@
       musicAudio.addEventListener('ended', () => {
         playing = false;
         disc.style.animationPlayState = 'paused';
+        playNext();
       });
 
       // 自动播放
