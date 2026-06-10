@@ -1510,7 +1510,8 @@ img {
 
   /* --- 文章卡片 → 垂直紧凑 + 标签日期同行 --- */
   .post-card {
-    flex: none;
+    flex: 1 1 0;
+    min-width: 0;
     flex-direction: column;
     gap: 3px;
     padding: 11px 14px;
@@ -1531,7 +1532,6 @@ img {
 
   /* 标题：单行省略 */
   .post-title {
-    flex: none;
     font-size: 0.9rem;
     margin-bottom: 0;
     overflow: hidden;
@@ -1539,9 +1539,9 @@ img {
     white-space: nowrap;
   }
 
-  /* 简介：恢复显示，单行省略（必须覆盖桌面 flex:1） */
+  /* 简介：单行省略（覆盖桌面 flex:1 防纵向撑高） */
   .post-excerpt {
-    flex: none;
+    flex: 0 0 auto;
     display: block;
     font-size: 0.78rem;
     line-height: 1.4;
