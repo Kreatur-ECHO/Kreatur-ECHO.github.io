@@ -1460,9 +1460,10 @@ img {
     0 0 0 1px #2e2e2e,
     0 0 0 2px #1a1a1a,
     0 0 0 2.5px #333,
+    0 0 0 4px var(--color-accent),
     0 4px 22px rgba(0,0,0,0.35);
   background: #1a1a1a;
-  animation: vinylSpin 3.5s linear infinite;
+  animation: vinylSpin 4.4s linear infinite;
   transition: box-shadow 0.35s ease;
 }
 .vinyl-disc:hover {
@@ -1470,6 +1471,7 @@ img {
     0 0 0 1px #2e2e2e,
     0 0 0 2px #1a1a1a,
     0 0 0 2.5px #333,
+    0 0 0 4px var(--color-accent),
     0 4px 28px rgba(108, 99, 255, 0.4);
   animation-play-state: paused;
 }
@@ -1875,6 +1877,7 @@ img {
     box-shadow:
       0 0 0 0.8px #2e2e2e,
       0 0 0 1.5px #1a1a1a,
+      0 0 0 3px var(--color-accent),
       0 3px 12px rgba(0,0,0,0.35);
   }
   .vinyl-center {
