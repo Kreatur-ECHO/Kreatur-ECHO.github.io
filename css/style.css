@@ -849,10 +849,10 @@ img {
 /* ===== Back to Top ===== */
 .back-to-top {
   position: fixed;
-  bottom: 28px;
-  right: 28px;
-  width: 44px;
-  height: 44px;
+  bottom: 24px;
+  right: 24px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--color-accent);
   color: #fff;
@@ -861,13 +861,16 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px var(--color-accent-glow);
+  box-shadow: 0 2px 12px var(--color-accent-glow);
   opacity: 0;
   transform: translateY(10px);
-  transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
   pointer-events: none;
   z-index: 999;
-  backdrop-filter: none;
+}
+.back-to-top svg {
+  width: 18px;
+  height: 18px;
 }
 .back-to-top.visible {
   opacity: 1;
@@ -875,11 +878,8 @@ img {
   pointer-events: auto;
 }
 .back-to-top:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 28px var(--color-accent-glow);
-}
-.back-to-top:active {
-  transform: scale(0.92);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 18px var(--color-accent-glow);
 }
 
 /* ===== Responsive ===== */
@@ -1746,13 +1746,13 @@ img {
 
   /* --- 回到顶部按钮 --- */
   .back-to-top {
-    bottom: 20px;
-    right: 14px;
-    width: 36px;
-    height: 36px;
+    bottom: 16px;
+    right: 12px;
+    width: 30px;
+    height: 30px;
   }
   .back-to-top svg {
-    width: 18px;
-    height: 18px;
+    width: 15px;
+    height: 15px;
   }
 }
