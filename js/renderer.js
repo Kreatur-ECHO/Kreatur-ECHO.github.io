@@ -319,7 +319,9 @@ const Renderer = (() => {
 
   // ---- Back to Top 按钮 ----
   function renderBackToTop() {
-    return `<button class="back-to-top" id="backToTop" aria-label="Back to top">↑</button>`;
+    return `<button class="back-to-top" id="backToTop" aria-label="Back to top">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+    </button>`;
   }
 
   return {
