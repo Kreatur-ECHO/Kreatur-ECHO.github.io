@@ -570,12 +570,15 @@
       document.body.appendChild(musicAudio);
 
       musicAudio.addEventListener('play', () => {
+        playing = true;
         disc.style.animationPlayState = 'paused';
       });
       musicAudio.addEventListener('pause', () => {
+        playing = false;
         disc.style.animationPlayState = 'running';
       });
       musicAudio.addEventListener('ended', () => {
+        playing = false;
         disc.style.animationPlayState = 'running';
       });
 
