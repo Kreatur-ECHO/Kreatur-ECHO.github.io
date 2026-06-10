@@ -431,7 +431,7 @@ const BlogPosts = [
     excerpt: '为个人博客集成网易云音乐API，用腾讯云SCF做无服务器代理，调用at38.cn聚合搜索获取可播放音源，前端纯CSS黑胶唱片动画，支持列表循环播放、自动切歌、状态图标等完整音乐体验。',
     tags: ['Music', 'SCF', 'JavaScript', 'CSS'],
     url: '#post/music-system',
-    featured: true,
+    featured: false,
     content: `
       <p>博客有了留言系统，有了粒子特效，页面越来越完整——但总觉得还少了点什么。每次打开网易云听歌，就在想：能不能把自己的音乐动态也放进博客里？不只是展示，还能直接在线播放？</p>
       <p>于是花了一天时间，从零搭了一套完整的音乐系统——从网易云拉取喜欢的歌、通过聚合搜索找到可播放音源、用纯 CSS 做黑胶唱片动效、最后串成一个完整的交互闭环。本文记录这个过程。</p>
@@ -523,6 +523,126 @@ return { found: true, audioUrl: playUrl };</code></pre>
       <p>这套系统的核心思路是<strong>「借力」</strong>：不爬数据、不存文件、不做流媒体服务，只做胶水层。网易云给歌曲数据，at38.cn 给音源地址，QQ 音乐 CDN 给流，SCF 做代理和缓存，前端纯原生渲染播放。各部分职责清晰，零外部依赖。</p>
       <p>总共新增约 200 行 SCF 代码和 300 行前端代码，SCF 也只用了 Node.js 内置模块（http、https、crypto），没有引入任何 npm 包。</p>
       <p>后续考虑做的：自定义域名彻底解决梯子拦截问题、歌词显示、播放进度条。目前这个版本已经够用了。</p>
+    `,
+  },
+  {
+    id: 'scf-cos-serverless',
+    date: '2026-06-11',
+    title: 'Serverless 实战：用腾讯云 SCF + COS 给静态博客加上后端能力',
+    excerpt: 'GitHub Pages 托管的静态博客如何拥有点赞、访问计数、文章浏览统计等动态功能？本文记录用腾讯云 SCF Web 函数和 COS 对象存储，零外部依赖实现一套轻量 Serverless 后端的过程。',
+    tags: ['Serverless', 'SCF', 'COS', 'Architecture'],
+    url: '#post/scf-cos-serverless',
+    featured: false,
+    content: `
+      <p>用 GitHub Pages 托管静态博客最爽的是零成本、零运维。但迟早会遇到一个尴尬：静态页面没法做点赞、没法统计访问量。这些功能需要持久化存储，而静态网站没有后端。</p>
+      <p>传统做法是接入第三方服务（Disqus、不蒜子等等），但数据不在自己手里，而且很多国内访问不稳定。我选择用腾讯云的 Serverless 方案——SCF 云函数 + COS 对象存储——自己写一套极简后端。本文记录这个过程中遇到的关键问题和解决方法。</p>
+
+      <h2>1. 为什么是 SCF + COS</h2>
+      <p>选型时的几个约束：</p>
+      <ul>
+        <li><strong>零成本</strong> — 个人博客一天几十次请求，SCF 免费额度完全够用</li>
+        <li><strong>零依赖</strong> — 不想安装任何 npm 包，只用 Node.js 内置模块（http、https、crypto）</li>
+        <li><strong>数据自控</strong> — 点赞数、访问数都存在自己的 COS bucket 里，JSON 文件，随时导出</li>
+        <li><strong>同地域部署</strong> — SCF 和 COS 都在广州，内网通信快且不花流量费</li>
+      </ul>
+      <p>架构很简单：<code>浏览器 → SCF Web 函数（9000 端口） → COS JSON 文件</code>。SCF 负责处理逻辑（计数、去重、签名），COS 做纯数据存储。</p>
+
+      <h2>2. SCF Web 函数：像写 Express 一样写后端</h2>
+      <p>腾讯云 SCF 有两种模式：事件函数和 Web 函数。Web 函数本质上是一个 HTTP Server，监听指定端口。用 Node.js 内置的 <code>http</code> 模块就能跑起来：</p>
+
+      <pre><code>const server = http.createServer(async (req, res) => {
+  const method = req.method;
+  const path = (req.url || '/').split('?')[0];
+
+  if (path === '/likes') {
+    // 处理点赞
+  } else if (path === '/visits') {
+    // 处理访问计数
+  }
+});
+server.listen(9000);</code></pre>
+
+      <p>路由自己写，没有框架。路径匹配、CORS 头、JSON 响应——十几行代码就搞定。搭配 API 网关的公网 URL，浏览器直接 fetch，不需要额外配置。</p>
+
+      <h2>3. 路由设计</h2>
+      <p>最终实现了四个路由，三个 COS 存储文件：</p>
+
+      <table style="width:100%;font-size:0.9rem;border-collapse:collapse;margin:16px 0">
+        <tr style="border-bottom:1px solid var(--color-border)">
+          <th style="padding:8px;text-align:left">方法</th>
+          <th style="padding:8px;text-align:left">路径</th>
+          <th style="padding:8px;text-align:left">功能</th>
+          <th style="padding:8px;text-align:left">存储</th>
+        </tr>
+        <tr style="border-bottom:1px solid var(--color-border)">
+          <td style="padding:8px">GET/POST</td><td style="padding:8px"><code>/</code></td><td style="padding:8px">点赞 +1</td><td style="padding:8px">likes.json</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--color-border)">
+          <td style="padding:8px">GET/POST</td><td style="padding:8px"><code>/visits</code></td><td style="padding:8px">访问计数</td><td style="padding:8px">visits.json</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--color-border)">
+          <td style="padding:8px">GET/POST</td><td style="padding:8px"><code>/article-views</code></td><td style="padding:8px">文章浏览</td><td style="padding:8px">article-views.json</td>
+        </tr>
+      </table>
+
+      <p>每个 POST 都做 IP 去重。点赞是「每 IP 每评论仅一次」，访问和浏览是「每 IP 每日一次」。用 <code>md5(IP)</code> 做去重 key，避免原始 IP 明文存在 COS 里。</p>
+
+      <h2>4. COS 签名：最折腾的环节</h2>
+      <p>COS 是「公有读私有写」，读不需要鉴权，写需要签名。签名算法是 HMAC-SHA1，照着腾讯云的文档一步步拼出来的。踩了两个坑：</p>
+
+      <h3>坑一：SignKey 必须用 hex 字符串</h3>
+      <p>HMAC-SHA1 算出来的 SignKey，文档说用做下一步 HMAC 的 key。我顺手写了 <code>.digest()</code>——返回 Buffer。然后用这个 Buffer 做第二次 HMAC，签名怎么都不对。查了半天才发现，文档要求的是 <strong>hex 字符串</strong> 而不是 Buffer。</p>
+
+      <pre><code>// 错误写法
+const signKey = crypto.createHmac('sha1', SECRET_KEY).update(keyTime).digest();
+
+// 正确写法
+const signKey = crypto.createHmac('sha1', SECRET_KEY).update(keyTime).digest('hex');
+// signKey 现在是 hex 字符串，作为下一次 HMAC 的 key</code></pre>
+
+      <h3>坑二：只签 host 头</h3>
+      <p>SDK 的签名白名单里只有 <code>host</code> 一个 header。我一开始把 <code>content-type</code> 也签上了，结果上传一直 403。去掉之后秒通过。</p>
+
+      <pre><code>// FormatString 只包含 host
+const formatString = ['put', '/likes.json', '', 'host=xxx.cos.ap-guangzhou.myqcloud.com', ''].join('\\n');
+const formatHash = sha1Hex(formatString);</code></pre>
+
+      <h2>5. IP 去重：x-forwarded-for 的陷阱</h2>
+      <p>SCF 在 API 网关后面，客户端请求经过代理，原始 IP 在 <code>x-forwarded-for</code> 头里。这个头的值是逗号分隔的代理链：</p>
+
+      <pre><code>x-forwarded-for: 1.2.3.4, 10.0.0.1, 10.0.0.2</code></pre>
+
+      <p>一开始我直接把整个值拿去 MD5——结果每次客户端请求，代理链略有不同，MD5 值就不同，去重完全失效。修复很简单，只取第一个逗号前的值：</p>
+
+      <pre><code>function getClientIP(req) {
+  const xff = req.headers['x-forwarded-for'];
+  const ip = (typeof xff === 'string' ? xff.split(',')[0].trim() : '')
+    || req.headers['x-real-ip']
+    || (req.socket && req.socket.remoteAddress)
+    || '0.0.0.0';
+  return ip;
+}</code></pre>
+
+      <h2>6. JSON 文件的裸读写</h2>
+      <p>COS 上存的是纯 JSON 文件。读是 GET 下载 → <code>JSON.parse</code>，写是 <code>JSON.stringify</code> → PUT 上传。没有数据库，没有 ORM，就一个 JSON 文件。对于个人博客这种数据量，完全够用。</p>
+      <p>读写函数各十来行：</p>
+
+      <pre><code>async function readJSON(key) {
+  const result = await cosRequest('GET', key);
+  if (!result) return null;
+  return JSON.parse(result.body);
+}
+
+async function writeJSON(key, obj) {
+  const body = JSON.stringify(obj);
+  await cosRequest('PUT', key, body);
+}</code></pre>
+
+      <p>整个 SCF 函数不到 400 行，零 npm 依赖。部署就是把代码粘贴到控制台，点一下「部署」按钮。</p>
+
+      <h2>结语</h2>
+      <p>Serverless 的价值不只在「省钱」，更在「省事」。不用买服务器、不用配 Nginx、不用装数据库、不用写 CI/CD 部署脚本。对于个人项目的后端需求——几个 API、JSON 存文件、IP 去重——SCF + COS 的组合刚刚好。</p>
+      <p>这套架构之后还能扩展很多能力：表单提交、文章阅读排行、简单的用户反馈。只要是把 JSON 读写到 COS 的模式，都能用同一套 SCF 骨架快速实现。</p>
     `,
   }
 ];
