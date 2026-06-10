@@ -479,18 +479,16 @@
       disc.title = `${latest.name} — ${latest.artist}`;
       disc.style.cursor = 'pointer';
 
-      // 构建弹出播放列表（歌曲 2-5）
-      const rest = songs.slice(1);
-      if (!rest.length) return;
-
+      // 构建弹出播放列表（全部 5 首）
       let popupHTML = '<div class="vinyl-popup">';
       popupHTML += '<div class="vinyl-popup-title">最近喜欢</div>';
       popupHTML += '<div class="vinyl-popup-list">';
-      rest.forEach(s => {
+      songs.forEach((s, i) => {
         const safeCover = (s.cover || '').replace(/^http:/, 'https:');
         const songData = encodeURIComponent(JSON.stringify({ name: s.name, artist: s.artist, cover: s.cover, id: s.id }));
+        const currentClass = i === 0 ? ' vinyl-popup-current' : '';
         popupHTML += `
-          <div class="vinyl-popup-item" data-song="${songData}" title="${s.name} — ${s.artist}">
+          <div class="vinyl-popup-item${currentClass}" data-song="${songData}" title="${s.name} — ${s.artist}">
             <img class="vinyl-popup-cover" src="${safeCover}" alt="" loading="lazy" onerror="this.style.display='none'" />
             <div class="vinyl-popup-info">
               <div class="vinyl-popup-song">${s.name}</div>
@@ -506,7 +504,7 @@
       if (oldPopup) oldPopup.remove();
       wrap.insertAdjacentHTML('beforeend', popupHTML);
 
-      // 点击列表项 → 切换歌曲
+      // 点击列表项 → 切换歌曲 + 高亮当前
       const popupEl = wrap.querySelector('.vinyl-popup');
       if (popupEl) {
         popupEl.addEventListener('click', (e) => {
@@ -515,6 +513,9 @@
           try {
             const songInfo = JSON.parse(decodeURIComponent(item.dataset.song));
             switchToSong(songInfo.name, songInfo.artist, songInfo.cover, songInfo.id);
+            // 更新高亮
+            popupEl.querySelectorAll('.vinyl-popup-item').forEach(el => el.classList.remove('vinyl-popup-current'));
+            item.classList.add('vinyl-popup-current');
           } catch (_) {}
         });
       }

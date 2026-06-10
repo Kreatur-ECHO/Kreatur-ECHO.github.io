@@ -1624,6 +1624,14 @@ img {
   white-space: nowrap;
 }
 
+/* 当前播放歌曲高亮 */
+.vinyl-popup-current {
+  background: var(--color-accent-soft);
+}
+.vinyl-popup-current .vinyl-popup-song {
+  color: var(--color-accent);
+}
+
 /* 手机端弹出位置调整 */
 @media (max-width: 640px) {
   .vinyl-popup {
