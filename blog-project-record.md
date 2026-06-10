@@ -326,6 +326,7 @@ likesApi: 'https://1441674200-buqu8i9sqn.ap-guangzhou.tencentscf.com',
 | 06-10 | 展开卡片排版错乱 | `display:contents` 兼容问题 | 直接给 `<a>` 加 class |
 | 06-10 | 展开卡片大小不一致 | `display:block` 覆盖了 `display:flex` | 改为 `display:flex` |
 | 06-10 | 手机端缺少适配 | 仅 768px 断点，卡片竖向过大 | 新增 640px 断点：扁平列表卡片 + Hero 压缩 + Canvas 关闭 |
+| 06-10 | Hero 变形几何体 | 3D 线框效果不理想 | 已移除 |
 | 06-10 | GitHub API 403 限流 → 评论不更新 | 3 个未认证 API 调用共享 60/hr 配额 | github.js + comments.js 加 Bearer token 认证 (5000/hr) |
 
 ---
@@ -356,6 +357,6 @@ likesApi: 'https://1441674200-buqu8i9sqn.ap-guangzhou.tencentscf.com',
 | `js/github.js` | v=8 | GitHub API |
 | `js/renderer.js` | v=16 | 组件渲染 |
 | `js/comments.js` | v=13 | 留言+点赞 |
-| `js/effects.js` | v=9 | 粒子特效 |
+| `js/effects.js` | v=10 | 粒子特效 |
 | `js/admin.js` | v=7 | 管理面板 |
-| `js/main.js` | v=14 | 主入口 |
+| `js/main.js` | v=15 | 主入口 |
