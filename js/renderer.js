@@ -338,9 +338,11 @@ const Renderer = (() => {
       '</svg>'
     );
     return `
-    <div class="vinyl-disc" id="musicDisc" title="最近在听">
-      <div class="vinyl-center">
-        <img class="vinyl-cover" src="${defaultCover}" alt="music" width="22" height="22" />
+    <div class="vinyl-wrapper" id="musicDiscWrap">
+      <div class="vinyl-disc" id="musicDisc" title="最近在听">
+        <div class="vinyl-center">
+          <img class="vinyl-cover" src="${defaultCover}" alt="music" width="22" height="22" />
+        </div>
       </div>
     </div>`;
   }

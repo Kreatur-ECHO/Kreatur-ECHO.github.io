@@ -498,10 +498,12 @@
       });
       popupHTML += '</div>';
 
-      // 移除旧 popup，插入新 popup
-      const oldPopup = disc.querySelector('.vinyl-popup');
+      // 移除旧 popup，插入新 popup（放在 wrapper 内，不跟黑胶旋转）
+      const wrap = document.getElementById('musicDiscWrap');
+      if (!wrap) return;
+      const oldPopup = wrap.querySelector('.vinyl-popup');
       if (oldPopup) oldPopup.remove();
-      disc.insertAdjacentHTML('beforeend', popupHTML);
+      wrap.insertAdjacentHTML('beforeend', popupHTML);
     } catch (err) {
       console.warn('[Blog] Failed to load recent song:', err);
     }

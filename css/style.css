@@ -1444,14 +1444,18 @@ img {
 }
 
 /* ===== 旋转黑胶唱片（右下角音乐图标） ===== */
-.vinyl-disc {
+.vinyl-wrapper {
   position: fixed;
   bottom: 24px;
   right: 24px;
+  z-index: 998;
+}
+
+.vinyl-disc {
+  position: relative;
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  z-index: 998;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1551,7 +1555,7 @@ img {
   transform: rotate(45deg);
 }
 
-.vinyl-disc:hover .vinyl-popup {
+.vinyl-wrapper:hover .vinyl-popup {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
@@ -1996,9 +2000,11 @@ img {
   }
 
   /* --- 黑胶唱片（手机端缩小并置于回顶按钮上方） --- */
-  .vinyl-disc {
+  .vinyl-wrapper {
     bottom: 56px;
     right: 12px;
+  }
+  .vinyl-disc {
     width: 40px;
     height: 40px;
     box-shadow:
