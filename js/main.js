@@ -660,7 +660,7 @@
       musicAudio = new Audio();
       musicAudio.src = data.audioUrl;
       musicAudio.preload = 'none';
-      musicAudio.volume = 0.25;
+      musicAudio.volume = 0.19;
       document.body.appendChild(musicAudio);
 
       musicAudio.addEventListener('play', () => {
