@@ -25,7 +25,7 @@ const CursorEffects = (() => {
       lifespan: 0.5,         // 存活秒数
       sizeMin: 2,            // 最小半径
       sizeMax: 5,            // 最大半径
-      spawnRate: 3,          // 每帧生成数 (60fps 下)
+      spawnRate: 4.5,          // 每帧生成数 (60fps 下)
       gravity: 120,          // 重力加速度 (px/s²)
       driftRange: 30,        // 水平漂移范围 (px/s)
       opacityPeak: 0.55,     // 最大不透明度
