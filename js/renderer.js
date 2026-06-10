@@ -151,7 +151,8 @@ const Renderer = (() => {
         </a>`;
     };
 
-    const INITIAL_COUNT = 6;
+    const isMobile = window.matchMedia('(max-width: 640px)').matches;
+    const INITIAL_COUNT = isMobile ? 4 : 6;
     const hasMore = sorted.length > INITIAL_COUNT;
     const visibleCards = sorted.slice(0, INITIAL_COUNT).map(renderCard).join('');
     const hiddenCards = hasMore
@@ -219,7 +220,7 @@ const Renderer = (() => {
   // ---- 归档时间线区块 ----
   function renderArchiveSection(posts) {
     const validPosts = filterNonBlank(posts);
-    const ARCHIVE_COUNT = 10;
+    const ARCHIVE_COUNT = window.matchMedia('(max-width: 640px)').matches ? 6 : 10;
     const hasMore = validPosts.length > ARCHIVE_COUNT;
     const visibleItems = validPosts.slice(0, ARCHIVE_COUNT);
     const hiddenItems = validPosts.slice(ARCHIVE_COUNT);

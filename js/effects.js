@@ -64,6 +64,9 @@ const CursorEffects = (() => {
   //  初始化
   // ============================================================
   function init() {
+    // 手机端关闭 Canvas 粒子（性能）
+    if (window.matchMedia('(max-width: 640px)').matches) return;
+
     // 防止重复初始化（页面内导航会多次触发 renderHomePage）
     if (running) destroy();
     canvas = document.createElement('canvas');

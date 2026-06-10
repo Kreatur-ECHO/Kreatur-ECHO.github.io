@@ -1416,3 +1416,229 @@ img {
     display: none;
   }
 }
+
+/* ===== 手机端 (≤640px) ===== */
+@media (max-width: 640px) {
+  /* --- 全局间距 --- */
+  .section {
+    padding: 32px 14px;
+  }
+  .section-title {
+    font-size: 1.1rem;
+  }
+
+  /* --- Hero 压缩 --- */
+  .hero {
+    padding: 80px 14px 40px;
+  }
+  .hero-avatar-wrapper {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 18px;
+  }
+  .hero-avatar {
+    width: 80px;
+    height: 80px;
+    border-width: 3px;
+    box-shadow: inset 0 0 5px 1.5px rgba(108, 99, 255, 0.15),
+      0 0 0 2px var(--color-accent),
+      0 4px 20px var(--color-accent-glow);
+  }
+  .hero-avatar-wrapper::before {
+    width: 16px;
+    height: 16px;
+    margin-top: -8px;
+    margin-left: -8px;
+    animation: orbitAvatar 4s linear infinite;
+  }
+  @keyframes orbitAvatar {
+    from { transform: rotate(0deg) translateX(44px); }
+    to   { transform: rotate(360deg) translateX(44px); }
+  }
+  .hero-name {
+    font-size: 1.7rem;
+  }
+  .hero-username {
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+  }
+  .hero-bio {
+    font-size: 0.88rem;
+    max-width: 100%;
+    padding: 0 8px;
+    margin-bottom: 14px;
+  }
+  .hero-social {
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .hero-social-link {
+    width: 34px;
+    height: 34px;
+  }
+  .hero-stats {
+    gap: 20px;
+  }
+  .hero-stat .stat-num {
+    font-size: 1.25rem;
+  }
+  .hero-stat .stat-label {
+    font-size: 0.72rem;
+  }
+
+  /* --- 文章卡片 → 扁平水平列表 --- */
+  .section-header-row {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .posts-sort-bar {
+    gap: 4px;
+  }
+  .posts-sort-bar .sort-btn {
+    padding: 4px 10px;
+    font-size: 0.78rem;
+  }
+  .posts-sort-bar .sort-btn svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .posts-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .post-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+  }
+  .post-card:hover {
+    transform: none;
+    outline: none;
+  }
+
+  .post-card.featured::after {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+    padding: 3px 4px 0 0;
+  }
+
+  .post-date {
+    font-size: 0.7rem;
+    margin-bottom: 1px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .post-title {
+    font-size: 0.9rem;
+    margin-bottom: 1px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .post-excerpt {
+    display: none;
+  }
+
+  .post-tags {
+    gap: 3px;
+    flex-shrink: 0;
+  }
+  .post-tag {
+    font-size: 0.68rem;
+    padding: 1px 6px;
+  }
+
+  /* --- Archive 时间线 --- */
+  .timeline-item {
+    padding: 10px 0;
+  }
+  .timeline-date {
+    font-size: 0.75rem;
+    min-width: 90px;
+  }
+  .timeline-title {
+    font-size: 0.88rem;
+  }
+
+  /* --- 评论 --- */
+  .guestbook-post {
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .guestbook-post-btn {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+  }
+  .guestbook-post-hint {
+    font-size: 0.7rem;
+  }
+
+  .comments-sort-bar {
+    gap: 4px;
+  }
+  .comments-sort-bar .sort-btn {
+    padding: 4px 10px;
+    font-size: 0.78rem;
+  }
+
+  .comment-card {
+    padding: 12px;
+    gap: 8px;
+  }
+  .comment-avatar-img {
+    width: 30px;
+    height: 30px;
+  }
+  .comment-name {
+    font-size: 0.82rem;
+  }
+  .comment-time {
+    font-size: 0.7rem;
+  }
+  .comment-text {
+    font-size: 0.85rem;
+  }
+  .comment-text img {
+    max-width: 100%;
+    max-height: 160px;
+  }
+
+  /* --- 文章详情 --- */
+  .post-detail {
+    padding: 70px 14px 32px;
+  }
+  .post-detail-title {
+    font-size: 1.35rem;
+  }
+  .post-body {
+    font-size: 0.95rem;
+  }
+  .post-body h2 {
+    font-size: 1.15rem;
+  }
+
+  /* --- Footer --- */
+  .footer {
+    padding: 28px 14px;
+    font-size: 0.78rem;
+  }
+  .footer-links {
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  /* --- 回到顶部按钮 --- */
+  .back-to-top {
+    bottom: 20px;
+    right: 14px;
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+}

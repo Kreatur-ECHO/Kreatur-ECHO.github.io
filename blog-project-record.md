@@ -325,7 +325,7 @@ likesApi: 'https://1441674200-buqu8i9sqn.ap-guangzhou.tencentscf.com',
 | 06-10 | 已点赞按钮 Firefox 不响应 | `disabled` 属性阻止点击事件冒泡 | 改用 class `already-liked` |
 | 06-10 | 展开卡片排版错乱 | `display:contents` 兼容问题 | 直接给 `<a>` 加 class |
 | 06-10 | 展开卡片大小不一致 | `display:block` 覆盖了 `display:flex` | 改为 `display:flex` |
-| 06-10 | test/test2 文章丢失 | git merge 冲突解决失误 | 手动恢复 |
+| 06-10 | 手机端缺少适配 | 仅 768px 断点，卡片竖向过大 | 新增 640px 断点：扁平列表卡片 + Hero 压缩 + Canvas 关闭 |
 | 06-10 | GitHub API 403 限流 → 评论不更新 | 3 个未认证 API 调用共享 60/hr 配额 | github.js + comments.js 加 Bearer token 认证 (5000/hr) |
 
 ---
@@ -348,14 +348,14 @@ likesApi: 'https://1441674200-buqu8i9sqn.ap-guangzhou.tencentscf.com',
 | 文件 | 版本 | 用途 |
 |------|------|------|
 | `css/themes.css` | v=6 | 主题变量 |
-| `css/style.css` | v=12 | 布局样式 |
+| `css/style.css` | v=13 | 布局样式 |
 | `css/admin.css` | v=6 | 管理面板 |
 | `data/config.js` | v=7 | 网站配置 |
 | `data/posts.js` | v=9 | 文章数据 |
 | `js/theme.js` | v=7 | 主题切换 |
 | `js/github.js` | v=8 | GitHub API |
-| `js/renderer.js` | v=14 | 组件渲染 |
+| `js/renderer.js` | v=15 | 组件渲染 |
 | `js/comments.js` | v=13 | 留言+点赞 |
-| `js/effects.js` | v=7 | 粒子特效 |
+| `js/effects.js` | v=8 | 粒子特效 |
 | `js/admin.js` | v=7 | 管理面板 |
 | `js/main.js` | v=14 | 主入口 |
