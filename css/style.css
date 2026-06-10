@@ -1558,7 +1558,7 @@ img {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transition-delay: 0.5s;
+  transition-delay: 0.2s;
 }
 
 .vinyl-popup-title {

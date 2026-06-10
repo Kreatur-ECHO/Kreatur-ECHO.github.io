@@ -519,7 +519,7 @@
         hovering = true;
         showTimer = setTimeout(() => {
           if (hovering) popup.classList.add('visible');
-        }, 500);
+        }, 200);
       }
 
       function tryHide() {
