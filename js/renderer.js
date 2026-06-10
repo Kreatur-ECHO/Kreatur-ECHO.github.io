@@ -340,11 +340,11 @@ const Renderer = (() => {
     return `
     <div class="vinyl-wrapper" id="musicDiscWrap">
       <div class="vinyl-disc" id="musicDisc" title="最近在听">
-        <div class="vinyl-state-icon" id="vinylStateIcon"></div>
         <div class="vinyl-center">
           <img class="vinyl-cover" src="${defaultCover}" alt="music" width="22" height="22" />
         </div>
       </div>
+      <div class="vinyl-state-icon" id="vinylStateIcon"></div>
     </div>`;
   }
 

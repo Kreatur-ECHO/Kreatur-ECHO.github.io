@@ -1521,7 +1521,7 @@ img {
   border-radius: 50%;
 }
 
-/* 播放/暂停状态图标 */
+/* 播放/暂停状态图标（在 wrapper 内、不随黑胶旋转） */
 .vinyl-state-icon {
   position: absolute;
   top: 50%;
@@ -1535,13 +1535,17 @@ img {
   transition: opacity 0.5s ease;
 }
 .vinyl-state-icon.visible {
-  opacity: 1;
+  opacity: 0.3;
   transition: opacity 0.5s ease;
+}
+.vinyl-wrapper:hover .vinyl-state-icon {
+  opacity: 0.3;
+  transition: opacity 0.3s ease;
 }
 .vinyl-state-icon svg {
   width: 100%;
   height: 100%;
-  fill: rgba(255,255,255,0.85);
+  fill: #fff;
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
 }
 
