@@ -478,9 +478,6 @@
 
       disc.title = `${latest.name} — ${latest.artist}`;
       disc.style.cursor = 'pointer';
-      disc.addEventListener('click', () => {
-        window.open(`https://music.163.com/#/song?id=${latest.id}`, '_blank');
-      });
 
       // 构建弹出播放列表（歌曲 2-5）
       const rest = songs.slice(1);
@@ -538,7 +535,7 @@
       popup.addEventListener('mouseleave', tryHide);
 
       // 搜索可播放音源
-      searchAndPlayMusic(latest.name, latest.artist);
+      searchAndPlayMusic(latest.name, latest.artist, latest.id);
     } catch (err) {
       console.warn('[Blog] Failed to load recent song:', err);
     }
@@ -549,7 +546,7 @@
   // ============================================================
   let musicAudio = null;
 
-  async function searchAndPlayMusic(name, artist) {
+  async function searchAndPlayMusic(name, artist, songId) {
     if (!MUSIC_PLAY_API) return;
     const disc = document.getElementById('musicDisc');
     if (!disc) return;
@@ -572,29 +569,28 @@
       musicAudio.volume = 0.25;
       document.body.appendChild(musicAudio);
 
-      // 播放/暂停切换
-      let playing = false;
       musicAudio.addEventListener('play', () => {
-        playing = true;
         disc.style.animationPlayState = 'paused';
       });
       musicAudio.addEventListener('pause', () => {
-        playing = false;
         disc.style.animationPlayState = 'running';
       });
       musicAudio.addEventListener('ended', () => {
-        playing = false;
         disc.style.animationPlayState = 'running';
       });
 
-      // 更新点击行为：播放/暂停
+      // 点击：有音源 → 播放/暂停，无音源 → 打开网易云
+      let playing = false;
       disc.addEventListener('click', (e) => {
-        // 只有直接点击唱片才触发（不让弹出列表项触发）
         if (e.target.closest('.vinyl-popup')) return;
-        if (playing) {
-          musicAudio.pause();
+        if (musicAudio && musicAudio.src) {
+          if (playing) {
+            musicAudio.pause();
+          } else {
+            musicAudio.play().catch(() => {});
+          }
         } else {
-          musicAudio.play().catch(() => {});
+          window.open(`https://music.163.com/#/song?id=${songId}`, '_blank');
         }
       });
     } catch (err) {

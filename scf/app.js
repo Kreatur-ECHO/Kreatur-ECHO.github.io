@@ -202,12 +202,18 @@ function fetchRecentSongsFromNetease() {
 async function handleRecentSong(method) {
   if (method !== 'GET') return [405, { error: 'Method not allowed' }];
 
-  // 先读 COS 缓存
+  // 每天凌晨 4 点刷新一次缓存
   const cached = await readJSON('recent-song.json');
-  const CACHE_MS = 120000; // 2 分钟缓存，避免频繁请求网易云
+  const now = new Date();
+  const today4am = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 4, 0, 0).getTime();
 
-  if (cached && cached.updatedAt && (Date.now() - cached.updatedAt < CACHE_MS)) {
-    return [200, { ...cached, fromCache: true }];
+  if (cached && cached.updatedAt) {
+    const cacheAge = now.getTime() - cached.updatedAt;
+    // 同一天且已过4点 → 用缓存；不到4点 → 用昨天的缓存
+    const needsRefresh = now.getTime() >= today4am && cached.updatedAt < today4am;
+    if (!needsRefresh || cacheAge < 60000) {
+      return [200, { ...cached, fromCache: true }];
+    }
   }
 
   // 诊断：检查环境变量
