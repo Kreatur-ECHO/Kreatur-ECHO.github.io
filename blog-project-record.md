@@ -38,6 +38,8 @@
 |-----|-------|
 | `SECRET_ID` | `AKID****` (见腾讯云 CAM 控制台) |
 | `SECRET_KEY` | `****` (见腾讯云 CAM 控制台) |
+| `NETEASE_UID` | `1654774015` |
+| `NETEASE_COOKIE` | `MUSIC_U=****`（网易云登录态，有效期 1-3 月） |
 
 ### 路由接口（2026-06-10 最新）
 
@@ -49,6 +51,8 @@
 | POST | `/visits` (body: `{"visit":true}`) | 记录访问（每日 IP 去重） | `visits.json` | COS 签名 |
 | GET | `/article-views` | 读取所有文章浏览计数 | `article-views.json` | 公开 |
 | POST | `/article-views` (body: `{"article_id":"..."}`) | 文章浏览+1（每日 IP 去重） | `article-views.json` | COS 签名 |
+| GET | `/recent-song` | 读取最近喜欢的 5 首歌 | `recent-song.json` | 公开 |
+| GET | `/music-play?keyword=歌名+歌手` | 代理 at38.cn 搜索可播放音源 | — | 公开 |
 
 ### COS 存储文件格式
 
@@ -313,6 +317,36 @@ likesApi: 'https://1441674200-buqu8i9sqn.ap-guangzhou.tencentscf.com',
 | 主题切换 | CSS 变量 + localStorage |
 | 粒子特效 | Canvas + requestAnimationFrame |
 
+### 6.8 网易云音乐集成（2026-06-10）
+
+| 层级 | 机制 | 实现文件 |
+|------|------|----------|
+| SCF 路由 | `/recent-song` — 调用网易云 API 拉取「羽_Kreatur喜欢的音乐」歌单前 5 首 | `scf/app.js` |
+| SCF 路由 | `/music-play?keyword=` — 代理 at38.cn 搜索可播放音源 | `scf/app.js` |
+| COS 缓存 | `recent-song.json`，每天凌晨 4 点刷新一次 | — |
+| 前端渲染 | 右下角固定黑胶唱片，展示最近喜欢的第 1 首封面 | `js/renderer.js` |
+| 前端数据 | `loadRecentSong()` → 更新黑胶封面 + 构建弹出列表 | `js/main.js` |
+| 音乐播放 | `switchToSong()` → at38.cn 搜音源 → `<audio>` 播放 | `js/main.js` |
+| 播放控制 | 点击黑胶切换播放/暂停；播放时旋转，暂停停止 | `js/main.js` |
+| 列表循环 | 歌曲播完自动切下一首，5 首循环 | `js/main.js` |
+| 弹出列表 | 黑胶 hover 0.2s 后向上弹出全部 5 首，当前播放紫色高亮 | `css/style.css` |
+| 状态图标 | 半透明白色播放/暂停图标（32px），hover 显示，状态切换 1.5s 淡入淡出 | `css/style.css` |
+| 切换歌曲 | 点击列表歌曲切换黑胶封面 + 搜索播放该歌曲 | `js/main.js` |
+
+- SCF `/music-play` 不经过 COS，直接代理请求 at38.cn 并解析 HTML 返回 JSON
+- 网易云 Cookie (`MUSIC_U`) 保存在 SCF 环境变量，有效期约 1-3 个月
+- 前端 `<audio>` 直接从 QQ 音乐 CDN 拉流，不经过 SCF/COS
+
+### 6.9 侧边栏回顶按钮（2026-06-10）
+
+| 屏幕 | 行为 |
+|------|------|
+| 桌面 (>1024px) | 回顶按钮集成在右侧快捷跳转栏底部（分隔线下方），独立按钮隐藏 |
+| 手机/平板 (≤1024px) | 侧边栏隐藏，独立回顶按钮显示在原位置 |
+
+- 侧边栏回顶按钮使用 SVG 箭头代替默认圆点
+- 点击滚动到顶部 `behavior: smooth`
+
 ---
 
 ## 七、已知问题与修复记录
@@ -328,6 +362,10 @@ likesApi: 'https://1441674200-buqu8i9sqn.ap-guangzhou.tencentscf.com',
 | 06-10 | 手机端缺少适配 | 仅 768px 断点，卡片竖向过大 | 新增 640px 断点：扁平列表卡片 + Hero 压缩 + Canvas 关闭 |
 | 06-10 | Hero 变形几何体 | 3D 线框效果不理想 | 已移除 |
 | 06-10 | GitHub API 403 限流 → 评论不更新 | 3 个未认证 API 调用共享 60/hr 配额 | github.js + comments.js 加 Bearer token 认证 (5000/hr) |
+| 06-10 | 网易云歌单 API 返回空 | SCF IP 调用 `/user/playlist` 时 Cookie 登录态无效 | 跳过查找，直接用已知 liked playlist ID `2488546807` |
+| 06-10 | 弹出列表跟随黑胶旋转 | popup 是 rotating disc 的子元素 | 外包 `.vinyl-wrapper`，popup 与 disc 同级 |
+| 06-10 | 黑胶点击无法播放 | 两个 click 监听器冲突（网易云跳转 vs 播放） | 合并为统一 handler，有音源播放、无音源跳转 |
+| 06-10 | 二次点击暂停无效 | `playing` 变量未在 audio 事件中更新 | play/pause/ended 事件中更新 `playing` 状态 |
 
 ---
 
@@ -336,7 +374,7 @@ likesApi: 'https://1441674200-buqu8i9sqn.ap-guangzhou.tencentscf.com',
 1. **COS**：新建 bucket（公有读私有写），无需改 SCF 代码（bucket 名在代码中）
 2. **SCF**：
    - 新建 Web 函数 Node.js 18，粘贴 `scf/app.js`
-   - 配环境变量 `SECRET_ID` + `SECRET_KEY`
+   - 配环境变量 `SECRET_ID` + `SECRET_KEY` + `NETEASE_UID` + `NETEASE_COOKIE`
    - 开公网 URL + CORS（`*`）
    - ⚠️ 必须是 **Web 函数**（HTTP Server），不是事件函数
 3. **前端**：改 `data/config.js` 里的 `likesApi` 为新 SCF URL
@@ -349,14 +387,14 @@ likesApi: 'https://1441674200-buqu8i9sqn.ap-guangzhou.tencentscf.com',
 | 文件 | 版本 | 用途 |
 |------|------|------|
 | `css/themes.css` | v=6 | 主题变量 |
-| `css/style.css` | v=14 | 布局样式 |
+| `css/style.css` | v=25 | 布局样式 |
 | `css/admin.css` | v=6 | 管理面板 |
 | `data/config.js` | v=7 | 网站配置 |
 | `data/posts.js` | v=9 | 文章数据 |
 | `js/theme.js` | v=7 | 主题切换 |
 | `js/github.js` | v=8 | GitHub API |
-| `js/renderer.js` | v=16 | 组件渲染 |
+| `js/renderer.js` | v=19 | 组件渲染 |
 | `js/comments.js` | v=13 | 留言+点赞 |
 | `js/effects.js` | v=10 | 粒子特效 |
 | `js/admin.js` | v=7 | 管理面板 |
-| `js/main.js` | v=15 | 主入口 |
+| `js/main.js` | v=28 | 主入口 |
