@@ -36,6 +36,8 @@
     ? SiteConfig.likesApi + '/article-views' : '';
   const RECENT_SONG_API = (typeof SiteConfig !== 'undefined' && SiteConfig.likesApi)
     ? SiteConfig.likesApi + '/recent-song' : '';
+  const MUSIC_PLAY_API = (typeof SiteConfig !== 'undefined' && SiteConfig.likesApi)
+    ? SiteConfig.likesApi + '/music-play' : '';
 
   // ---- 哈希路由 ----
   function routeFromHash() {
@@ -534,8 +536,69 @@
       disc.addEventListener('mouseleave', tryHide);
       popup.addEventListener('mouseenter', showPopup);
       popup.addEventListener('mouseleave', tryHide);
+
+      // 搜索可播放音源
+      searchAndPlayMusic(latest.name, latest.artist);
     } catch (err) {
       console.warn('[Blog] Failed to load recent song:', err);
+    }
+  }
+
+  // ============================================================
+  //  音乐搜索播放（at38.cn 代理）
+  // ============================================================
+  let musicAudio = null;
+
+  async function searchAndPlayMusic(name, artist) {
+    if (!MUSIC_PLAY_API) return;
+    const disc = document.getElementById('musicDisc');
+    if (!disc) return;
+
+    try {
+      const keyword = encodeURIComponent(`${name} ${artist}`);
+      const res = await fetch(`${MUSIC_PLAY_API}?keyword=${keyword}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.found || !data.audioUrl) return;
+
+      // 创建或复用 audio 元素
+      if (musicAudio) {
+        musicAudio.pause();
+        musicAudio.remove();
+      }
+      musicAudio = new Audio();
+      musicAudio.src = data.audioUrl;
+      musicAudio.preload = 'none';
+      musicAudio.volume = 0.6;
+      document.body.appendChild(musicAudio);
+
+      // 播放/暂停切换
+      let playing = false;
+      musicAudio.addEventListener('play', () => {
+        playing = true;
+        disc.style.animationPlayState = 'paused';
+      });
+      musicAudio.addEventListener('pause', () => {
+        playing = false;
+        disc.style.animationPlayState = 'running';
+      });
+      musicAudio.addEventListener('ended', () => {
+        playing = false;
+        disc.style.animationPlayState = 'running';
+      });
+
+      // 更新点击行为：播放/暂停
+      disc.addEventListener('click', (e) => {
+        // 只有直接点击唱片才触发（不让弹出列表项触发）
+        if (e.target.closest('.vinyl-popup')) return;
+        if (playing) {
+          musicAudio.pause();
+        } else {
+          musicAudio.play().catch(() => {});
+        }
+      });
+    } catch (err) {
+      console.warn('[Blog] Failed to search music:', err);
     }
   }
 
