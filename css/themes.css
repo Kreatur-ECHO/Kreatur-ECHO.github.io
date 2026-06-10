@@ -44,12 +44,12 @@
   --color-accent-soft-text: #6c63ff;
 
   /* 边框 */
-  --color-border:         #e8e8ee;
+  --color-border:         #ceced6;
 
   /* 阴影 */
-  --shadow-card:          0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-card-hover:    0 10px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
-  --shadow-nav:           0 1px 3px rgba(0,0,0,0.06);
+  --shadow-card:          0 2px 4px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-card-hover:    0 10px 40px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-nav:           0 1px 4px rgba(0,0,0,0.08);
 
   /* 渐变 */
   --gradient-hero:        linear-gradient(135deg, #667eea 0%, #764ba2 100%);
