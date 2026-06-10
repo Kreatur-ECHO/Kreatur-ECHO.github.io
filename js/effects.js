@@ -399,20 +399,27 @@ const HeroGeometry = (() => {
       targetVertices.push(randomVertex(size));
     }
 
-    // 生成边（连接相邻顶点形成线框）
+    // 生成 2-3 条边（极简线框）
+    const edgeCount = 2 + Math.floor(Math.random() * 2); // 2 or 3
     const edges = [];
-    for (let i = 0; i < vCount; i++) {
-      for (let j = i + 1; j < vCount; j++) {
-        if (Math.random() < 0.35) {
-          edges.push([i, j]);
-        }
-      }
+    const connected = new Set();
+    // 先连成一条链确保每个点至少有一条边
+    const shuffled = [...Array(vCount).keys()].sort(() => Math.random() - 0.5);
+    for (let i = 0; i < Math.min(edgeCount, vCount - 1); i++) {
+      edges.push([shuffled[i], shuffled[i + 1]]);
+      connected.add(shuffled[i]);
+      connected.add(shuffled[i + 1]);
     }
-    // 确保每个顶点至少有一条边
-    for (let i = 0; i < vCount; i++) {
-      if (!edges.some(e => e[0] === i || e[1] === i)) {
-        const j = (i + 1) % vCount;
-        edges.push([i, j]);
+    // 剩余边数随机连接
+    while (edges.length < edgeCount) {
+      const a = Math.floor(Math.random() * vCount);
+      let b = Math.floor(Math.random() * vCount);
+      if (b === a) b = (a + 1) % vCount;
+      const key = Math.min(a, b) + '_' + Math.max(a, b);
+      if (!edges.some(e => (e[0] === a && e[1] === b) || (e[0] === b && e[1] === a))) {
+        edges.push([a, b]);
+        connected.add(a);
+        connected.add(b);
       }
     }
 
