@@ -318,14 +318,14 @@ const CursorEffects = (() => {
 const HeroGeometry = (() => {
   const CFG = {
     maxShapes: 5,
-    fadeIn: 1.0,
-    visible: 3.0,
-    fadeOut: 1.0,
-    driftSpeed: 15,        // px/s
-    vertexCount: [4, 8],  // 顶点数范围
-    sizeRange: [30, 70],   // 尺寸范围
+    fadeIn: 1.5,
+    visible: 5.0,
+    fadeOut: 1.5,
+    driftSpeed: 6,          // px/s
+    vertexCount: [4, 7],   // 顶点数范围
+    sizeRange: [40, 90],   // 尺寸范围
     strokeColor: '#6c63ff',
-    lineWidth: 1.2,
+    lineWidth: 1.0,
   };
 
   let canvas, ctx, animationId = null;
@@ -430,14 +430,14 @@ const HeroGeometry = (() => {
       driftX: (Math.random() - 0.5) * CFG.driftSpeed,
       driftY: (Math.random() - 0.5) * CFG.driftSpeed,
       // 旋转速度
-      rotX: (Math.random() - 0.5) * 1.2,
-      rotY: (Math.random() - 0.5) * 1.2,
-      rotZ: (Math.random() - 0.5) * 0.8,
+      rotX: (Math.random() - 0.5) * 0.35,
+      rotY: (Math.random() - 0.5) * 0.35,
+      rotZ: (Math.random() - 0.5) * 0.2,
       angleX: Math.random() * Math.PI * 2,
       angleY: Math.random() * Math.PI * 2,
       angleZ: Math.random() * Math.PI * 2,
       morphTimer: 0,
-      morphInterval: 0.8 + Math.random() * 1.2,
+      morphInterval: 2.5 + Math.random() * 3.5,
     });
   }
 
@@ -501,7 +501,7 @@ const HeroGeometry = (() => {
       const t = Math.min(s.morphTimer / s.morphInterval, 1);
       const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
       for (let i = 0; i < s.vertices.length; i++) {
-        s.vertices[i] = lerpV(s.vertices[i], s.targetVertices[i], ease * 0.05);
+        s.vertices[i] = lerpV(s.vertices[i], s.targetVertices[i], ease * 0.015);
       }
     }
   }
