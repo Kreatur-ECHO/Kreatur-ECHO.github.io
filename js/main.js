@@ -153,6 +153,11 @@
       CursorEffects.init();
     }
 
+    // ---- Hero 变形几何 ----
+    if (typeof HeroGeometry !== 'undefined') {
+      HeroGeometry.init();
+    }
+
     // 回到顶部
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
@@ -165,6 +170,9 @@
     if (currentView === 'home') {
       if (typeof CursorEffects !== 'undefined') {
         CursorEffects.destroy();
+      }
+      if (typeof HeroGeometry !== 'undefined') {
+        HeroGeometry.destroy();
       }
     }
     currentView = 'post';
@@ -196,6 +204,9 @@
     if (currentView === 'home') {
       if (typeof CursorEffects !== 'undefined') {
         CursorEffects.destroy();
+      }
+      if (typeof HeroGeometry !== 'undefined') {
+        HeroGeometry.destroy();
       }
     }
     currentView = 'admin';

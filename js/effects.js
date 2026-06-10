@@ -302,3 +302,283 @@ const CursorEffects = (() => {
 
   return { init, destroy };
 })();
+
+/**
+ * ============================================================
+ *  Hero Geometry — 首页 Hero 区域漂浮变形几何体
+ * ============================================================
+ *
+ * 在光模式下 Hero 区域生成随机线框几何体：
+ *   - 顶点持续变形（随机插值）
+ *   - 3D 旋转投影到 2D
+ *   - 渐入 1s → 存在 3s → 渐出 1s
+ *   - 随机方向缓慢飘荡
+ *   - 仅光模式显示，暗模式/手机端不渲染
+ */
+const HeroGeometry = (() => {
+  const CFG = {
+    maxShapes: 5,
+    fadeIn: 1.0,
+    visible: 3.0,
+    fadeOut: 1.0,
+    driftSpeed: 15,        // px/s
+    vertexCount: [4, 8],  // 顶点数范围
+    sizeRange: [30, 70],   // 尺寸范围
+    strokeColor: '#6c63ff',
+    lineWidth: 1.2,
+  };
+
+  let canvas, ctx, animationId = null;
+  let shapes = [];
+  let running = false;
+  let heroEl = null;
+
+  function init() {
+    if (running) return;
+    if (window.matchMedia('(max-width: 640px)').matches) return;
+
+    heroEl = document.getElementById('about');
+    if (!heroEl) return;
+
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) return;
+
+    canvas = document.createElement('canvas');
+    canvas.setAttribute('aria-hidden', 'true');
+    Object.assign(canvas.style, {
+      position: 'absolute', top: '0', left: '0',
+      width: '100%', height: '100%',
+      'pointer-events': 'none', 'z-index': '0',
+    });
+    heroEl.style.position = heroEl.style.position || 'relative';
+    heroEl.appendChild(canvas);
+
+    ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    resize();
+    window.addEventListener('resize', resize);
+
+    // 监听主题切换
+    new MutationObserver(() => {
+      const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      if (dark) destroy();
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    running = true;
+    tick();
+  }
+
+  function resize() {
+    if (!canvas || !heroEl) return;
+    const dpr = window.devicePixelRatio || 1;
+    const w = heroEl.offsetWidth;
+    const h = heroEl.offsetHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+  }
+
+  // ============================================================
+  //  形状生成
+  // ============================================================
+  function spawnShape(now) {
+    const w = heroEl.offsetWidth;
+    const h = heroEl.offsetHeight;
+    const vCount = CFG.vertexCount[0] + Math.floor(Math.random() * (CFG.vertexCount[1] - CFG.vertexCount[0] + 1));
+
+    // 生成随机顶点（3D）
+    const vertices = [];
+    const targetVertices = [];
+    const size = CFG.sizeRange[0] + Math.random() * (CFG.sizeRange[1] - CFG.sizeRange[0]);
+    for (let i = 0; i < vCount; i++) {
+      vertices.push(randomVertex(size));
+      targetVertices.push(randomVertex(size));
+    }
+
+    // 生成边（连接相邻顶点形成线框）
+    const edges = [];
+    for (let i = 0; i < vCount; i++) {
+      for (let j = i + 1; j < vCount; j++) {
+        if (Math.random() < 0.35) {
+          edges.push([i, j]);
+        }
+      }
+    }
+    // 确保每个顶点至少有一条边
+    for (let i = 0; i < vCount; i++) {
+      if (!edges.some(e => e[0] === i || e[1] === i)) {
+        const j = (i + 1) % vCount;
+        edges.push([i, j]);
+      }
+    }
+
+    const totalLife = CFG.fadeIn + CFG.visible + CFG.fadeOut;
+    shapes.push({
+      vertices: vertices,
+      targetVertices: targetVertices,
+      edges: edges,
+      born: now,
+      lifespan: totalLife,
+      // 初始位置：Hero 区域随机
+      x: w * 0.2 + Math.random() * w * 0.6,
+      y: h * 0.2 + Math.random() * h * 0.6,
+      // 飘荡方向
+      driftX: (Math.random() - 0.5) * CFG.driftSpeed,
+      driftY: (Math.random() - 0.5) * CFG.driftSpeed,
+      // 旋转速度
+      rotX: (Math.random() - 0.5) * 1.2,
+      rotY: (Math.random() - 0.5) * 1.2,
+      rotZ: (Math.random() - 0.5) * 0.8,
+      angleX: Math.random() * Math.PI * 2,
+      angleY: Math.random() * Math.PI * 2,
+      angleZ: Math.random() * Math.PI * 2,
+      morphTimer: 0,
+      morphInterval: 0.8 + Math.random() * 1.2,
+    });
+  }
+
+  function randomVertex(size) {
+    return {
+      x: (Math.random() - 0.5) * size * 2,
+      y: (Math.random() - 0.5) * size * 2,
+      z: (Math.random() - 0.5) * size * 2,
+    };
+  }
+
+  function lerpV(a, b, t) {
+    return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, z: a.z + (b.z - a.z) * t };
+  }
+
+  // ============================================================
+  //  主循环
+  // ============================================================
+  function tick() {
+    if (!running) return;
+    const now = performance.now() / 1000;
+
+    // 维持形状数量
+    while (shapes.length < CFG.maxShapes) {
+      spawnShape(now);
+    }
+
+    update(now);
+    draw(now);
+
+    // 移除过期形状
+    shapes = shapes.filter(s => now - s.born < s.lifespan);
+    // 补充新形状
+    if (shapes.length < CFG.maxShapes && Math.random() < 0.3) {
+      spawnShape(now);
+    }
+
+    animationId = requestAnimationFrame(tick);
+  }
+
+  function update(now) {
+    for (const s of shapes) {
+      const elapsed = now - s.born;
+      s.x += s.driftX * 0.016;
+      s.y += s.driftY * 0.016;
+      s.angleX += s.rotX * 0.016;
+      s.angleY += s.rotY * 0.016;
+      s.angleZ += s.rotZ * 0.016;
+
+      // 顶点变形
+      s.morphTimer += 0.016;
+      if (s.morphTimer >= s.morphInterval) {
+        s.morphTimer = 0;
+        s.morphInterval = 0.8 + Math.random() * 1.2;
+        const size = CFG.sizeRange[0] + Math.random() * (CFG.sizeRange[1] - CFG.sizeRange[0]);
+        for (let i = 0; i < s.vertices.length; i++) {
+          s.targetVertices[i] = randomVertex(size);
+        }
+      }
+      // 平滑插值
+      const t = Math.min(s.morphTimer / s.morphInterval, 1);
+      const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+      for (let i = 0; i < s.vertices.length; i++) {
+        s.vertices[i] = lerpV(s.vertices[i], s.targetVertices[i], ease * 0.05);
+      }
+    }
+  }
+
+  function draw(now) {
+    if (!ctx) return;
+    const w = heroEl.offsetWidth;
+    const h = heroEl.offsetHeight;
+    ctx.clearRect(0, 0, w, h);
+
+    const rgb = hexToRgb(CFG.strokeColor);
+
+    for (const s of shapes) {
+      const elapsed = now - s.born;
+      let alpha;
+      if (elapsed < CFG.fadeIn) {
+        alpha = elapsed / CFG.fadeIn;
+      } else if (elapsed < CFG.fadeIn + CFG.visible) {
+        alpha = 1;
+      } else {
+        const fadeProgress = (elapsed - CFG.fadeIn - CFG.visible) / CFG.fadeOut;
+        alpha = 1 - Math.min(fadeProgress, 1);
+      }
+      if (alpha <= 0) continue;
+      alpha *= 0.18; // 整体半透明
+
+      // 3D 旋转投影
+      const projected = s.vertices.map(v => {
+        // 绕 X 轴
+        let y1 = v.y * Math.cos(s.angleX) - v.z * Math.sin(s.angleX);
+        let z1 = v.y * Math.sin(s.angleX) + v.z * Math.cos(s.angleX);
+        // 绕 Y 轴
+        let x2 = v.x * Math.cos(s.angleY) + z1 * Math.sin(s.angleY);
+        let z2 = -v.x * Math.sin(s.angleY) + z1 * Math.cos(s.angleY);
+        // 绕 Z 轴
+        let x3 = x2 * Math.cos(s.angleZ) - y1 * Math.sin(s.angleZ);
+        let y3 = x2 * Math.sin(s.angleZ) + y1 * Math.cos(s.angleZ);
+        // 透视投影
+        const dist = 300;
+        const scale = dist / (dist + z2);
+        return { x: s.x + x3 * scale, y: s.y + y3 * scale };
+      });
+
+      // 绘制边
+      ctx.strokeStyle = `rgba(${rgb}, ${alpha.toFixed(3)})`;
+      ctx.lineWidth = CFG.lineWidth;
+      ctx.beginPath();
+      for (const [i, j] of s.edges) {
+        ctx.moveTo(projected[i].x, projected[i].y);
+        ctx.lineTo(projected[j].x, projected[j].y);
+      }
+      ctx.stroke();
+
+      // 顶点小圆点
+      ctx.fillStyle = `rgba(${rgb}, ${(alpha * 1.8).toFixed(3)})`;
+      for (const p of projected) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  function hexToRgb(hex) {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (m) return `${parseInt(m[1],16)}, ${parseInt(m[2],16)}, ${parseInt(m[3],16)}`;
+    return '108, 99, 255';
+  }
+
+  function destroy() {
+    running = false;
+    if (animationId) cancelAnimationFrame(animationId);
+    if (canvas?.parentNode) canvas.parentNode.removeChild(canvas);
+    window.removeEventListener('resize', resize);
+    canvas = ctx = null;
+    shapes = [];
+  }
+
+  return { init, destroy };
+})();
