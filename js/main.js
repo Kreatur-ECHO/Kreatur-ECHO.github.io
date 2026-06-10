@@ -466,7 +466,8 @@
       // 黑胶唱片展示最近喜欢的第一首
       const latest = songs[0];
       const disc = document.getElementById('musicDisc');
-      if (!disc) return;
+      const wrap = document.getElementById('musicDiscWrap');
+      if (!disc || !wrap) return;
 
       const cover = disc.querySelector('.vinyl-cover');
       if (cover && latest.cover) {
@@ -499,11 +500,38 @@
       popupHTML += '</div>';
 
       // 移除旧 popup，插入新 popup（放在 wrapper 内，不跟黑胶旋转）
-      const wrap = document.getElementById('musicDiscWrap');
-      if (!wrap) return;
       const oldPopup = wrap.querySelector('.vinyl-popup');
       if (oldPopup) oldPopup.remove();
       wrap.insertAdjacentHTML('beforeend', popupHTML);
+
+      // JS hover 控制：黑胶和 popup 各自监听，共享 hover 状态
+      const popup = wrap.querySelector('.vinyl-popup');
+      if (!popup) return;
+
+      let hovering = false;
+      let showTimer = null;
+      let hideTimer = null;
+
+      function showPopup() {
+        clearTimeout(hideTimer);
+        hovering = true;
+        showTimer = setTimeout(() => {
+          if (hovering) popup.classList.add('visible');
+        }, 500);
+      }
+
+      function tryHide() {
+        hovering = false;
+        clearTimeout(showTimer);
+        hideTimer = setTimeout(() => {
+          if (!hovering) popup.classList.remove('visible');
+        }, 500);
+      }
+
+      disc.addEventListener('mouseenter', showPopup);
+      disc.addEventListener('mouseleave', tryHide);
+      popup.addEventListener('mouseenter', showPopup);
+      popup.addEventListener('mouseleave', tryHide);
     } catch (err) {
       console.warn('[Blog] Failed to load recent song:', err);
     }
