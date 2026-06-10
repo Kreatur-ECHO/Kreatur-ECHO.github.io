@@ -488,22 +488,36 @@
       popupHTML += '<div class="vinyl-popup-list">';
       rest.forEach(s => {
         const safeCover = (s.cover || '').replace(/^http:/, 'https:');
+        const songData = encodeURIComponent(JSON.stringify({ name: s.name, artist: s.artist, cover: s.cover, id: s.id }));
         popupHTML += `
-          <a class="vinyl-popup-item" href="https://music.163.com/#/song?id=${s.id}" target="_blank" title="${s.name} — ${s.artist}">
+          <div class="vinyl-popup-item" data-song="${songData}" title="${s.name} — ${s.artist}">
             <img class="vinyl-popup-cover" src="${safeCover}" alt="" loading="lazy" onerror="this.style.display='none'" />
             <div class="vinyl-popup-info">
               <div class="vinyl-popup-song">${s.name}</div>
               <div class="vinyl-popup-artist">${s.artist}</div>
             </div>
-          </a>`;
+          </div>`;
       });
       popupHTML += '</div>';
       popupHTML += '</div>';
 
-      // 移除旧 popup，插入新 popup（放在 wrapper 内，不跟黑胶旋转）
+      // 移除旧 popup，插入新 popup
       const oldPopup = wrap.querySelector('.vinyl-popup');
       if (oldPopup) oldPopup.remove();
       wrap.insertAdjacentHTML('beforeend', popupHTML);
+
+      // 点击列表项 → 切换歌曲
+      const popupEl = wrap.querySelector('.vinyl-popup');
+      if (popupEl) {
+        popupEl.addEventListener('click', (e) => {
+          const item = e.target.closest('.vinyl-popup-item');
+          if (!item) return;
+          try {
+            const songInfo = JSON.parse(decodeURIComponent(item.dataset.song));
+            switchToSong(songInfo.name, songInfo.artist, songInfo.cover, songInfo.id);
+          } catch (_) {}
+        });
+      }
 
       // JS hover 控制：黑胶和 popup 各自监听，共享 hover 状态
       const popup = wrap.querySelector('.vinyl-popup');
@@ -535,21 +549,55 @@
       popup.addEventListener('mouseleave', tryHide);
 
       // 搜索可播放音源
-      searchAndPlayMusic(latest.name, latest.artist, latest.id);
+      switchToSong(latest.name, latest.artist, latest.cover, latest.id);
     } catch (err) {
       console.warn('[Blog] Failed to load recent song:', err);
     }
   }
 
   // ============================================================
-  //  音乐搜索播放（at38.cn 代理）
+  //  音乐搜索播放（at38.cn 代理）+ 切换歌曲
   // ============================================================
   let musicAudio = null;
+  let playing = false;
+  let clickLock = false;
 
-  async function searchAndPlayMusic(name, artist, songId) {
+  function setupDiscClick(songId) {
+    const disc = document.getElementById('musicDisc');
+    if (!disc || disc.dataset.clickReady) return;
+    disc.dataset.clickReady = '1';
+    disc.addEventListener('click', (e) => {
+      if (e.target.closest('.vinyl-popup')) return;
+      if (clickLock) return;
+      clickLock = true;
+      setTimeout(() => { clickLock = false; }, 100);
+
+      if (musicAudio && musicAudio.src) {
+        if (playing) {
+          musicAudio.pause();
+        } else {
+          musicAudio.play().catch(() => {});
+        }
+      } else {
+        window.open(`https://music.163.com/#/song?id=${songId}`, '_blank');
+      }
+    });
+  }
+
+  async function switchToSong(name, artist, cover, songId) {
     if (!MUSIC_PLAY_API) return;
     const disc = document.getElementById('musicDisc');
     if (!disc) return;
+
+    // 更新黑胶封面
+    const coverImg = disc.querySelector('.vinyl-cover');
+    if (coverImg && cover) {
+      coverImg.src = cover.replace(/^http:/, 'https:');
+    }
+    disc.title = `${name} — ${artist}`;
+
+    // 设置点击切换（仅一次）
+    setupDiscClick(songId);
 
     try {
       const keyword = encodeURIComponent(`${name} ${artist}`);
@@ -558,7 +606,7 @@
       const data = await res.json();
       if (!data.found || !data.audioUrl) return;
 
-      // 创建或复用 audio 元素
+      // 切换音频
       if (musicAudio) {
         musicAudio.pause();
         musicAudio.remove();
@@ -582,27 +630,7 @@
         disc.style.animationPlayState = 'paused';
       });
 
-      // 点击：有音源 → 播放/暂停，无音源 → 打开网易云
-      let playing = false;
-      let clickLock = false;
-      disc.addEventListener('click', (e) => {
-        if (e.target.closest('.vinyl-popup')) return;
-        if (clickLock) return;
-        clickLock = true;
-        setTimeout(() => { clickLock = false; }, 100);
-
-        if (musicAudio && musicAudio.src) {
-          if (playing) {
-            musicAudio.pause();
-          } else {
-            musicAudio.play().catch(() => {});
-          }
-        } else {
-          window.open(`https://music.163.com/#/song?id=${songId}`, '_blank');
-        }
-      });
-
-      // 进入页面自动播放
+      // 自动播放
       musicAudio.play().catch(() => {});
     } catch (err) {
       console.warn('[Blog] Failed to search music:', err);
