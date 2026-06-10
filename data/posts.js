@@ -433,100 +433,96 @@ const BlogPosts = [
     url: '#post/music-system',
     featured: true,
     content: `
-      <p>博客有了，留言有了，特效也有了——但总觉得少了点什么。一个个人主页，如果能展示自己最近在听的音乐，甚至直接在线播放，那该多好？于是花了一天时间，从零搭建了一套完整的音乐系统。</p>
+      <p>博客有了留言系统，有了粒子特效，页面越来越完整——但总觉得还少了点什么。每次打开网易云听歌，就在想：能不能把自己的音乐动态也放进博客里？不只是展示，还能直接在线播放？</p>
+      <p>于是花了一天时间，从零搭了一套完整的音乐系统——从网易云拉取喜欢的歌、通过聚合搜索找到可播放音源、用纯 CSS 做黑胶唱片动效、最后串成一个完整的交互闭环。本文记录这个过程。</p>
 
-      <h2>架构总览</h2>
-      <p>整个系统涉及四个环节：</p>
+      <h2>1. 系统架构</h2>
+      <p>整个系统由四个部分组成：</p>
       <ul>
-        <li><strong>网易云音乐 API</strong> — 获取我最近红心（喜欢的）歌曲</li>
-        <li><strong>腾讯云 SCF 云函数</strong> — 无服务器代理，封装 API 调用 + 缓存</li>
-        <li><strong>at38.cn 聚合搜索</strong> — 跨平台搜索可播放的 MP3 音源</li>
-        <li><strong>前端黑胶唱片 UI</strong> — 纯 CSS 动画 + HTML5 Audio 播放</li>
+        <li><strong>网易云 API</strong> — 获取最近红心的 5 首歌曲（歌名、歌手、封面、ID）</li>
+        <li><strong>腾讯云 SCF</strong> — 无服务器函数，代理 API 调用并缓存结果到 COS</li>
+        <li><strong>at38.cn</strong> — 第三方聚合搜索，按「歌名+歌手」搜索可播放的 MP3 音源</li>
+        <li><strong>前端 UI</strong> — 黑胶唱片旋转动画 + HTML5 Audio 播放 + 播放列表交互</li>
       </ul>
-      <p>数据流：<code>浏览器 → SCF → 网易云/at38.cn → 前端渲染播放</code></p>
+      <p>数据流向：<code>浏览器 → SCF → 网易云/at38.cn → 前端渲染 & 播放</code>。SCF 是中间层，前端不直接接触任何第三方 API。</p>
 
-      <h2>Step 1: 获取最近喜欢的歌</h2>
-      <p>网易云没有官方公开 API，但有不少社区逆向的接口。我找到两个关键端点：</p>
+      <h2>2. 获取喜欢的歌</h2>
+      <p>网易云没有官方公开 API，但社区逆向出了不少可用端点。我用了两个：</p>
       <ul>
-        <li><strong>/api/user/playlist</strong> — 获取用户歌单列表，找到「喜欢的音乐」(specialType=5)</li>
-        <li><strong>/api/playlist/detail</strong> — 获取歌单内歌曲，按红心时间倒序排列</li>
+        <li><strong>/api/user/playlist</strong> — 拿用户歌单列表，从中找到「喜欢的音乐」（specialType=5）</li>
+        <li><strong>/api/playlist/detail</strong> — 拉取歌单里的歌曲，排列顺序就是红心时间倒序</li>
       </ul>
-      <p>这些接口需要登录态 Cookie (<code>MUSIC_U</code>)，我用 SCF 环境变量存储，服务端代理调用，前端无感知。</p>
-      <p>缓存策略：每天凌晨 4 点刷新一次到 COS，避免频繁请求触发风控。</p>
+      <p>这些接口需要登录态——浏览器里存的 <code>MUSIC_U</code> Cookie。我把这个值放在 SCF 环境变量里，服务端带着它请求网易云，前端完全不接触凭证。</p>
+      <p><strong>缓存策略</strong>：每天凌晨 4 点拉一次新数据，写入 COS 的 <code>recent-song.json</code>。当天其余时间全走缓存，避免频繁调网易云触发风控。</p>
 
-      <h3>SCF 核心代码（节选）</h3>
-      <pre><code>// 每天凌晨 4 点刷新缓存
+      <pre><code>// 每天凌晨 4 点刷新一次
 const now = new Date();
 const today4am = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 4).getTime();
 if (cached && cached.updatedAt > today4am) {
-  return cached; // 今天已刷新过，直接返回缓存
+  return cached; // 今天已经刷新过
 }
-// 请求网易云
-const result = await fetchRecentSongsFromNetease();
-await writeJSON('recent-song.json', result);
-return result;</code></pre>
+const data = await fetchRecentSongsFromNetease();
+await writeJSON('recent-song.json', data);
+return data;</code></pre>
 
-      <h2>Step 2: 搜索可播放音源</h2>
-      <p>网易云 API 只返回歌曲信息，不提供直接播放链接。这时需要借助第三方音源搜索。</p>
-      <p>我使用了 <strong>at38.cn</strong>——一个聚合搜索站点，覆盖 QQ 音乐、酷狗等多个平台。关键词格式为<code>歌名 歌手名</code>，搜索后解析 HTML 提取第一首歌曲的播放链接和封面。</p>
+      <h2>3. 搜索可播放音源</h2>
+      <p>网易云接口只给歌曲信息，不给播放链接。所以还需要另一个环节——找音源。</p>
+      <p>我用了 <strong>at38.cn</strong>，一个聚合音乐搜索站，覆盖 QQ 音乐、酷狗等平台。搜索格式是 <code>歌名+空格+歌手名</code>，返回的是一个完整 HTML 页面。SCF 拿到 HTML 后，用正则提取第一首歌曲的播放 URL。</p>
 
       <pre><code>// SCF /music-play 路由
 const url = 'https://www.at38.cn/?keyword=' + encodeURIComponent(keyword);
 const html = await fetch(url).then(r => r.text());
-// 正则解析音乐卡片
 const playUrl = html.match(/src="([^"]*action=play[^"]*)"/)[1];
 return { found: true, audioUrl: playUrl };</code></pre>
 
-      <p><strong>踩坑记录</strong>：at38.cn 是服务端渲染页面，返回的是完整 HTML 而非 JSON。SCF 需要手动解析 DOM 字符串。而且音频播放地址是 302 重定向到 QQ 音乐 CDN，所以前端 Audio 标签可以直接加载，不经过 SCF 流量。</p>
+      <p>有趣的是，at38.cn 的播放地址实际上是个 302 重定向，最终指向 QQ 音乐 CDN 的真 MP3 地址。所以前端 <code>&lt;audio&gt;</code> 标签直接加载即可，音频流量完全不经过我的 SCF 和 COS。</p>
 
-      <h2>Step 3: 黑胶唱片 UI</h2>
-      <p>右下角的旋转黑胶是整系统的视觉核心。实现要点：</p>
+      <h2>4. 黑胶唱片 UI</h2>
+      <p>右下角的旋转黑胶是整个系统的视觉锚点。纯 CSS 实现：</p>
       <ul>
-        <li>外圈用多层 <code>box-shadow</code> 模拟黑胶纹理</li>
-        <li>紫色边框呼应主题色 (<code>var(--color-accent)</code>)</li>
-        <li>中心 50px 圆形区域显示专辑封面</li>
-        <li>播放时旋转 (<code>animation: vinylSpin 4.4s linear infinite</code>)，暂停静止</li>
-        <li>hover 0.2s 后弹出完整播放列表，JS 管理 hover 状态（不用 CSS :hover 避免旋转干扰）</li>
+        <li>多层 <code>box-shadow</code> 模拟黑胶唱片的同心圆纹理</li>
+        <li>最外圈是 <code>var(--color-accent)</code> 紫色边框，跟随主题色切换</li>
+        <li>中心 50px 圆形区域放专辑封面，用 <code>object-fit: cover</code> 保证不变形</li>
+        <li>播放时 <code>animation-play-state: running</code> 开始旋转，暂停切回 <code>paused</code></li>
       </ul>
 
-      <pre><code>/* 黑胶旋转动画 */
-@keyframes vinylSpin {
+      <pre><code>@keyframes vinylSpin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
 .vinyl-disc {
   animation: vinylSpin 4.4s linear infinite;
-  animation-play-state: paused; /* 默认静止 */
+  animation-play-state: paused; /* 默认静止，播放时才转 */
 }</code></pre>
 
-      <h2>Step 4: 交互设计</h2>
+      <p>hover 黑胶 0.2 秒后，上方弹出完整的 5 首播放列表。当前播放的歌曲紫色高亮，点击任意一首可以切换。列表展开用了 <code>opacity</code> 渐入渐出，没有依赖 CSS <code>:hover</code>——因为 popup 是绝对定位在 wrapper 外部的，用 JS 管理 hover 状态更可靠。</p>
+
+      <h2>5. 交互细节</h2>
       <ul>
-        <li><strong>点击黑胶</strong>：播放 / 暂停切换，有 100ms 冷却防连点误触</li>
-        <li><strong>播放列表</strong>：黑胶 hover 弹出全部 5 首，当前歌曲紫色高亮</li>
-        <li><strong>点击列表歌曲</strong>：切换黑胶封面 + 搜索播放该歌曲（不再跳转网易云）</li>
-        <li><strong>自动循环</strong>：歌曲播完自动切下一首，5 首循环，搜不到音源自动跳过</li>
-        <li><strong>状态图标</strong>：半透明白色播放/暂停图标（32px），hover 显示，状态切换 1.5s 淡入淡出</li>
-        <li><strong>进入页面</strong>：自动播放最近喜欢的歌（浏览器允许时）</li>
+        <li><strong>点击黑胶</strong>：播放 ↔ 暂停切换，100ms 冷却防连点</li>
+        <li><strong>列表循环</strong>：歌曲播完自动切下一首，最后一首播完回到第一首。搜不到音源自动跳过</li>
+        <li><strong>状态图标</strong>：半透明白色播放/暂停图标，hover 显示，状态变化后 1.5 秒渐入渐出</li>
+        <li><strong>进入页面</strong>：自动播放最近喜欢的歌（受浏览器策略限制，首次访问需点一下激活）</li>
       </ul>
 
-      <h2>技术亮点与踩坑</h2>
+      <h2>6. 踩过的坑</h2>
 
-      <h3>坑1：弹出列表跟随黑胶旋转</h3>
-      <p>最初把 popup 放在 <code>.vinyl-disc</code> 内部，作为旋转元素的子节点，自然跟着转。解决方案：外包一层 <code>.vinyl-wrapper</code>，popup 和 disc 同级，各自独立控制。</p>
+      <h3>弹出列表跟着黑胶一起转</h3>
+      <p>最初把 popup 放在旋转的 <code>.vinyl-disc</code> 内部。结果列表也一起转了。解决：包一层 <code>.vinyl-wrapper</code>，popup 和 disc 同级。disc 转它的，popup 不参与动画。</p>
 
-      <h3>坑2：黑胶点击无效</h3>
-      <p>起初有两个 click 监听器同时挂在黑胶上：一个跳转网易云页面，一个控制播放。先注册的打开新窗口，后注册的播放被拦截。最后合并为一个统一 handler，有音源就播放/暂停，没有才跳转。</p>
+      <h3>两个 click 监听器打架</h3>
+      <p>起初在黑胶上同时挂了两个监听器：一个跳网易云页面，一个控制播放。浏览器里，先注册的 handler 先执行——打开新标签页之后，后注册的播放调用就被拦截了。最后合并为一个：有音源就切播放/暂停，没有才打开网易云。</p>
 
-      <h3>坑3：网易云歌单 API 在 SCF 返回空</h3>
-      <p>从本地 curl 测试正常，部署到 SCF 后 playlist 列表为空。排查发现 SCF 的出口 IP 可能被网易云降级处理（Cookie 验证更严格）。解决方案：跳过歌单查找步骤，直接用本地测试时得到的 liked playlist ID (2488546807) 调 detail API。</p>
+      <h3>SCF 调用网易云歌单 API 返回空</h3>
+      <p>本地 curl 测试一切正常，部署到 SCF 后 <code>/user/playlist</code> 返回的列表是空的。排查发现 SCF 的出口 IP 触发了网易云更严格的 Cookie 校验。绕过去的方法：跳过查找歌单的步骤，直接写死 liked playlist ID（从本地测试拿到），只调 detail API。</p>
 
-      <h3>坑4：音量与自动播放策略</h3>
-      <p>浏览器自动播放限制很严格——Chrome 要求用户先与页面交互。首次访问时自动播放会被拦截（<code>.play()</code> 返回 rejected Promise），catch 忽略即可。后续用 <code>musicAudio.volume = 0.19</code> 保持低音量不打扰。</p>
+      <h3>playing 变量忘了同步</h3>
+      <p>重构时把 <code>playing = true/false</code> 从 audio 事件监听里漏掉了。结果 <code>playing</code> 永远是 <code>false</code>，点击永远在调 <code>play()</code>，暂停永远不生效。事件驱动的状态管理，每个事件都要完整同步状态。</p>
 
-      <h2>总结</h2>
-      <p>这套音乐系统的核心思路是<strong>「借力」</strong>：不自己爬数据、不存音乐文件、不做流媒体服务，而是作为"胶水层"把网易云（歌曲数据）+ at38.cn（音源搜索）+ QQ 音乐（CDN 流）串联起来。SCF 只负责代理请求和缓存，前端只负责渲染和播放，各司其职。</p>
-      <p>整个系统零外部前端依赖，纯原生 JS + CSS 实现。SCF 代码也只用 Node.js 内置模块。总共新增约 200 行 SCF 代码和 300 行前端代码。</p>
-      <p>后续可以扩展的方向：自定义域名解决梯子阻断问题、播放进度条、歌词显示。</p>
+      <h2>结语</h2>
+      <p>这套系统的核心思路是<strong>「借力」</strong>：不爬数据、不存文件、不做流媒体服务，只做胶水层。网易云给歌曲数据，at38.cn 给音源地址，QQ 音乐 CDN 给流，SCF 做代理和缓存，前端纯原生渲染播放。各部分职责清晰，零外部依赖。</p>
+      <p>总共新增约 200 行 SCF 代码和 300 行前端代码，SCF 也只用了 Node.js 内置模块（http、https、crypto），没有引入任何 npm 包。</p>
+      <p>后续考虑做的：自定义域名彻底解决梯子拦截问题、歌词显示、播放进度条。目前这个版本已经够用了。</p>
     `,
   }
 ];
