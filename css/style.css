@@ -1590,6 +1590,35 @@ img {
     white-space: nowrap;
   }
 
+  /* --- Projects 仓库卡片压缩 --- */
+  .repos-grid {
+    gap: 10px;
+  }
+  .repo-card {
+    min-width: 0;
+    overflow: hidden;
+    padding: 11px 14px;
+  }
+  .repo-card:hover {
+    transform: none;
+  }
+  .repo-name {
+    font-size: 0.88rem;
+    margin-bottom: 2px;
+  }
+  .repo-desc {
+    font-size: 0.78rem;
+    margin-bottom: 6px;
+    min-height: unset;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .repo-meta {
+    font-size: 0.7rem;
+    gap: 10px;
+  }
+
   /* --- Archive 时间线 --- */
   .timeline-item {
     padding: 10px 0;
