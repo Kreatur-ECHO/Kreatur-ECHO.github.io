@@ -571,15 +571,15 @@
 
       musicAudio.addEventListener('play', () => {
         playing = true;
-        disc.style.animationPlayState = 'paused';
+        disc.style.animationPlayState = 'running';
       });
       musicAudio.addEventListener('pause', () => {
         playing = false;
-        disc.style.animationPlayState = 'running';
+        disc.style.animationPlayState = 'paused';
       });
       musicAudio.addEventListener('ended', () => {
         playing = false;
-        disc.style.animationPlayState = 'running';
+        disc.style.animationPlayState = 'paused';
       });
 
       // 点击：有音源 → 播放/暂停，无音源 → 打开网易云

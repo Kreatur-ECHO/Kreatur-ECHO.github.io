@@ -1468,6 +1468,7 @@ img {
     0 4px 22px rgba(0,0,0,0.35);
   background: #1a1a1a;
   animation: vinylSpin 4.4s linear infinite;
+  animation-play-state: paused;
   transition: box-shadow 0.35s ease;
 }
 .vinyl-disc:hover {
