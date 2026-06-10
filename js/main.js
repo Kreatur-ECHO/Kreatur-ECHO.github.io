@@ -484,7 +484,8 @@
       const rest = songs.slice(1);
       if (!rest.length) return;
 
-      let popupHTML = '<div class="vinyl-popup-title">最近喜欢</div>';
+      let popupHTML = '<div class="vinyl-popup">';
+      popupHTML += '<div class="vinyl-popup-title">最近喜欢</div>';
       popupHTML += '<div class="vinyl-popup-list">';
       rest.forEach(s => {
         const safeCover = (s.cover || '').replace(/^http:/, 'https:');
@@ -497,6 +498,7 @@
             </div>
           </a>`;
       });
+      popupHTML += '</div>';
       popupHTML += '</div>';
 
       // 移除旧 popup，插入新 popup（放在 wrapper 内，不跟黑胶旋转）
