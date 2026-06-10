@@ -1507,6 +1507,10 @@ img {
     grid-template-columns: 1fr;
     gap: 10px;
   }
+  .post-card-link {
+    min-width: 0;
+    overflow: hidden;
+  }
 
   /* --- 文章卡片 → 垂直紧凑 + 标签日期同行 --- */
   .post-card {
