@@ -1457,11 +1457,10 @@ img {
   align-items: center;
   justify-content: center;
   box-shadow:
+    0 0 0 1.5px #2e2e2e,
     0 0 0 3px #1a1a1a,
-    0 0 0 5px #2e2e2e,
-    0 0 0 7px #1a1a1a,
-    0 0 0 9px #333,
-    0 0 0 11px #1a1a1a,
+    0 0 0 4.5px #333,
+    0 0 0 6px #1a1a1a,
     0 4px 22px rgba(0,0,0,0.35);
   background: #1a1a1a;
   animation: vinylSpin 3.5s linear infinite;
@@ -1469,11 +1468,10 @@ img {
 }
 .vinyl-disc:hover {
   box-shadow:
+    0 0 0 1.5px #2e2e2e,
     0 0 0 3px #1a1a1a,
-    0 0 0 5px #2e2e2e,
-    0 0 0 7px #1a1a1a,
-    0 0 0 9px #333,
-    0 0 0 11px #1a1a1a,
+    0 0 0 4.5px #333,
+    0 0 0 6px #1a1a1a,
     0 4px 28px rgba(108, 99, 255, 0.4);
   animation-play-state: paused;
 }
@@ -1488,15 +1486,15 @@ img {
 
 /* 黑胶中心标签（专辑封面区域） */
 .vinyl-center {
-  width: 22px;
-  height: 22px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: var(--color-surface);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border: 2px solid #444;
+  border: 1.5px solid #444;
   z-index: 1;
   position: relative;
 }
@@ -1877,17 +1875,16 @@ img {
     width: 40px;
     height: 40px;
     box-shadow:
+      0 0 0 1px #2e2e2e,
       0 0 0 2px #1a1a1a,
-      0 0 0 3.5px #2e2e2e,
-      0 0 0 5px #1a1a1a,
-      0 0 0 6.5px #333,
-      0 0 0 8px #1a1a1a,
-      0 3px 16px rgba(0,0,0,0.35);
+      0 0 0 3px #333,
+      0 0 0 4px #1a1a1a,
+      0 3px 14px rgba(0,0,0,0.35);
   }
   .vinyl-center {
-    width: 16px;
-    height: 16px;
-    border-width: 1.5px;
+    width: 24px;
+    height: 24px;
+    border-width: 1px;
   }
   .vinyl-center::after {
     width: 3px;
