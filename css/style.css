@@ -1508,15 +1508,12 @@ img {
     gap: 10px;
   }
 
-  /* --- 文章卡片 → Grid 三行：标题 / 简介 / 标签+日期同行 --- */
+  /* --- 文章卡片 → 垂直紧凑 + 标签日期同行 --- */
   .post-card {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto auto;
-    gap: 3px 8px;
+    flex-direction: column;
+    gap: 3px;
     padding: 11px 14px;
     border-radius: var(--radius-md);
-    overflow: hidden;
   }
   .post-card:hover {
     transform: none;
@@ -1531,10 +1528,8 @@ img {
     z-index: 2;
   }
 
-  /* 标题：全宽第1行，单行省略 */
+  /* 标题：单行省略 */
   .post-title {
-    grid-column: 1 / -1;
-    grid-row: 1;
     font-size: 0.9rem;
     margin-bottom: 0;
     overflow: hidden;
@@ -1542,10 +1537,8 @@ img {
     white-space: nowrap;
   }
 
-  /* 简介：全宽第2行，单行省略 */
+  /* 简介：恢复显示，单行省略 */
   .post-excerpt {
-    grid-column: 1 / -1;
-    grid-row: 2;
     display: block;
     font-size: 0.78rem;
     line-height: 1.4;
@@ -1557,10 +1550,17 @@ img {
     -webkit-line-clamp: unset;
   }
 
-  /* 标签：第3行左列 */
-  .post-tags {
-    grid-column: 1;
-    grid-row: 3;
+  /* 标签+日期同行容器 */
+  .post-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* 标签：flex 填充，溢出隐藏 */
+  .post-meta-row .post-tags {
+    flex: 0 1 auto;
+    min-width: 0;
     flex-wrap: nowrap;
     gap: 3px;
     overflow: hidden;
@@ -1574,11 +1574,10 @@ img {
     letter-spacing: 1px;
   }
 
-  /* 日期：第3行右列，同高度 */
-  .post-date {
-    grid-column: 2;
-    grid-row: 3;
-    align-self: center;
+  /* 日期：同行右侧，不伸缩，缩小一号 */
+  .post-meta-row .post-date {
+    flex: 0 0 auto;
+    margin-left: auto;
     font-size: 0.65rem;
     margin-bottom: 0;
     white-space: nowrap;

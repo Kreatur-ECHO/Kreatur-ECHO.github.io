@@ -148,6 +148,21 @@ const Renderer = (() => {
         tagsHTML = tags.map(t => `<span class="post-tag">${t}</span>`).join('');
       }
       const featuredClass = post.featured ? ' featured' : '';
+
+      if (isMobile) {
+        return `
+        <a href="${post.url}" class="post-card-link" data-post-id="${post.id}">
+          <article class="post-card${featuredClass}">
+            <h3 class="post-title">${post.title}</h3>
+            <p class="post-excerpt">${post.excerpt}</p>
+            <div class="post-meta-row">
+              <div class="post-tags">${tagsHTML}</div>
+              <div class="post-date">${post.date}</div>
+            </div>
+          </article>
+        </a>`;
+      }
+
       return `
         <a href="${post.url}" class="post-card-link" data-post-id="${post.id}">
           <article class="post-card${featuredClass}">
