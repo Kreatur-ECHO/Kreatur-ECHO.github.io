@@ -1486,13 +1486,16 @@ img {
     height: 34px;
   }
   .hero-stats {
-    gap: 20px;
+    gap: 10px 24px;
+    max-width: 280px;
+    margin: 0 auto;
   }
   .hero-stat .stat-num {
-    font-size: 1.25rem;
+    font-size: 1rem;
   }
   .hero-stat .stat-label {
-    font-size: 0.72rem;
+    font-size: 0.65rem;
+    margin-top: 0;
   }
 
   /* --- 文章卡片 → 扁平水平列表 --- */
