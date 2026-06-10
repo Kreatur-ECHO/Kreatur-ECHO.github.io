@@ -351,7 +351,7 @@ const HeroGeometry = (() => {
       'pointer-events': 'none', 'z-index': '0',
     });
     heroEl.style.position = heroEl.style.position || 'relative';
-    heroEl.appendChild(canvas);
+    heroEl.prepend(canvas);
 
     ctx = canvas.getContext('2d');
     if (!ctx) return;
