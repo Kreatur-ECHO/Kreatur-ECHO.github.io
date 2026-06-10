@@ -69,6 +69,7 @@ const BlogPosts = [
       
       
       
+      
     `,
   },
   {
@@ -136,6 +137,7 @@ const BlogPosts = [
       
       
       
+      
     `,
   },
   {
@@ -175,6 +177,7 @@ const BlogPosts = [
       <p>GitHub 上有数以亿计的开源项目。从学习别人的代码，到贡献自己的项目，GitHub 让全球开发者连接在一起。这也是为什么我把所有项目都放在 GitHub 上——开放、透明、协作。</p>
       
       <p>如果你还没有 GitHub 账号，强烈建议注册一个。它可能会改变你构建软件的方式。</p>
+      
       
       
       
@@ -268,6 +271,7 @@ const BlogPosts = [
       
       
       
+      
     `,
   },
   {
@@ -343,6 +347,7 @@ const BlogPosts = [
       
       
       
+      
     `,
   },
   {
@@ -393,19 +398,6 @@ const BlogPosts = [
       
       
       
-      
-    `,
-  },
-  {
-    id: 'test3',
-    date: '2026-06-10',
-    title: 'test3',
-    excerpt: 'test3',
-    tags: ['test'],
-    url: '#post/test3',
-    featured: false,
-    content: `
-      test3
       
       
     `,
@@ -510,6 +502,7 @@ const BlogPosts = [
             <p>总共新增约 200 行 SCF 代码和 300 行前端代码，SCF 也只用了 Node.js 内置模块（http、https、crypto），没有引入任何 npm 包。</p>
             <p>后续考虑做的：自定义域名彻底解决梯子拦截问题、歌词显示、播放进度条。目前这个版本已经够用了。</p>
           
+      
       
     `,
   },
@@ -632,6 +625,7 @@ const BlogPosts = [
             <p>Serverless 的价值不只在「省钱」，更在「省事」。不用买服务器、不用配 Nginx、不用装数据库、不用写 CI/CD 部署脚本。对于个人项目的后端需求——几个 API、JSON 存文件、IP 去重——SCF + COS 的组合刚刚好。</p>
             <p>这套架构之后还能扩展很多能力：表单提交、文章阅读排行、简单的用户反馈。只要是把 JSON 读写到 COS 的模式，都能用同一套 SCF 骨架快速实现。</p>
           
+      
       
     `,
   }
