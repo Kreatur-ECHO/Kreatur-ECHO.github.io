@@ -1535,7 +1535,7 @@ img {
     opacity 0.25s ease,
     visibility 0.25s ease,
     transform 0.25s ease;
-  transition-delay: 0s;
+  transition-delay: 0.5s;
 }
 /* 三角箭头指向黑胶 */
 .vinyl-popup::after {
