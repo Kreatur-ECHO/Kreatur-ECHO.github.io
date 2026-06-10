@@ -1569,18 +1569,9 @@ img {
     opacity 0.25s ease,
     visibility 0.25s ease;
 }
-/* 三角箭头指向黑胶 */
+/* 三角箭头指向黑胶（已移除） */
 .vinyl-popup::after {
-  content: '';
-  position: absolute;
-  bottom: -6px;
-  right: 22px;
-  width: 10px;
-  height: 10px;
-  background: var(--color-surface);
-  border-right: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
-  transform: rotate(45deg);
+  display: none;
 }
 
 .vinyl-popup.visible {
@@ -1665,9 +1656,6 @@ img {
   .vinyl-popup {
     min-width: 180px;
     padding: 10px;
-  }
-  .vinyl-popup::after {
-    right: 14px;
   }
   .vinyl-popup-cover {
     width: 24px;
