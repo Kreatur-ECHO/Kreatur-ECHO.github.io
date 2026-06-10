@@ -573,6 +573,23 @@
   let songList = [];
   let currentIndex = 0;
 
+  // 播放/暂停图标（1.5s 显示，渐入渐出各 0.5s）
+  const PLAY_ICON = '<svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg>';
+  const PAUSE_ICON = '<svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+  let iconTimer = null;
+
+  function flashStateIcon(isPlaying) {
+    const icon = document.getElementById('vinylStateIcon');
+    if (!icon) return;
+    clearTimeout(iconTimer);
+    icon.innerHTML = isPlaying ? PAUSE_ICON : PLAY_ICON;
+    icon.classList.add('visible');
+    // 总共显示 1.5s（含 0.5s 渐入），到达时间后渐出
+    iconTimer = setTimeout(() => {
+      icon.classList.remove('visible');
+    }, 1500);
+  }
+
   function setupDiscClick(songId) {
     const disc = document.getElementById('musicDisc');
     if (!disc || disc.dataset.clickReady) return;
@@ -649,10 +666,12 @@
       musicAudio.addEventListener('play', () => {
         playing = true;
         disc.style.animationPlayState = 'running';
+        flashStateIcon(true);
       });
       musicAudio.addEventListener('pause', () => {
         playing = false;
         disc.style.animationPlayState = 'paused';
+        flashStateIcon(false);
       });
       musicAudio.addEventListener('ended', () => {
         playing = false;
