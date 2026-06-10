@@ -1523,7 +1523,8 @@ img {
 /* 黑胶 hover 弹出播放列表 */
 .vinyl-popup {
   position: absolute;
-  bottom: calc(100% + 6px);
+  top: 0;
+  transform: translateY(calc(-100% - 8px));
   right: -4px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -1535,11 +1536,9 @@ img {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: translateY(8px);
   transition:
     opacity 0.25s ease,
-    visibility 0.25s ease,
-    transform 0.25s ease;
+    visibility 0.25s ease;
 }
 /* 三角箭头指向黑胶 */
 .vinyl-popup::after {
@@ -1559,7 +1558,6 @@ img {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transform: translateY(0);
   transition-delay: 0.5s;
 }
 
