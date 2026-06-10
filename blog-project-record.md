@@ -1,6 +1,6 @@
 # YEYU's Blog — 项目配置记录
 
-> 最后更新：2026-06-10
+> 最后更新：2026-06-11
 > 仓库：https://github.com/Kreatur-ECHO/Kreatur-ECHO.github.io
 > 线上地址：https://kreatur-echo.github.io/
 
