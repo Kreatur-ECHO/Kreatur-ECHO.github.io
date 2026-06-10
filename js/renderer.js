@@ -138,7 +138,15 @@ const Renderer = (() => {
     const sorted = sortPosts(validPosts, sortMode || 'latest', articleViews || {});
 
     const renderCard = post => {
-      const tagsHTML = post.tags.map(t => `<span class="post-tag">${t}</span>`).join('');
+      const isMobile = window.matchMedia('(max-width: 640px)').matches;
+      let tags = post.tags;
+      let tagsHTML;
+      if (isMobile && tags.length > 2) {
+        tagsHTML = tags.slice(0, 2).map(t => `<span class="post-tag">${t}</span>`).join('')
+          + '<span class="post-tag post-tag-more">...</span>';
+      } else {
+        tagsHTML = tags.map(t => `<span class="post-tag">${t}</span>`).join('');
+      }
       const featuredClass = post.featured ? ' featured' : '';
       return `
         <a href="${post.url}" class="post-card-link" data-post-id="${post.id}">

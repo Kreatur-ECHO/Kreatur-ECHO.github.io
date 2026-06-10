@@ -1508,14 +1508,13 @@ img {
     gap: 10px;
   }
 
-  /* --- 文章卡片 → 左右双列布局 --- */
+  /* --- 文章卡片 → 标题在上，标签+日期在下方行 --- */
   .post-card {
-    display: grid;
-    grid-template-columns: 48px 1fr;
-    grid-template-rows: auto auto;
-    column-gap: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 8px;
     row-gap: 3px;
-    align-items: start;
     padding: 11px 14px;
     border-radius: var(--radius-md);
     overflow: hidden;
@@ -1533,20 +1532,9 @@ img {
     z-index: 2;
   }
 
-  /* 日期：左列 */
-  .post-date {
-    grid-column: 1;
-    grid-row: 1 / 3;
-    font-size: 0.7rem;
-    white-space: nowrap;
-    margin-bottom: 0;
-    padding-top: 1px;
-  }
-
-  /* 标题：右列上行，单行省略 */
+  /* 标题：独占第一行，单行省略 */
   .post-title {
-    grid-column: 2;
-    grid-row: 1;
+    flex: 0 0 100%;
     font-size: 0.9rem;
     margin-bottom: 0;
     overflow: hidden;
@@ -1558,15 +1546,30 @@ img {
     display: none;
   }
 
-  /* 标签：右列下行 */
+  /* 标签：第二行左，溢出隐藏 */
   .post-tags {
-    grid-column: 2;
-    grid-row: 2;
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
     gap: 3px;
   }
   .post-tag {
     font-size: 0.68rem;
     padding: 1px 6px;
+  }
+  .post-tag-more {
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  /* 日期：第二行右，缩小一号 */
+  .post-date {
+    flex: 0 0 auto;
+    margin-left: auto;
+    font-size: 0.65rem;
+    margin-bottom: 0;
+    white-space: nowrap;
   }
 
   /* --- Archive 时间线 --- */
