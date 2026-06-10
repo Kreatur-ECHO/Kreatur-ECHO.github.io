@@ -1419,10 +1419,119 @@ img {
   color: var(--color-text-muted);
 }
 
+/* 侧边栏分隔线 */
+.sidebar-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 4px 6px;
+  opacity: 0.5;
+}
+
+/* 侧边栏回到顶部按钮（覆盖 dot 的 ::before 样式，改用箭头 SVG） */
+.sidebar-top {
+  margin-top: 2px;
+}
+.sidebar-top::before {
+  display: none !important;
+}
+.sidebar-top svg {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast);
+}
+.sidebar-top:hover svg {
+  color: var(--color-accent);
+}
+
+/* ===== 旋转黑胶唱片（右下角音乐图标） ===== */
+.vinyl-disc {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  z-index: 998;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 0 3px #1a1a1a,
+    0 0 0 5px #2e2e2e,
+    0 0 0 7px #1a1a1a,
+    0 0 0 9px #333,
+    0 0 0 11px #1a1a1a,
+    0 4px 22px rgba(0,0,0,0.35);
+  background: #1a1a1a;
+  animation: vinylSpin 3.5s linear infinite;
+  transition: box-shadow 0.35s ease;
+}
+.vinyl-disc:hover {
+  box-shadow:
+    0 0 0 3px #1a1a1a,
+    0 0 0 5px #2e2e2e,
+    0 0 0 7px #1a1a1a,
+    0 0 0 9px #333,
+    0 0 0 11px #1a1a1a,
+    0 4px 28px rgba(108, 99, 255, 0.4);
+  animation-play-state: paused;
+}
+.vinyl-disc:active {
+  transform: scale(0.93);
+}
+
+@keyframes vinylSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* 黑胶中心标签（专辑封面区域） */
+.vinyl-center {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid #444;
+  z-index: 1;
+  position: relative;
+}
+/* 中心孔 */
+.vinyl-center::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #111;
+  z-index: 2;
+}
+
+.vinyl-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* 桌面端：隐藏独立回到顶部（侧边栏已内置） */
+@media (min-width: 1025px) {
+  .back-to-top {
+    display: none;
+  }
+}
+
 /* 侧边栏响应式: 小屏隐藏 */
 @media (max-width: 1024px) {
   .sidebar {
     display: none;
+  }
+  .back-to-top {
+    display: flex;
   }
 }
 
@@ -1759,5 +1868,29 @@ img {
   .back-to-top svg {
     width: 15px;
     height: 15px;
+  }
+
+  /* --- 黑胶唱片（手机端缩小并置于回顶按钮上方） --- */
+  .vinyl-disc {
+    bottom: 56px;
+    right: 12px;
+    width: 40px;
+    height: 40px;
+    box-shadow:
+      0 0 0 2px #1a1a1a,
+      0 0 0 3.5px #2e2e2e,
+      0 0 0 5px #1a1a1a,
+      0 0 0 6.5px #333,
+      0 0 0 8px #1a1a1a,
+      0 3px 16px rgba(0,0,0,0.35);
+  }
+  .vinyl-center {
+    width: 16px;
+    height: 16px;
+    border-width: 1.5px;
+  }
+  .vinyl-center::after {
+    width: 3px;
+    height: 3px;
   }
 }

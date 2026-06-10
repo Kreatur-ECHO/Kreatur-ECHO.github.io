@@ -34,6 +34,8 @@
     ? SiteConfig.likesApi + '/visits' : '';
   const ARTICLE_VIEWS_API = (typeof SiteConfig !== 'undefined' && SiteConfig.likesApi)
     ? SiteConfig.likesApi + '/article-views' : '';
+  const RECENT_SONG_API = (typeof SiteConfig !== 'undefined' && SiteConfig.likesApi)
+    ? SiteConfig.likesApi + '/recent-song' : '';
 
   // ---- 哈希路由 ----
   function routeFromHash() {
@@ -132,7 +134,9 @@
       ${Renderer.renderSidebar(SiteConfig)}
       ${Renderer.renderFooter(SiteConfig)}
       ${Renderer.renderBackToTop()}
+      ${Renderer.renderMusicDisc()}
     `;
+    app.setAttribute('data-view', 'home');
 
     // ---- 事件绑定 ----
     bindHomeEvents();
@@ -141,6 +145,7 @@
     loadGitHubData();
     loadVisitCount();
     loadArticleViews();
+    loadRecentSong();
 
     // ---- 留言模块 ----
     if (typeof Comments !== 'undefined') {
@@ -177,13 +182,18 @@
       </main>
       ${Renderer.renderFooter(SiteConfig)}
       ${Renderer.renderBackToTop()}
+      ${Renderer.renderMusicDisc()}
     `;
+    app.setAttribute('data-view', 'post');
 
     // 绑定主题等通用事件
     bindCommonEvents();
 
     // 记录文章浏览
     recordArticleView(post.id);
+
+    // 加载最近音乐
+    loadRecentSong();
 
     // 回到顶部
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -244,13 +254,21 @@
       });
     }
 
-    // 回到顶部
+    // 回到顶部（桌面端隐藏，侧边栏内置；移动端/文章页显示）
     const backToTop = document.getElementById('backToTop');
     if (backToTop) {
       window.addEventListener('scroll', () => {
         backToTop.classList.toggle('visible', window.scrollY > 500);
       });
       backToTop.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    // 侧边栏回到顶部按钮
+    const sidebarBackToTop = document.getElementById('sidebarBackToTop');
+    if (sidebarBackToTop) {
+      sidebarBackToTop.addEventListener('click', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     }
@@ -430,6 +448,39 @@
       });
     } catch (err) {
       console.warn('[Blog] Failed to record article view:', err);
+    }
+  }
+
+  // ============================================================
+  //  网易云最近播放 — 更新黑胶唱片封面
+  // ============================================================
+  async function loadRecentSong() {
+    if (!RECENT_SONG_API) return;
+    try {
+      const res = await fetch(RECENT_SONG_API + '?t=' + Date.now());
+      if (!res.ok) return;
+      const data = await res.json();
+      const songs = data && data.songs;
+      if (!songs || !songs.length) return;
+
+      // 黑胶唱片展示最近喜欢的第一首
+      const latest = songs[0];
+      const disc = document.getElementById('musicDisc');
+      if (!disc) return;
+
+      const cover = disc.querySelector('.vinyl-cover');
+      if (cover && latest.cover) {
+        cover.src = latest.cover.replace(/^http:/, 'https:');
+      }
+
+      disc.title = `${latest.name} — ${latest.artist}`;
+
+      disc.style.cursor = 'pointer';
+      disc.addEventListener('click', () => {
+        window.open(`https://music.163.com/#/song?id=${latest.id}`, '_blank');
+      });
+    } catch (err) {
+      console.warn('[Blog] Failed to load recent song:', err);
     }
   }
 

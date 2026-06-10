@@ -313,15 +313,36 @@ const Renderer = (() => {
     <nav class="sidebar" id="sidebar" aria-label="Page sections">
       <div class="sidebar-inner">
         ${items}
+        <div class="sidebar-divider"></div>
+        <button class="sidebar-dot sidebar-top" id="sidebarBackToTop" aria-label="回到顶部">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+          <span class="sidebar-label">回到顶部</span>
+        </button>
       </div>
     </nav>`;
   }
 
-  // ---- Back to Top 按钮 ----
+  // ---- Back to Top 按钮（移动端/文章页备用） ----
   function renderBackToTop() {
     return `<button class="back-to-top" id="backToTop" aria-label="Back to top">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
     </button>`;
+  }
+
+  // ---- 黑胶唱片（右下角音乐图标） ----
+  function renderMusicDisc() {
+    const defaultCover = 'data:image/svg+xml,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+      '<rect width="100" height="100" rx="50" fill="%236c63ff"/>' +
+      '<text x="50" y="62" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="48" font-weight="700" font-family="sans-serif">♪</text>' +
+      '</svg>'
+    );
+    return `
+    <div class="vinyl-disc" id="musicDisc" title="最近在听">
+      <div class="vinyl-center">
+        <img class="vinyl-cover" src="${defaultCover}" alt="music" width="22" height="22" />
+      </div>
+    </div>`;
   }
 
   return {
@@ -334,6 +355,7 @@ const Renderer = (() => {
     renderSidebar,
     renderFooter,
     renderBackToTop,
+    renderMusicDisc,
     renderPostDetail,
   };
 })();

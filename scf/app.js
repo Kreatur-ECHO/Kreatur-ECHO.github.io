@@ -18,6 +18,9 @@ const PORT = 9000;
 const SECRET_ID = process.env.SECRET_ID || '';
 const SECRET_KEY = process.env.SECRET_KEY || '';
 
+const NETEASE_UID = process.env.NETEASE_UID || '';
+const NETEASE_COOKIE = process.env.NETEASE_COOKIE || '';
+
 function getToday() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -136,6 +139,104 @@ async function readJSON(key) {
 async function writeJSON(key, obj) {
   const body = JSON.stringify(obj);
   await cosRequest('PUT', key, body);
+}
+
+// ============================================================
+//  网易云音乐 — 最近播放
+// ============================================================
+
+function fetchRecentSongsFromNetease() {
+  return new Promise((resolve, reject) => {
+    if (!NETEASE_UID || !NETEASE_COOKIE) {
+      resolve({ error: 'No env vars' });
+      return;
+    }
+
+    const reqOpts = {
+      headers: {
+        'Cookie': NETEASE_COOKIE.startsWith('MUSIC_U=') ? NETEASE_COOKIE : `MUSIC_U=${NETEASE_COOKIE}`,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Referer': 'https://music.163.com/',
+      },
+      timeout: 10000,
+    };
+
+    // 直接调用 playlist detail API（使用已知的 liked playlist ID）
+    // playlist ID 相对固定，不依赖 /user/playlist 登录态
+    const LIKED_PLAYLIST_ID = '2488546807';
+    const detailUrl = `https://music.163.com/api/playlist/detail?id=${LIKED_PLAYLIST_ID}&limit=5`;
+    https.get(detailUrl, reqOpts, (res2) => {
+      let data2 = '';
+      res2.on('data', chunk => data2 += chunk);
+      res2.on('end', () => {
+        try {
+          const json2 = JSON.parse(data2);
+          if (json2.code !== 200) {
+            resolve({ error: 'Detail API code=' + json2.code, rawCode: json2.code });
+            return;
+          }
+          const tracks = ((json2.result && json2.result.tracks) || []).slice(0, 5);
+          const songs = tracks.map(t => {
+            const artists = (t.artists || []).map(a => a.name).join(' / ');
+            const album = t.album || {};
+            return {
+              name: t.name,
+              id: t.id,
+              artist: artists,
+              album: album.name || '',
+              cover: album.picUrl || '',
+            };
+          });
+
+          resolve({ songs, updatedAt: Date.now(), likedPlaylistId: parseInt(LIKED_PLAYLIST_ID) });
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }).on('error', (e) => {
+      resolve({ error: 'Fetch error: ' + e.message });
+    }).on('timeout', () => { resolve({ error: 'Timeout' }); });
+  });
+}
+
+async function handleRecentSong(method) {
+  if (method !== 'GET') return [405, { error: 'Method not allowed' }];
+
+  // 先读 COS 缓存
+  const cached = await readJSON('recent-song.json');
+  const CACHE_MS = 120000; // 2 分钟缓存，避免频繁请求网易云
+
+  if (cached && cached.updatedAt && (Date.now() - cached.updatedAt < CACHE_MS)) {
+    return [200, { ...cached, fromCache: true }];
+  }
+
+  // 诊断：检查环境变量
+  if (!NETEASE_UID || !NETEASE_COOKIE) {
+    return [500, { error: 'Env vars missing',
+      hasUid: !!NETEASE_UID, hasCookie: !!NETEASE_COOKIE,
+      uidLen: (NETEASE_UID || '').length, cookieLen: (NETEASE_COOKIE || '').length }];
+  }
+
+  // 请求网易云
+  try {
+    const result = await fetchRecentSongsFromNetease();
+    if (!result || result.error) {
+      if (cached) return [200, cached];
+      return [502, result || { error: 'No result' }];
+    }
+    if (!result.songs || !result.songs.length) {
+      if (cached) return [200, cached];
+      return [502, { error: 'Empty songs list' }];
+    }
+
+    // 写入 COS 缓存
+    await writeJSON('recent-song.json', result);
+    return [200, result];
+  } catch (err) {
+    console.error('[RecentSong] Error:', err);
+    if (cached) return [200, cached];
+    return [502, { error: 'Crash: ' + err.message }];
+  }
 }
 
 // ============================================================
@@ -278,6 +379,8 @@ async function handleDebug(req) {
       [statusCode, responseBody] = await handleVisits(method, body, ip);
     } else if (path === '/article-views') {
       [statusCode, responseBody] = await handleArticleViews(method, body, ip);
+    } else if (path === '/recent-song') {
+      [statusCode, responseBody] = await handleRecentSong(method);
     } else {
       statusCode = 404;
       responseBody = { error: 'Not found' };
