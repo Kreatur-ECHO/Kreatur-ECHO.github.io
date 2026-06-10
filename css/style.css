@@ -1516,6 +1516,133 @@ img {
   border-radius: 50%;
 }
 
+/* 黑胶 hover 弹出播放列表 */
+.vinyl-popup {
+  position: absolute;
+  bottom: 64px;
+  right: -8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  min-width: 210px;
+  z-index: 997;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition:
+    opacity 0.25s ease,
+    visibility 0.25s ease,
+    transform 0.25s ease;
+  transition-delay: 0s;
+}
+/* 三角箭头指向黑胶 */
+.vinyl-popup::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  right: 24px;
+  width: 10px;
+  height: 10px;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  transform: rotate(45deg);
+}
+
+.vinyl-disc:hover .vinyl-popup {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: 0.5s;
+}
+
+.vinyl-popup-title {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--color-border);
+  font-weight: 500;
+}
+
+.vinyl-popup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vinyl-popup-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: background var(--transition-fast);
+}
+.vinyl-popup-item:hover {
+  background: var(--color-accent-soft);
+  text-decoration: none;
+}
+
+.vinyl-popup-cover {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+}
+
+.vinyl-popup-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.vinyl-popup-song {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vinyl-popup-artist {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 手机端弹出位置调整 */
+@media (max-width: 640px) {
+  .vinyl-popup {
+    bottom: 48px;
+    right: -4px;
+    min-width: 180px;
+    padding: 10px;
+  }
+  .vinyl-popup::after {
+    right: 16px;
+  }
+  .vinyl-popup-cover {
+    width: 24px;
+    height: 24px;
+  }
+  .vinyl-popup-song {
+    font-size: 0.75rem;
+  }
+  .vinyl-popup-artist {
+    font-size: 0.68rem;
+  }
+}
+
 /* 桌面端：隐藏独立回到顶部（侧边栏已内置） */
 @media (min-width: 1025px) {
   .back-to-top {

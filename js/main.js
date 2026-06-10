@@ -474,11 +474,34 @@
       }
 
       disc.title = `${latest.name} — ${latest.artist}`;
-
       disc.style.cursor = 'pointer';
       disc.addEventListener('click', () => {
         window.open(`https://music.163.com/#/song?id=${latest.id}`, '_blank');
       });
+
+      // 构建弹出播放列表（歌曲 2-5）
+      const rest = songs.slice(1);
+      if (!rest.length) return;
+
+      let popupHTML = '<div class="vinyl-popup-title">最近喜欢</div>';
+      popupHTML += '<div class="vinyl-popup-list">';
+      rest.forEach(s => {
+        const safeCover = (s.cover || '').replace(/^http:/, 'https:');
+        popupHTML += `
+          <a class="vinyl-popup-item" href="https://music.163.com/#/song?id=${s.id}" target="_blank" title="${s.name} — ${s.artist}">
+            <img class="vinyl-popup-cover" src="${safeCover}" alt="" loading="lazy" onerror="this.style.display='none'" />
+            <div class="vinyl-popup-info">
+              <div class="vinyl-popup-song">${s.name}</div>
+              <div class="vinyl-popup-artist">${s.artist}</div>
+            </div>
+          </a>`;
+      });
+      popupHTML += '</div>';
+
+      // 移除旧 popup，插入新 popup
+      const oldPopup = disc.querySelector('.vinyl-popup');
+      if (oldPopup) oldPopup.remove();
+      disc.insertAdjacentHTML('beforeend', popupHTML);
     } catch (err) {
       console.warn('[Blog] Failed to load recent song:', err);
     }
