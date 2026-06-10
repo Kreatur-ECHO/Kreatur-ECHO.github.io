@@ -569,7 +569,7 @@
       musicAudio = new Audio();
       musicAudio.src = data.audioUrl;
       musicAudio.preload = 'none';
-      musicAudio.volume = 0.6;
+      musicAudio.volume = 0.25;
       document.body.appendChild(musicAudio);
 
       // 播放/暂停切换
