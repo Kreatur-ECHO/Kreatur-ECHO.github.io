@@ -600,25 +600,20 @@
   function startBarDance() {
     if (barTimer) return;
     barTimer = setInterval(function () {
-      var bars = document.querySelectorAll('.vinyl-bar');
-      if (!bars.length) { stopBarDance(); return; }
-      // 每轮更新 ~30 根为随机高度，其余自然衰减
+      var bs = document.querySelectorAll('.vinyl-bar');
+      if (!bs.length) { stopBarDance(); return; }
       for (var i = 0; i < 72; i++) {
         if (Math.random() < 0.42) {
           var h = 2 + Math.floor(Math.random() * 10);
-          if (bars[i]) bars[i].style.setProperty('--h', h + 'px');
-        } else if (bars[i]) {
-          var cur = parseFloat(bars[i].style.getPropertyValue('--h')) || 2;
-          if (cur > 2) bars[i].style.setProperty('--h', Math.max(2, cur * 0.65) + 'px');
+          if (bs[i]) bs[i].style.setProperty('--h', h + 'px');
+        } else if (bs[i]) {
+          var cur = parseFloat(bs[i].style.getPropertyValue('--h')) || 2;
+          if (cur > 2) bs[i].style.setProperty('--h', Math.max(2, cur * 0.65) + 'px');
         }
       }
-      // 低频区额外抬几根
       for (var j = 0; j < 3; j++) {
         var bi = Math.floor(Math.random() * 24);
-        if (bars[bi]) {
-          var bh = 4 + Math.floor(Math.random() * 8);
-          bars[bi].style.setProperty('--h', bh + 'px');
-        }
+        if (bs[bi]) bs[bi].style.setProperty('--h', (4 + Math.floor(Math.random() * 8)) + 'px');
       }
     }, 70);
   }
@@ -626,7 +621,11 @@
   function stopBarDance() {
     if (barTimer) { clearInterval(barTimer); barTimer = null; }
     var bars = document.querySelectorAll('.vinyl-bar');
-    for (var k = 0; k < bars.length; k++) bars[k].style.setProperty('--h', '2px');
+    // 长过渡 → 0.3s 渐出落回
+    for (var k = 0; k < bars.length; k++) {
+      bars[k].style.transition = 'height 0.3s ease-out';
+      bars[k].style.setProperty('--h', '2px');
+    }
   }
 
   function flashStateIcon(isPlaying) {
