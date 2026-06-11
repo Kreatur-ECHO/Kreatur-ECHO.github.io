@@ -594,11 +594,10 @@
   const PAUSE_ICON = '<svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
   let iconTimer = null;
 
-  // ---- 音柱可视化 (Web Audio API) ----
+  // ---- 音柱可视化 (Web Audio API — captureStream 只读旁路) ----
   var audioCtx = null;
   var analyser = null;
-  var mediaSource = null;
-  var analyserToDest = false;
+  var streamSource = null;
   var animFrameId = null;
 
   function initAudioContext() {
@@ -607,26 +606,24 @@
       analyser = audioCtx.createAnalyser();
       analyser.fftSize = 64;
       analyser.smoothingTimeConstant = 0.75;
-      // 音柱 rAF 循环独立于音频路由，始终运行
+      // analyser 不连 destination — 这是纯只读旁路，音频直接到扬声器
       startBarAnimation();
-      // context 被浏览器挂起时自动恢复；恢复后接入音频源
       audioCtx.addEventListener('statechange', function () {
         if (audioCtx && audioCtx.state === 'suspended') {
           audioCtx.resume();
-        } else if (audioCtx && audioCtx.state === 'running') {
-          connectAudioSource(musicAudio);
+        } else if (audioCtx && audioCtx.state === 'running' && musicAudio && musicAudio.src) {
+          tryConnectStream(musicAudio);
         }
       });
     }
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
   }
 
-  // 只负责 rAF 循环更新音柱高度，不依赖音频路由
   function startBarAnimation() {
     if (animFrameId) return;
-    var bufferLength = 32;  // fftSize=64 → 32 bins
+    var bufferLength = 32;
     var dataArray = new Uint8Array(bufferLength);
-    function animate() {
+    (function animate() {
       animFrameId = requestAnimationFrame(animate);
       if (analyser) analyser.getByteFrequencyData(dataArray);
       for (var i = 0; i < 72; i++) {
@@ -638,42 +635,30 @@
         if (binEnd > bufferLength) binEnd = bufferLength;
         var sum = 0;
         for (var j = binStart; j < binEnd; j++) sum += dataArray[j];
-        var avg = sum / (binEnd - binStart);
-        var h = Math.max(2, (avg / 255) * 22);
+        var h = Math.max(2, (sum / (binEnd - binStart)) / 255 * 22);
         var bar = document.querySelector('.vinyl-bar:nth-child(' + (i + 1) + ')');
         if (bar) bar.style.setProperty('--h', h + 'px');
       }
-    }
-    animate();
+    })();
   }
 
   function stopBarAnimation() {
     if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+    if (streamSource) { try { streamSource.disconnect(); } catch (_) {} streamSource = null; }
     var bars = document.querySelectorAll('.vinyl-bar');
     for (var k = 0; k < bars.length; k++) bars[k].style.setProperty('--h', '2px');
   }
 
-  // 将 audio 元素接入 analyser→destination（接管音频路由）
-  function connectAudioSource(audio) {
-    if (!audioCtx || !analyser || !audio || !audio.src) return;
-    if (audioCtx.state !== 'running') return;  // context 未运行，不接管（音频直接播放）
-    if (mediaSource) {
-      // 已接入过同一个 audio（或之前的），先断开
-      try { mediaSource.disconnect(); } catch (_) {}
-      mediaSource = null;
-    }
+  // captureStream 只读旁路 — 不接管音频路由，跨域无声时退化但不影响播放
+  function tryConnectStream(audio) {
+    if (!audioCtx || !analyser || !audio || !audio.captureStream) return;
+    if (audioCtx.state !== 'running') return;
+    if (streamSource) { try { streamSource.disconnect(); } catch (_) {} streamSource = null; }
     try {
-      mediaSource = audioCtx.createMediaElementSource(audio);
-      mediaSource.connect(analyser);
-      if (!analyserToDest) {
-        analyser.connect(audioCtx.destination);
-        analyserToDest = true;
-      }
-    } catch (_) { mediaSource = null; }
-  }
-
-  function disconnectAudioSource() {
-    if (mediaSource) { try { mediaSource.disconnect(); } catch (_) {} mediaSource = null; }
+      var stream = audio.captureStream();
+      streamSource = audioCtx.createMediaStreamSource(stream);
+      streamSource.connect(analyser);
+    } catch (_) { streamSource = null; }
   }
 
   function flashStateIcon(isPlaying) {
@@ -702,10 +687,11 @@
         if (playing) {
           musicAudio.pause();
         } else {
-          // 用户点击 → 唤醒 AudioContext → 尝试接入音柱
+          // 首次点击 → 初始化音频上下文 + 尝试接入 captureStream 旁路
+          // 后续点击 → context 已在 running，直接播放
           initAudioContext();
-          connectAudioSource(musicAudio);
-          musicAudio.play().catch(function (err) { console.warn('[Blog] Play failed:', err); });
+          tryConnectStream(musicAudio);
+          musicAudio.play().catch(function () {});
         }
       } else {
         window.open(`https://music.163.com/#/song?id=${songId}`, '_blank');
@@ -787,9 +773,10 @@
       // 自动播放
       musicAudio.play().catch(function () {});
 
-      // ---- 音柱可视化：尝试接入（context 未运行时跳过，音频直接播放） ----
-      initAudioContext();
-      connectAudioSource(musicAudio);
+      // 可视化已初始化 → 新 audio 也接入 captureStream 旁路
+      if (audioCtx) {
+        tryConnectStream(musicAudio);
+      }
     } catch (err) {
       console.warn('[Blog] Failed to search music:', err);
     }
