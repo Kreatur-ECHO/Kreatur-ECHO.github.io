@@ -550,6 +550,10 @@ img {
   border-radius: var(--radius-full);
   font-size: 0.78rem;
   font-weight: 500;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   transition: opacity var(--transition-base);
 }
 .post-tag:hover {
