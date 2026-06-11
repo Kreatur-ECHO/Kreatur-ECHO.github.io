@@ -598,6 +598,7 @@
   var audioCtx = null;
   var analyser = null;
   var mediaSource = null;
+  var analyserConnected = false;
   var animFrameId = null;
 
   function initAudioContext() {
@@ -606,10 +607,8 @@
       analyser = audioCtx.createAnalyser();
       analyser.fftSize = 64;
       analyser.smoothingTimeConstant = 0.75;
-      analyser.connect(audioCtx.destination);
-      // Chrome 会在 ~30s 无音频后挂起 AudioContext；
-      // createMediaElementSource 已接管音频路由，挂起 = 静音 → 自动恢复；
-      // 恢复后尝试接入音柱（如果之前因 context 挂起而跳过了）
+      // analyser → destination 延迟到 startVisualizer 才连接，
+      // 避免空 analyser 连接干扰首次加载时 <audio> 的直接播放
       audioCtx.addEventListener('statechange', function () {
         if (audioCtx && audioCtx.state === 'suspended') {
           audioCtx.resume();
@@ -627,6 +626,11 @@
     try {
       mediaSource = audioCtx.createMediaElementSource(audio);
       mediaSource.connect(analyser);
+      // 连接 analyser → destination（仅一次，重复连接会导致音量叠加）
+      if (!analyserConnected) {
+        analyser.connect(audioCtx.destination);
+        analyserConnected = true;
+      }
     } catch (_) { mediaSource = null; return; }
 
     var bufferLength = analyser.frequencyBinCount;
