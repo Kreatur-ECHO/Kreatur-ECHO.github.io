@@ -862,11 +862,18 @@ img {
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 10px rgba(108, 99, 255, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
   z-index: 1001;
 }
 .back-to-top svg {
   width: 18px;
   height: 18px;
+}
+.back-to-top.visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 .back-to-top:hover {
   transform: translateY(-2px);

@@ -256,9 +256,14 @@
       });
     }
 
-    // 回到顶部（桌面端 CSS 隐藏，移动端/文章页显示）
+    // 回到顶部：IntersectionObserver 监听 Hero 区域，Hero 不可见时显示
     var backToTop = document.getElementById('backToTop');
-    if (backToTop) {
+    var heroSection = document.getElementById('about');
+    if (backToTop && heroSection) {
+      var btObserver = new IntersectionObserver(function (entries) {
+        backToTop.classList.toggle('visible', !entries[0].isIntersecting);
+      }, { threshold: 0 });
+      btObserver.observe(heroSection);
       backToTop.addEventListener('click', function () {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
