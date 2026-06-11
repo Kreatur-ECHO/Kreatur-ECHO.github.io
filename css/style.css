@@ -368,6 +368,7 @@ img {
 /* 文章卡片链接（整张卡片可点击，拉伸填充网格单元格） */
 .post-card-link {
   display: flex;
+  min-width: 0;
   color: inherit;
   text-decoration: none;
 }
@@ -449,6 +450,7 @@ img {
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -514,10 +516,13 @@ img {
   font-size: 0.925rem;
   line-height: 1.65;
   margin-bottom: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
-  overflow: hidden;
+  max-height: calc(0.925rem * 1.65 * 3);
   word-break: break-word;
 }
 
