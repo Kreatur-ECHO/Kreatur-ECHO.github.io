@@ -44,44 +44,6 @@
     to   { bottom: 68vh; opacity: 1; }
   }
 
-  /* ==== 水波光晕层 ==== */
-  .moon-glow {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 280px; height: 280px;
-    border-radius: 50%;
-    pointer-events: none;
-    background:
-      radial-gradient(circle, rgba(220,190,120,0.14) 0%, rgba(210,175,100,0.06) 40%, transparent 65%);
-  }
-  /* 水波环：多层圆环叠出立体感 */
-  .moon-glow::before,
-  .moon-glow::after {
-    content: '';
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    pointer-events: none;
-  }
-  .moon-glow::before {
-    width: 170px; height: 170px;
-    border: 1.5px solid rgba(220,190,120,0.22);
-    animation: rippleOut 3s ease-in-out infinite;
-  }
-  .moon-glow::after {
-    width: 200px; height: 200px;
-    border: 1px solid rgba(220,190,120,0.16);
-    animation: rippleOut 3s ease-in-out 0.8s infinite;
-  }
-
-  @keyframes rippleOut {
-    0%   { transform: translate(-50%, -50%) scale(0.6); opacity: 0.55; border-width: 2px; }
-    50%  { transform: translate(-50%, -50%) scale(1.25); opacity: 0.3; border-width: 0.6px; }
-    100% { transform: translate(-50%, -50%) scale(1.6);  opacity: 0;  border-width: 0.3px; }
-  }
-
   /* ==== 圆月本体 ==== */
   .intro-moon {
     position: absolute;
@@ -107,6 +69,44 @@
   }
   .intro-moon:active {
     transform: scale(0.95);
+  }
+
+  /* 融入月亮的水波光晕（在 stage 伪元素上，圆心与月亮重合） */
+  .moon-stage::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    pointer-events: none;
+    background: radial-gradient(circle,
+      rgba(220,190,120,0.15) 0%,
+      rgba(210,175,100,0.07) 35%,
+      transparent 55%);
+  }
+  .moon-stage::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 150px; height: 150px;
+    border-radius: 50%;
+    pointer-events: none;
+    border: 1.5px solid rgba(220,190,120,0.16);
+    animation: rippleIn 3s ease-in-out infinite;
+  }
+
+  @keyframes rippleIn {
+    0%   { transform: translate(-50%, -50%) scale(1.4); opacity: 0;   border-width: 0.3px; }
+    50%  { transform: translate(-50%, -50%) scale(0.8); opacity: 0.45; border-width: 1.8px; }
+    100% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.1; border-width: 0.5px; }
+  }
+
+  @keyframes rippleOut {
+    0%   { transform: scale(0.5); opacity: 0.5; border-width: 2px; }
+    50%  { transform: scale(1.1); opacity: 0.25; border-width: 0.8px; }
+    100% { transform: scale(1.5); opacity: 0;   border-width: 0.3px; }
   }
 
   /* ==== 3D 纹理层：多片浮动云影模拟月面起伏 ==== */
@@ -153,9 +153,9 @@
 
   @keyframes sparkFloat {
     0%   { opacity: 0; transform: translate(0, 0) scale(0); }
-    15%  { opacity: 0.9; }
-    40%  { opacity: 0.7; transform: scale(1); }
-    100% { opacity: 0; transform: translate(15px, -100px) scale(0.2); }
+    10%  { opacity: 0.85; }
+    30%  { opacity: 0.6; transform: scale(1); }
+    100% { opacity: 0; transform: translate(8px, -70px) scale(0.2); }
   }
 </style>
 </head>
@@ -168,7 +168,6 @@
 
   <div class="intro-overlay" id="overlay">
     <div class="moon-stage" id="stage">
-      <div class="moon-glow"></div>
       <div class="intro-moon" id="moon">
         <div class="moon-texture"></div>
         <div class="moon-texture"></div>
@@ -183,16 +182,18 @@
     var overlay = document.getElementById('overlay');
     var sparksContainer = document.getElementById('sparks');
 
-    // 金粉碎光：12 颗随机延时/偏移
+    // 金粉碎光：16 颗环绕月亮，缓慢上浮
     var h = '';
-    for (var i = 0; i < 12; i++) {
+    for (var i = 0; i < 16; i++) {
       var size = 1.5 + Math.random() * 2.5;
-      var delay = 0.8 + Math.random() * 1.8;
-      var xOff = (Math.random() - 0.5) * 180;
-      var yOff = 30 + Math.random() * 90;
+      var delay = 0.5 + Math.random() * 3.5;  // 0.5~4s 错开
+      var angle = Math.random() * Math.PI * 2;
+      var dist = 50 + Math.random() * 70;  // 50~120px 环形散布
+      var xOff = Math.cos(angle) * dist;
+      var yOff = Math.sin(angle) * dist;
       h += '<div class="intro-spark" style="'
         + 'width:' + size + 'px; height:' + size + 'px; '
-        + 'bottom:' + yOff + 'px; left:calc(50% + ' + xOff + 'px); '
+        + 'top:calc(50% + ' + yOff.toFixed(0) + 'px); left:calc(50% + ' + xOff.toFixed(0) + 'px); '
         + 'animation-delay:' + delay + 's;"></div>';
     }
     sparksContainer.innerHTML = h;
