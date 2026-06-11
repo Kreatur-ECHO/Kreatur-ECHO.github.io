@@ -257,13 +257,26 @@
     }
 
     // 回到顶部（桌面端隐藏，侧边栏内置；移动端/文章页显示）
-    const backToTop = document.getElementById('backToTop');
+    var backToTop = document.getElementById('backToTop');
     if (backToTop) {
-      window.addEventListener('scroll', () => {
-        backToTop.classList.toggle('visible', window.scrollY > 500);
-      });
-      backToTop.addEventListener('click', () => {
+      var scrollTicking = false;
+      window.addEventListener('scroll', function () {
+        if (!scrollTicking) {
+          requestAnimationFrame(function () {
+            var btn = document.getElementById('backToTop');
+            if (btn) btn.classList.toggle('visible', window.scrollY > 500);
+            scrollTicking = false;
+          });
+          scrollTicking = true;
+        }
+      }, { passive: true });
+      backToTop.addEventListener('click', function () {
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        // smooth 动画结束后强制重检
+        setTimeout(function () {
+          var btn = document.getElementById('backToTop');
+          if (btn) btn.classList.toggle('visible', window.scrollY > 500);
+        }, 600);
       });
     }
 

@@ -866,7 +866,7 @@ img {
   transform: translateY(10px);
   transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.2s ease;
   pointer-events: none;
-  z-index: 999;
+  z-index: 1001;
 }
 .back-to-top svg {
   width: 18px;
