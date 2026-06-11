@@ -47,28 +47,57 @@
     pointer-events: none;
   }
 
-  /* ===== 圆月 ===== */
-  .intro-moon {
+  /* ===== 月亮外壳（负责上升动画，不锁 transform） ===== */
+  .moon-riser {
     position: absolute;
     left: 50%;
     bottom: -160px;
     width: 120px;
     height: 120px;
     margin-left: -60px;
+    animation: moonRise 2.2s cubic-bezier(0.45, 0, 0.25, 1) forwards;
+  }
+
+  @keyframes moonRise {
+    from { bottom: -160px; opacity: 0; }
+    20%  { opacity: 0; }
+    to   { bottom: 65vh; opacity: 1; }
+  }
+
+  /* ===== 圆月本体（缩放/光晕，动画结束后释放 transform 给 hover） ===== */
+  .intro-moon {
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
     cursor: pointer;
+    position: relative;
     background: radial-gradient(circle at 40% 40%, #f5e6c8 0%, #e8d5a3 30%, #d4b86a 60%, #b8935a 100%);
     box-shadow:
-      0 0 60px 20px rgba(220, 190, 120, 0.25),
-      0 0 120px 40px rgba(210, 175, 100, 0.15),
-      0 0 200px 60px rgba(200, 160, 80, 0.08);
-    animation:
-      moonRise 2.2s cubic-bezier(0.45, 0, 0.25, 1) forwards,
-      moonGlow 3s ease-in-out infinite 2.2s;
-    transition: transform 0.45s cubic-bezier(0.18, 1.8, 0.5, 1);
+      0 0 40px 10px rgba(220, 190, 120, 0.3),
+      0 0 90px 30px rgba(210, 175, 100, 0.18),
+      0 0 160px 50px rgba(200, 160, 80, 0.1);
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
   }
-  .intro-moon:hover {
-    transform: scale(1.12);
+  .intro-moon.ready:hover {
+    transform: scale(1.08);
+  }
+  .intro-moon.ready:active {
+    transform: scale(0.95);
+  }
+
+  /* 光晕放在 riser 上，与月亮分离 */
+  .moon-riser::after {
+    content: '';
+    position: absolute;
+    inset: -60px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(220,190,120,0.18) 0%, rgba(210,175,100,0.08) 50%, transparent 70%);
+    animation: moonGlow 3s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes moonGlow {
+    0%, 100% { opacity: 0.8; }
+    50%      { opacity: 1.2; }
   }
   /* 内光斑（让月亮有层次感） */
   .intro-moon::before {
@@ -100,34 +129,6 @@
     background: #f0d78c;
     opacity: 0;
     animation: sparkFloat 2s ease-out forwards;
-  }
-
-  @keyframes moonRise {
-    0% {
-      bottom: -160px;
-      opacity: 0;
-      transform: scale(0.85);
-    }
-    100% {
-      bottom: 65vh;
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  @keyframes moonGlow {
-    0%, 100% {
-      box-shadow:
-        0 0 60px 20px rgba(220, 190, 120, 0.25),
-        0 0 120px 40px rgba(210, 175, 100, 0.15),
-        0 0 200px 60px rgba(200, 160, 80, 0.08);
-    }
-    50% {
-      box-shadow:
-        0 0 70px 24px rgba(220, 190, 120, 0.3),
-        0 0 140px 48px rgba(210, 175, 100, 0.18),
-        0 0 220px 70px rgba(200, 160, 80, 0.1);
-    }
   }
 
   @keyframes sparkFloat {
@@ -162,7 +163,9 @@
 
   <!-- 入场动画遮罩 -->
   <div class="intro-overlay" id="introOverlay">
-    <div class="intro-moon" id="introMoon"></div>
+    <div class="moon-riser" id="moonRiser">
+      <div class="intro-moon" id="introMoon"></div>
+    </div>
     <div id="sparks"></div>
   </div>
 
@@ -187,6 +190,11 @@
       + 'animation-delay:' + delay + 's;"></div>';
   }
   sparksContainer.innerHTML = sparksHTML;
+
+  // 动画结束后释放 transform，启用 hover 的 scale 效果
+  setTimeout(function () {
+    moon.classList.add('ready');
+  }, 2300);
 
   // 点击月亮解除遮罩
   function dismiss() {
