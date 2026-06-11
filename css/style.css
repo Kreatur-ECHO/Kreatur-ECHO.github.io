@@ -1446,17 +1446,13 @@ img {
 /* ===== 旋转黑胶唱片（右下角音乐图标） ===== */
 .vinyl-wrapper {
   position: fixed;
-  bottom: 18px;
-  right: 18px;
+  bottom: 24px;
+  right: 24px;
   z-index: 998;
-  width: 124px;
-  height: 124px;
 }
 
 .vinyl-disc {
-  position: absolute;
-  bottom: 0;
-  right: 0;
+  position: relative;
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -1496,10 +1492,10 @@ img {
 /* ===== 黑胶音柱（不随唱片旋转，环绕外围） ===== */
 .vinyl-bars {
   position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 56px;
-  height: 56px;
+  top: -34px;
+  left: -34px;
+  right: -34px;
+  bottom: -34px;
   pointer-events: none;
   z-index: 0;
   overflow: visible;
@@ -2059,8 +2055,6 @@ img {
   .vinyl-wrapper {
     bottom: 56px;
     right: 12px;
-    width: 96px;
-    height: 96px;
   }
   .vinyl-disc {
     width: 40px;
@@ -2071,8 +2065,8 @@ img {
       0 0 0 3px var(--color-accent),
       0 3px 12px rgba(0,0,0,0.35);
   }
-  .vinyl-bars { width: 40px; height: 40px; }
-  .vinyl-bar { width: 1.2px; opacity: 0.5; }
+  .vinyl-bars { top: -24px; left: -24px; right: -24px; bottom: -24px; }
+  .vinyl-bar { width: 1.2px; opacity: 0.5; --bar-gap: -22px; }
   .vinyl-center {
     width: 36px;
     height: 36px;

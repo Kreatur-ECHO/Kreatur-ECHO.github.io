@@ -681,6 +681,17 @@
         if (playing) {
           musicAudio.pause();
         } else {
+          // 用户点击时尝试启用音柱可视化（AudioContext 此时可被唤醒）
+          if (audioCtx && !currentSource && analyser) {
+            initAudioContext();
+            if (audioCtx.state === 'running') {
+              try {
+                currentSource = audioCtx.createMediaElementSource(musicAudio);
+                currentSource.connect(analyser);
+                startVisualizer();
+              } catch (_) { currentSource = null; }
+            }
+          }
           musicAudio.play().catch(() => {});
         }
       } else {
@@ -740,17 +751,17 @@
       musicAudio.volume = 0.19;
       document.body.appendChild(musicAudio);
 
-      // ---- 接入音柱可视化 ----
+      // ---- 接入音柱可视化（仅在 AudioContext 已运行时接管音频路由） ----
       initAudioContext();
       if (currentSource) {
-        try { currentSource.disconnect(); } catch (_) {}
+        try { currentSource.disconnect(); } catch (_) { currentSource = null; }
       }
-      try {
-        currentSource = audioCtx.createMediaElementSource(musicAudio);
-        currentSource.connect(analyser);
-        startVisualizer();
-      } catch (_) {
-        // createMediaElementSource 对同一 audio 只能调用一次（不应发生，但兜底）
+      if (audioCtx && audioCtx.state === 'running') {
+        try {
+          currentSource = audioCtx.createMediaElementSource(musicAudio);
+          currentSource.connect(analyser);
+          startVisualizer();
+        } catch (_) { currentSource = null; }
       }
 
       musicAudio.addEventListener('play', () => {

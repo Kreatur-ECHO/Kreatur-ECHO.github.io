@@ -347,7 +347,7 @@ const Renderer = (() => {
     var barsHTML = '';
     for (var j = 0; j < 24; j++) {
       var angle = j * 15;
-      barsHTML += '<div class="vinyl-bar ' + barClasses[j] + '" style="transform: rotate(' + angle + 'deg) translateY(-30px)"></div>';
+      barsHTML += '<div class="vinyl-bar ' + barClasses[j] + '" style="transform: rotate(' + angle + 'deg) translateY(var(--bar-gap, -30px))"></div>';
     }
     return `
     <div class="vinyl-wrapper" id="musicDiscWrap">
