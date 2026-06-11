@@ -569,9 +569,9 @@
       } else {
         // 页面切换：保留当前播放状态，仅重建 UI 交互
         setupDiscClick(songList[currentIndex] && songList[currentIndex].id);
-        // 恢复旋转动画状态
         if (playing) {
           disc.style.animationPlayState = 'running';
+          startBarDance();
         }
       }
     } catch (err) {
@@ -594,71 +594,33 @@
   const PAUSE_ICON = '<svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
   let iconTimer = null;
 
-  // ---- 音柱可视化 (Web Audio API — captureStream 只读旁路) ----
-  var audioCtx = null;
-  var analyser = null;
-  var streamSource = null;
-  var animFrameId = null;
+  // ---- 音柱随机动画 ----
+  var barTimer = null;
 
-  function initAudioContext() {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 64;
-      analyser.smoothingTimeConstant = 0.75;
-      // analyser 不连 destination — 这是纯只读旁路，音频直接到扬声器
-      startBarAnimation();
-      audioCtx.addEventListener('statechange', function () {
-        if (audioCtx && audioCtx.state === 'suspended') {
-          audioCtx.resume();
-        } else if (audioCtx && audioCtx.state === 'running' && musicAudio && musicAudio.src) {
-          tryConnectStream(musicAudio);
-        }
-      });
-    }
-    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-  }
-
-  function startBarAnimation() {
-    if (animFrameId) return;
-    var bufferLength = 32;
-    var dataArray = new Uint8Array(bufferLength);
-    (function animate() {
-      animFrameId = requestAnimationFrame(animate);
-      if (analyser) analyser.getByteFrequencyData(dataArray);
-      for (var i = 0; i < 72; i++) {
-        var binCenter = i * bufferLength / 72;
-        var binStart = Math.floor(binCenter);
-        var binEnd = Math.ceil(binCenter + bufferLength / 72);
-        if (binEnd <= binStart) binEnd = binStart + 1;
-        if (binStart < 0) binStart = 0;
-        if (binEnd > bufferLength) binEnd = bufferLength;
-        var sum = 0;
-        for (var j = binStart; j < binEnd; j++) sum += dataArray[j];
-        var h = Math.max(2, (sum / (binEnd - binStart)) / 255 * 22);
-        var bar = document.querySelector('.vinyl-bar:nth-child(' + (i + 1) + ')');
-        if (bar) bar.style.setProperty('--h', h + 'px');
+  function startBarDance() {
+    if (barTimer) return;
+    barTimer = setInterval(function () {
+      var bars = document.querySelectorAll('.vinyl-bar');
+      if (!bars.length) { stopBarDance(); return; }
+      // 先全部归底，再随机挑几根跳起来
+      for (var k = 0; k < bars.length; k++) bars[k].style.setProperty('--h', '0px');
+      for (var n = 0; n < 14; n++) {
+        var idx = Math.floor(Math.random() * 72);
+        var h = 3 + Math.floor(Math.random() * 18);
+        if (bars[idx]) bars[idx].style.setProperty('--h', h + 'px');
       }
-    })();
+      // 低频区（0-23）稍高
+      for (var m = 0; m < 4; m++) {
+        var bi = Math.floor(Math.random() * 24);
+        if (bars[bi]) bars[bi].style.setProperty('--h', (8 + Math.floor(Math.random() * 16)) + 'px');
+      }
+    }, 120);
   }
 
-  function stopBarAnimation() {
-    if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
-    if (streamSource) { try { streamSource.disconnect(); } catch (_) {} streamSource = null; }
+  function stopBarDance() {
+    if (barTimer) { clearInterval(barTimer); barTimer = null; }
     var bars = document.querySelectorAll('.vinyl-bar');
     for (var k = 0; k < bars.length; k++) bars[k].style.setProperty('--h', '2px');
-  }
-
-  // captureStream 只读旁路 — 不接管音频路由，跨域无声时退化但不影响播放
-  function tryConnectStream(audio) {
-    if (!audioCtx || !analyser || !audio || !audio.captureStream) return;
-    if (audioCtx.state !== 'running') return;
-    if (streamSource) { try { streamSource.disconnect(); } catch (_) {} streamSource = null; }
-    try {
-      var stream = audio.captureStream();
-      streamSource = audioCtx.createMediaStreamSource(stream);
-      streamSource.connect(analyser);
-    } catch (_) { streamSource = null; }
   }
 
   function flashStateIcon(isPlaying) {
@@ -667,8 +629,7 @@
     clearTimeout(iconTimer);
     icon.innerHTML = isPlaying ? PAUSE_ICON : PLAY_ICON;
     icon.classList.add('visible');
-    // 总共显示 1.5s（含 0.5s 渐入），到达时间后渐出
-    iconTimer = setTimeout(() => {
+    iconTimer = setTimeout(function () {
       icon.classList.remove('visible');
     }, 1500);
   }
@@ -677,24 +638,20 @@
     const disc = document.getElementById('musicDisc');
     if (!disc || disc.dataset.clickReady) return;
     disc.dataset.clickReady = '1';
-    disc.addEventListener('click', (e) => {
+    disc.addEventListener('click', function (e) {
       if (e.target.closest('.vinyl-popup')) return;
       if (clickLock) return;
       clickLock = true;
-      setTimeout(() => { clickLock = false; }, 100);
+      setTimeout(function () { clickLock = false; }, 100);
 
       if (musicAudio && musicAudio.src) {
         if (playing) {
           musicAudio.pause();
         } else {
-          // 首次点击 → 初始化音频上下文 + 尝试接入 captureStream 旁路
-          // 后续点击 → context 已在 running，直接播放
-          initAudioContext();
-          tryConnectStream(musicAudio);
           musicAudio.play().catch(function () {});
         }
       } else {
-        window.open(`https://music.163.com/#/song?id=${songId}`, '_blank');
+        window.open('https://music.163.com/#/song?id=' + songId, '_blank');
       }
     });
   }
@@ -702,13 +659,12 @@
   function playNext() {
     if (!songList.length) return;
     currentIndex = (currentIndex + 1) % songList.length;
-    const s = songList[currentIndex];
+    var s = songList[currentIndex];
     switchToSong(s.name, s.artist, s.cover, s.id);
-    // 更新列表高亮
-    const popupEl = document.querySelector('.vinyl-popup');
+    var popupEl = document.querySelector('.vinyl-popup');
     if (popupEl) {
-      const items = popupEl.querySelectorAll('.vinyl-popup-item');
-      items.forEach(el => el.classList.remove('vinyl-popup-current'));
+      var items = popupEl.querySelectorAll('.vinyl-popup-item');
+      for (var i = 0; i < items.length; i++) items[i].classList.remove('vinyl-popup-current');
       if (items[currentIndex]) items[currentIndex].classList.add('vinyl-popup-current');
     }
   }
@@ -756,27 +712,25 @@
         var discEl = document.getElementById('musicDisc');
         if (discEl) discEl.style.animationPlayState = 'running';
         flashStateIcon(true);
+        startBarDance();
       });
       musicAudio.addEventListener('pause', () => {
         playing = false;
         var discEl = document.getElementById('musicDisc');
         if (discEl) discEl.style.animationPlayState = 'paused';
         flashStateIcon(false);
+        stopBarDance();
       });
       musicAudio.addEventListener('ended', () => {
         playing = false;
         var discEl = document.getElementById('musicDisc');
         if (discEl) discEl.style.animationPlayState = 'paused';
+        stopBarDance();
         playNext();
       });
 
-      // 自动播放（用户此前已与站点交互过时可通过，否则被浏览器策略阻止）
+      // 自动播放
       musicAudio.play().catch(function () {});
-
-      // 可视化已初始化 → 新 audio 也接入 captureStream 旁路
-      if (audioCtx) {
-        tryConnectStream(musicAudio);
-      }
     } catch (err) {
       console.warn('[Blog] Failed to search music:', err);
     }
