@@ -623,7 +623,7 @@
     var bars = document.querySelectorAll('.vinyl-bar');
     // 长过渡 → 0.3s 渐出落回
     for (var k = 0; k < bars.length; k++) {
-      bars[k].style.transition = 'height 0.3s ease-out';
+      bars[k].style.transition = 'height 0.5s ease-out';
       bars[k].style.setProperty('--h', '2px');
     }
   }
