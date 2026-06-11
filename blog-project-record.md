@@ -347,6 +347,32 @@ likesApi: 'https://1441674200-buqu8i9sqn.ap-guangzhou.tencentscf.com',
 - 侧边栏回顶按钮使用 SVG 箭头代替默认圆点
 - 点击滚动到顶部 `behavior: smooth`
 
+### 6.10 音柱可视化（2026-06-11）
+
+- 72 根音柱 5° 间隔环绕黑胶，`.vinyl-bars` 容器与 disc 同级
+- 低频（0-23）暖紫 `#b87cff`、中频（24-47）亮紫 `#6c63ff`、高频（48-71）冷蓝 `#5b9cf5`
+- **放弃 Web Audio API**（跨域 CORS 导致 `createMediaElementSource` 静音 / `captureStream` 无数据）
+- 最终方案：`setInterval` 70ms 随机动画，播放时启动，暂停时 0.5s 渐出
+- CSS `transition: height 0.5s ease-out` 平滑变化
+- 缩放防抖：`backface-visibility: hidden` + `will-change` GPU 合成
+
+### 6.11 卡片布局固定（2026-06-11）
+
+- 标题：`line-clamp: 2` + `min-height` 固定 2 行高度
+- 简介桌面端：`mask-image` 渐变遮罩渐隐（替代硬截断省略号）
+- 简介手机端：单行 `text-overflow: ellipsis`
+- 卡片 `height: 310px` 固定，简介 `height: 120px` 固定
+- 标签 `margin-top: auto` 沉底 + `nowrap` 单行
+- 标签溢出检测：全量渲染 → 运行时 `scrollWidth > clientWidth` 检测 → 逐末位移除 + 追加 `...`
+
+### 6.12 回顶按钮 + 其他（2026-06-11）
+
+- 回顶按钮移入 `.vinyl-wrapper` 内部，定位在黑胶上方，水平居中
+- `IntersectionObserver` 监听 Hero 区域控制显隐（替代 scroll 事件）
+- 桌面端 CSS `display: none`（侧边栏已有），平板/手机显示
+- 弹出列表标题右侧添加「每日 4:00 刷新」
+- 页面导航时保留音乐播放状态
+
 ---
 
 ## 七、已知问题与修复记录
@@ -387,14 +413,14 @@ likesApi: 'https://1441674200-buqu8i9sqn.ap-guangzhou.tencentscf.com',
 | 文件 | 版本 | 用途 |
 |------|------|------|
 | `css/themes.css` | v=6 | 主题变量 |
-| `css/style.css` | v=25 | 布局样式 |
+| `css/style.css` | v=33 | 布局样式 |
 | `css/admin.css` | v=6 | 管理面板 |
 | `data/config.js` | v=7 | 网站配置 |
 | `data/posts.js` | v=9 | 文章数据 |
 | `js/theme.js` | v=7 | 主题切换 |
 | `js/github.js` | v=8 | GitHub API |
-| `js/renderer.js` | v=19 | 组件渲染 |
+| `js/renderer.js` | v=23 | 组件渲染 |
 | `js/comments.js` | v=13 | 留言+点赞 |
 | `js/effects.js` | v=10 | 粒子特效 |
 | `js/admin.js` | v=7 | 管理面板 |
-| `js/main.js` | v=28 | 主入口 |
+| `js/main.js` | v=44 | 主入口 |
