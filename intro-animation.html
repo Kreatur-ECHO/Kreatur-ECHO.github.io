@@ -63,8 +63,8 @@
       0 0 120px 40px rgba(210, 175, 100, 0.15),
       0 0 200px 60px rgba(200, 160, 80, 0.08);
     animation:
-      moonRise 2s ease-out forwards,
-      moonGlow 3s ease-in-out infinite 2s;
+      moonRise 2.2s cubic-bezier(0.45, 0, 0.25, 1) forwards,
+      moonGlow 3s ease-in-out infinite 2.2s;
   }
   /* 内光斑（让月亮有层次感） */
   .intro-moon::before {
@@ -174,7 +174,7 @@
   var sparksHTML = '';
   for (var i = 0; i < 8; i++) {
     var size = 2 + Math.random() * 3;
-    var delay = 0.8 + Math.random() * 1.4;
+    var delay = 1 + Math.random() * 1.6;
     var xOff = (Math.random() - 0.5) * 200;
     var yOff = -20 - Math.random() * 100;
     sparksHTML += '<div class="intro-spark" style="'
