@@ -594,42 +594,42 @@
   const PAUSE_ICON = '<svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
   let iconTimer = null;
 
-  // ---- 音柱可视化 (Web Audio API) ----
+  // ---- 音柱可视化 (Web Audio API — 只读旁路，不干涉音频播放) ----
   let audioCtx = null;
   let analyser = null;
-  let currentSource = null;
+  let streamSource = null;
   let animFrameId = null;
 
   function initAudioContext() {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 64;          // 32 个频率 bin，匹配 24 根音柱
+      analyser.fftSize = 64;
       analyser.smoothingTimeConstant = 0.75;
-      analyser.connect(audioCtx.destination);
-      // Chrome 会在 ~30s 无音频后自动挂起 AudioContext，
-      // 一旦 createMediaElementSource 接管了 <audio> 路由，
-      // 挂起的 context 会让所有音频静默丢弃 → 必须自动恢复
-      audioCtx.addEventListener('statechange', function () {
-        if (audioCtx && audioCtx.state === 'suspended') {
-          audioCtx.resume();
-        }
-      });
+      // 注意：analyser 不连接到 destination！
+      // captureStream() 提供只读旁路，音频直接到扬声器，不受 AudioContext 状态影响
     }
+    // 确保 context 在运行（rAF 中的 getByteFrequencyData 需要 running context）
     if (audioCtx && audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
   }
 
-  function startVisualizer() {
-    if (!analyser) return;
-    if (animFrameId) cancelAnimationFrame(animFrameId);
+  function startVisualizer(audio) {
+    if (!analyser || !audio || !audio.captureStream) return;
+    stopVisualizer();
+    try {
+      var stream = audio.captureStream();
+      streamSource = audioCtx.createMediaStreamSource(stream);
+      streamSource.connect(analyser);
+    } catch (_) { streamSource = null; return; }
 
     var bufferLength = analyser.frequencyBinCount;
     var dataArray = new Uint8Array(bufferLength);
 
     function animate() {
       animFrameId = requestAnimationFrame(animate);
+      if (!analyser) return;
       analyser.getByteFrequencyData(dataArray);
 
       for (var i = 0; i < 24; i++) {
@@ -640,7 +640,6 @@
           sum += dataArray[j];
         }
         var avg = sum / (binEnd - binStart);
-        // 映射到 2–24px（无声音时 2px 最低，满音量 24px）
         var h = Math.max(2, (avg / 255) * 24);
         var bar = document.querySelector('.vinyl-bar:nth-child(' + (i + 1) + ')');
         if (bar) {
@@ -656,7 +655,10 @@
       cancelAnimationFrame(animFrameId);
       animFrameId = null;
     }
-    // 复位全部音柱到最低
+    if (streamSource) {
+      try { streamSource.disconnect(); } catch (_) {}
+      streamSource = null;
+    }
     var bars = document.querySelectorAll('.vinyl-bar');
     for (var k = 0; k < bars.length; k++) {
       bars[k].style.setProperty('--h', '2px');
@@ -689,17 +691,9 @@
         if (playing) {
           musicAudio.pause();
         } else {
-          // 确保 AudioContext 处于运行状态（可能因暂停过久被浏览器挂起）
-          initAudioContext();
-          // 若尚未开启可视化且 context 已运行，则接入音柱
-          if (audioCtx && !currentSource && analyser && audioCtx.state === 'running') {
-            try {
-              currentSource = audioCtx.createMediaElementSource(musicAudio);
-              currentSource.connect(analyser);
-              startVisualizer();
-            } catch (_) { currentSource = null; }
-          }
-          musicAudio.play().catch(() => {});
+          // 确保 AudioContext 在运行（用于音柱可视化，不影响音频播放）
+          if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+          musicAudio.play().catch(function (err) { console.warn('[Blog] Play failed:', err); });
         }
       } else {
         window.open(`https://music.163.com/#/song?id=${songId}`, '_blank');
@@ -758,18 +752,9 @@
       musicAudio.volume = 0.19;
       document.body.appendChild(musicAudio);
 
-      // ---- 接入音柱可视化（仅在 AudioContext 已运行时接管音频路由） ----
+      // ---- 音柱可视化：captureStream 只读旁路，不影响音频播放 ----
       initAudioContext();
-      if (currentSource) {
-        try { currentSource.disconnect(); } catch (_) { currentSource = null; }
-      }
-      if (audioCtx && audioCtx.state === 'running') {
-        try {
-          currentSource = audioCtx.createMediaElementSource(musicAudio);
-          currentSource.connect(analyser);
-          startVisualizer();
-        } catch (_) { currentSource = null; }
-      }
+      startVisualizer(musicAudio);
 
       musicAudio.addEventListener('play', () => {
         playing = true;
