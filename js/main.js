@@ -758,35 +758,35 @@
       musicAudio.volume = 0.19;
       document.body.appendChild(musicAudio);
 
-      // ---- 音柱可视化：captureStream 只读旁路，不影响音频播放 ----
-      initAudioContext();
-      // 确保 AudioContext 运行后再启动可视化，否则 getByteFrequencyData 始终返回 0
-      if (audioCtx && audioCtx.state !== 'running') {
-        try { await audioCtx.resume(); } catch (_) {}
-      }
-      startVisualizer(musicAudio);
-
+      // 先绑定事件再播放，确保 play/pause 状态正确
       musicAudio.addEventListener('play', () => {
         playing = true;
-        const discEl = document.getElementById('musicDisc');
+        var discEl = document.getElementById('musicDisc');
         if (discEl) discEl.style.animationPlayState = 'running';
         flashStateIcon(true);
       });
       musicAudio.addEventListener('pause', () => {
         playing = false;
-        const discEl = document.getElementById('musicDisc');
+        var discEl = document.getElementById('musicDisc');
         if (discEl) discEl.style.animationPlayState = 'paused';
         flashStateIcon(false);
       });
       musicAudio.addEventListener('ended', () => {
         playing = false;
-        const discEl = document.getElementById('musicDisc');
+        var discEl = document.getElementById('musicDisc');
         if (discEl) discEl.style.animationPlayState = 'paused';
         playNext();
       });
 
       // 自动播放
-      musicAudio.play().catch(() => {});
+      musicAudio.play().catch(function () {});
+
+      // ---- 音柱可视化（play 之后再启动，确保 captureStream 能拿到活跃的媒体流） ----
+      initAudioContext();
+      if (audioCtx && audioCtx.state !== 'running') {
+        audioCtx.resume();  // 不 await，不阻塞
+      }
+      startVisualizer(musicAudio);
     } catch (err) {
       console.warn('[Blog] Failed to search music:', err);
     }
