@@ -198,11 +198,11 @@
   }
   sparksContainer.innerHTML = sparksHTML;
 
-  // 动画结束：移除 animation 释放 transform，加 .ready 启用 hover
-  setTimeout(function () {
+  // 动画结束后立即释放 transform，启用 hover
+  moon.addEventListener('animationend', function () {
     moon.style.animation = 'none';
     moon.classList.add('ready');
-  }, 2300);
+  });
 
   // 点击月亮解除遮罩
   function dismiss() {
