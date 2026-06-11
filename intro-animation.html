@@ -198,9 +198,8 @@
   }
   sparksContainer.innerHTML = sparksHTML;
 
-  // 动画结束后立即释放 transform，启用 hover
+  // 动画结束后启用 hover
   moon.addEventListener('animationend', function () {
-    moon.style.animation = 'none';
     moon.classList.add('ready');
   });
 
