@@ -509,6 +509,7 @@ img {
 
 .post-excerpt {
   flex: 1;
+  min-width: 0;
   color: var(--color-text-secondary);
   font-size: 0.925rem;
   line-height: 1.65;
@@ -517,6 +518,7 @@ img {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-word;
 }
 
 .post-tags {
