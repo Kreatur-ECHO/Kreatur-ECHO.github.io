@@ -135,7 +135,6 @@
       </main>
       ${Renderer.renderSidebar(SiteConfig)}
       ${Renderer.renderFooter(SiteConfig)}
-      ${Renderer.renderBackToTop()}
       ${Renderer.renderMusicDisc()}
     `;
     app.setAttribute('data-view', 'home');
@@ -183,7 +182,6 @@
         ${Renderer.renderPostDetail(post)}
       </main>
       ${Renderer.renderFooter(SiteConfig)}
-      ${Renderer.renderBackToTop()}
       ${Renderer.renderMusicDisc()}
     `;
     app.setAttribute('data-view', 'post');

@@ -351,6 +351,11 @@ const Renderer = (() => {
       var angle = j * (360 / barCount);
       barsHTML += '<div class="vinyl-bar ' + barClasses[j] + '" style="transform: rotate(' + angle.toFixed(1) + 'deg) translateY(var(--bar-gap, -30px))"></div>';
     }
+    // 回顶按钮（内置于黑胶上方，共享同一图层）
+    var backToTopHTML = '<button class="back-to-top" id="backToTop" aria-label="Back to top">' +
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>' +
+      '</button>';
+
     return `
     <div class="vinyl-wrapper" id="musicDiscWrap">
       <div class="vinyl-bars">${barsHTML}</div>
@@ -360,6 +365,7 @@ const Renderer = (() => {
         </div>
       </div>
       <div class="vinyl-state-icon" id="vinylStateIcon"></div>
+      ${backToTopHTML}
     </div>`;
   }
 
