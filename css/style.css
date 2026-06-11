@@ -538,7 +538,8 @@ img {
 .post-tags {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow: hidden;
   margin-top: auto;
 }
 

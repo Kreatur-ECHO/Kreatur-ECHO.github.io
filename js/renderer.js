@@ -140,9 +140,10 @@ const Renderer = (() => {
     const renderCard = post => {
       const isMobile = window.matchMedia('(max-width: 640px)').matches;
       let tags = post.tags;
+      let tagLimit = isMobile ? 2 : 4;
       let tagsHTML;
-      if (isMobile && tags.length > 2) {
-        tagsHTML = tags.slice(0, 2).map(t => `<span class="post-tag">${t}</span>`).join('')
+      if (tags.length > tagLimit) {
+        tagsHTML = tags.slice(0, tagLimit).map(t => `<span class="post-tag">${t}</span>`).join('')
           + '<span class="post-tag post-tag-more">...</span>';
       } else {
         tagsHTML = tags.map(t => `<span class="post-tag">${t}</span>`).join('');
