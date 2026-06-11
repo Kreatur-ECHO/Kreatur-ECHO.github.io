@@ -337,17 +337,19 @@ const Renderer = (() => {
       '<text x="50" y="62" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="48" font-weight="700" font-family="sans-serif">♪</text>' +
       '</svg>'
     );
-    // 24 根音柱，均匀环绕黑胶（15° 间隔），分低频/中频/高频三区
+    // 72 根音柱，5° 间隔，无间隙环绕黑胶
+    // 0°-115° 低频暖紫 / 120°-235° 中频亮紫 / 240°-355° 高频冷蓝
+    var barCount = 72;
     var barClasses = [];
-    for (var i = 0; i < 24; i++) {
-      if (i < 8) barClasses.push('bass');
-      else if (i < 16) barClasses.push('mid');
+    for (var i = 0; i < barCount; i++) {
+      if (i < 24) barClasses.push('bass');
+      else if (i < 48) barClasses.push('mid');
       else barClasses.push('treble');
     }
     var barsHTML = '';
-    for (var j = 0; j < 24; j++) {
-      var angle = j * 15;
-      barsHTML += '<div class="vinyl-bar ' + barClasses[j] + '" style="transform: rotate(' + angle + 'deg) translateY(var(--bar-gap, -30px))"></div>';
+    for (var j = 0; j < barCount; j++) {
+      var angle = j * (360 / barCount);
+      barsHTML += '<div class="vinyl-bar ' + barClasses[j] + '" style="transform: rotate(' + angle.toFixed(1) + 'deg) translateY(var(--bar-gap, -30px))"></div>';
     }
     return `
     <div class="vinyl-wrapper" id="musicDiscWrap">

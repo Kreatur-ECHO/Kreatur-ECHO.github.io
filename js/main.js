@@ -632,15 +632,21 @@
       if (!analyser) return;
       analyser.getByteFrequencyData(dataArray);
 
-      for (var i = 0; i < 24; i++) {
-        var binStart = Math.floor(i * bufferLength / 24);
-        var binEnd = Math.floor((i + 1) * bufferLength / 24);
+      for (var i = 0; i < 72; i++) {
+        // 32 个频率 bin 线性映射到 72 根音柱
+        var binCenter = i * bufferLength / 72;
+        var binStart = Math.floor(binCenter);
+        var binEnd = Math.ceil(binCenter + bufferLength / 72);
+        if (binEnd <= binStart) binEnd = binStart + 1;
+        if (binStart < 0) binStart = 0;
+        if (binEnd > bufferLength) binEnd = bufferLength;
         var sum = 0;
         for (var j = binStart; j < binEnd; j++) {
           sum += dataArray[j];
         }
         var avg = sum / (binEnd - binStart);
-        var h = Math.max(2, (avg / 255) * 24);
+        // 映射到 2–22px，无声音 2px 底线
+        var h = Math.max(2, (avg / 255) * 22);
         var bar = document.querySelector('.vinyl-bar:nth-child(' + (i + 1) + ')');
         if (bar) {
           bar.style.setProperty('--h', h + 'px');
