@@ -23,26 +23,70 @@
   .intro-overlay {
     position: fixed; inset: 0; z-index: 10000;
     background: #0a0a14;
-    display: flex; align-items: center; justify-content: center;
     transition: opacity 0.6s ease;
   }
   .intro-overlay.dismiss { opacity: 0; pointer-events: none; }
 
-  /* ===== 月亮容器（含光晕） ===== */
+  /* ===== 月亮容器（只做 bottom 上升，不做 transform） ===== */
   .moon-stage {
-    position: relative;
+    position: absolute;
+    left: 50%;
+    bottom: -160px;
     width: 120px; height: 120px;
+    margin-left: -60px;
+    animation: moonRise 2.2s cubic-bezier(0.45, 0, 0.25, 1) forwards;
   }
 
-  /* 圆月 — 只有 hover */
+  @keyframes moonRise {
+    from { bottom: -160px; opacity: 0; }
+    18%  { opacity: 0; }
+    to   { bottom: 68vh; opacity: 1; }
+  }
+
+  /* ==== 水波光晕（在 stage 上，不跟月亮缩放） ==== */
+  .moon-stage::before,
+  .moon-stage::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+  /* 底层静态柔光 */
+  .moon-stage::before {
+    width: 240px; height: 240px;
+    background: radial-gradient(circle,
+      rgba(220,190,120,0.18) 0%,
+      rgba(210,175,100,0.10) 30%,
+      rgba(200,160,80,0.04)  55%,
+      transparent 70%);
+  }
+  /* 水波：圆环先缩后胀，带透明度波浪 */
+  .moon-stage::after {
+    width: 140px; height: 140px;
+    background: radial-gradient(circle,
+      transparent 25%,
+      rgba(220,190,120,0.25) 40%,
+      rgba(210,175,100,0.12) 55%,
+      transparent 70%);
+    animation: waterRipple 2.8s ease-in-out infinite;
+  }
+
+  @keyframes waterRipple {
+    0%   { transform: translate(-50%, -50%) scale(1);   opacity: 0.4; }
+    25%  { transform: translate(-50%, -50%) scale(1.4); opacity: 0.9; }
+    50%  { transform: translate(-50%, -50%) scale(1.7); opacity: 0.3; }
+    75%  { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+    100% { transform: translate(-50%, -50%) scale(1);   opacity: 0.4; }
+  }
+
+  /* ==== 圆月本体 ==== */
   .intro-moon {
+    position: relative;
     width: 120px; height: 120px; border-radius: 50%;
     cursor: pointer;
     background: radial-gradient(circle at 40% 40%, #f5e6c8 0%, #e8d5a3 30%, #d4b86a 60%, #b8935a 100%);
-    box-shadow:
-      0 0 60px 20px rgba(220, 190, 120, 0.25),
-      0 0 120px 40px rgba(210, 175, 100, 0.15),
-      0 0 200px 60px rgba(200, 160, 80, 0.08);
     transition: transform 0.35s ease;
   }
   .intro-moon:hover {
@@ -50,6 +94,22 @@
   }
   .intro-moon:active {
     transform: scale(0.95);
+  }
+
+  /* 月面细节 */
+  .intro-moon::before {
+    content: '';
+    position: absolute;
+    top: 18%; left: 25%;
+    width: 50px; height: 50px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,250,240,0.5) 0%, transparent 70%);
+  }
+  .intro-moon::after {
+    content: '';
+    position: absolute;
+    top: 45%; left: 55%;
+    width: 35px; height: 35px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(160,130,80,0.30) 0%, transparent 70%);
   }
 </style>
 </head>
