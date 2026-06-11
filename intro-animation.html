@@ -50,18 +50,18 @@
   /* ===== 圆月 ===== */
   .intro-moon {
     position: absolute;
-    /* 初始：在底部下方偏右 */
+    /* 水平居中，初始在底部下方 */
+    left: 50%;
     bottom: -160px;
-    right: 15%;
     width: 140px;
     height: 140px;
+    margin-left: -70px;
     border-radius: 50%;
     background: radial-gradient(circle at 40% 40%, #f5e6c8 0%, #e8d5a3 30%, #d4b86a 60%, #b8935a 100%);
     box-shadow:
       0 0 60px 20px rgba(220, 190, 120, 0.25),
       0 0 120px 40px rgba(210, 175, 100, 0.15),
       0 0 200px 60px rgba(200, 160, 80, 0.08);
-    /* 光晕脉动 */
     animation:
       moonRise 1.6s cubic-bezier(0.25, 0.1, 0.15, 1) forwards,
       moonGlow 3s ease-in-out infinite 1.6s;
@@ -104,11 +104,12 @@
       opacity: 0;
       transform: scale(0.7);
     }
-    25% {
-      opacity: 0.6;
+    20% {
+      opacity: 0.7;
     }
     100% {
-      bottom: 35vh;
+      /* 升至 Hero 头像高度（头像中心约在页面顶部 25% 处） */
+      bottom: 65vh;
       opacity: 1;
       transform: scale(1);
     }
@@ -178,11 +179,11 @@
   for (var i = 0; i < 8; i++) {
     var size = 2 + Math.random() * 3;
     var delay = 0.5 + Math.random() * 1.2;
-    var xOff = (Math.random() - 0.5) * 180;
+    var xOff = (Math.random() - 0.5) * 200;
     var yOff = -20 - Math.random() * 100;
     sparksHTML += '<div class="intro-spark" style="'
       + 'width:' + size + 'px; height:' + size + 'px; '
-      + 'bottom:' + (-yOff) + 'px; right:calc(15% + ' + (-xOff) + 'px); '
+      + 'bottom:' + (-yOff) + 'px; left:calc(50% + ' + xOff + 'px); '
       + 'animation-delay:' + delay + 's;"></div>';
   }
   sparksContainer.innerHTML = sparksHTML;
