@@ -540,6 +540,8 @@ img {
   gap: 8px;
   flex-wrap: nowrap;
   overflow: hidden;
+  min-width: 0;
+  max-width: 100%;
   margin-top: auto;
 }
 
@@ -550,10 +552,8 @@ img {
   border-radius: var(--radius-full);
   font-size: 0.78rem;
   font-weight: 500;
-  max-width: 110px;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+  flex-shrink: 0;
   transition: opacity var(--transition-base);
 }
 .post-tag:hover {
