@@ -760,6 +760,10 @@
 
       // ---- 音柱可视化：captureStream 只读旁路，不影响音频播放 ----
       initAudioContext();
+      // 确保 AudioContext 运行后再启动可视化，否则 getByteFrequencyData 始终返回 0
+      if (audioCtx && audioCtx.state !== 'running') {
+        try { await audioCtx.resume(); } catch (_) {}
+      }
       startVisualizer(musicAudio);
 
       musicAudio.addEventListener('play', () => {

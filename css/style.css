@@ -1453,6 +1453,7 @@ img {
 
 .vinyl-disc {
   position: relative;
+  z-index: 1;
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -1497,14 +1498,14 @@ img {
   right: -34px;
   bottom: -34px;
   pointer-events: none;
-  z-index: 0;
+  z-index: 2;
   overflow: visible;
 }
 
 .vinyl-bar {
   position: absolute;
   left: 50%;
-  top: 50%;
+  bottom: 50%;
   width: 2.4px;
   height: var(--h, 3px);
   background: var(--bar-color, var(--color-accent));
