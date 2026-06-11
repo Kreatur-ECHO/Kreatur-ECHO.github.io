@@ -140,19 +140,19 @@
     100% { transform: translate(0, 0) rotate(0deg); }
   }
 
-  /* 月亮中央暖光（在纹理层上方） */
+  /* 月亮中央暖光 */
   .moon-center-glow {
     position: absolute;
-    inset: 5%;
+    inset: -10px;
     border-radius: 50%;
     pointer-events: none;
-    z-index: 2;
+    z-index: 5;
     background: radial-gradient(circle,
-      rgba(255,252,235,0.7) 0%,
-      rgba(255,242,210,0.4) 20%,
-      rgba(255,230,180,0.12) 50%,
-      transparent 70%);
-    animation: centerWarmth 4s ease-in-out infinite;
+      rgba(255,255,245,0.85) 0%,
+      rgba(255,248,220,0.5) 15%,
+      rgba(255,235,185,0.25) 35%,
+      transparent 60%);
+    animation: centerWarmth 3s ease-in-out infinite;
   }
 
   @keyframes centerWarmth {
