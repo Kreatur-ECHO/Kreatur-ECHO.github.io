@@ -52,9 +52,9 @@
     position: absolute;
     left: 50%;
     bottom: -160px;
-    width: 140px;
-    height: 140px;
-    margin-left: -70px;
+    width: 120px;
+    height: 120px;
+    margin-left: -60px;
     border-radius: 50%;
     cursor: pointer;
     background: radial-gradient(circle at 40% 40%, #f5e6c8 0%, #e8d5a3 30%, #d4b86a 60%, #b8935a 100%);
@@ -65,26 +65,10 @@
     animation:
       moonRise 2.2s cubic-bezier(0.45, 0, 0.25, 1) forwards,
       moonGlow 3s ease-in-out infinite 2.2s;
-    transition: transform 0.3s ease;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   .intro-moon:hover {
-    transform: scale(1.06);
-  }
-  /* 点击提示：升起后显示轻提示 */
-  .intro-moon .click-hint {
-    position: absolute;
-    bottom: -28px;
-    left: 50%;
-    transform: translateX(-50%);
-    white-space: nowrap;
-    font-size: 0.75rem;
-    color: rgba(220, 200, 160, 0.6);
-    opacity: 0;
-    transition: opacity 0.5s ease;
-    letter-spacing: 1px;
-  }
-  .intro-moon .click-hint.show {
-    opacity: 1;
+    transform: rotate(0deg) scale(1.08);
   }
   /* 内光斑（让月亮有层次感） */
   .intro-moon::before {
@@ -107,26 +91,6 @@
     height: 35px;
     border-radius: 50%;
     background: radial-gradient(circle, rgba(160,130,80,0.35) 0%, transparent 70%);
-  }
-
-  /* 灯芯图标（月亮内部，升起后浮现） */
-  .intro-wick {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 0;
-    height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-bottom: 18px solid rgba(255,245,230,0.85);
-    opacity: 0;
-    filter: drop-shadow(0 0 4px rgba(240,200,100,0.6));
-    animation: wickAppear 0.6s ease-out 2.2s forwards;
-  }
-  @keyframes wickAppear {
-    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-    100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   }
 
   /* 月亮旁边的碎光点 */
@@ -198,10 +162,7 @@
 
   <!-- 入场动画遮罩 -->
   <div class="intro-overlay" id="introOverlay">
-    <div class="intro-moon" id="introMoon">
-      <div class="intro-wick"></div>
-      <span class="click-hint">轻触进入</span>
-    </div>
+    <div class="intro-moon" id="introMoon"></div>
     <div id="sparks"></div>
   </div>
 
@@ -240,12 +201,6 @@
     e.stopPropagation();
     dismiss();
   });
-
-  // 月亮升起后显示提示
-  setTimeout(function () {
-    var hint = moon.querySelector('.click-hint');
-    if (hint) hint.classList.add('show');
-  }, 2400);
 })();
 
 function toggleTheme() {
