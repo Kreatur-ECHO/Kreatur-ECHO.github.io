@@ -465,23 +465,28 @@
       const songs = data && data.songs;
       if (!songs || !songs.length) return;
 
-      // 黑胶唱片展示最近喜欢的第一首
-      const latest = songs[0];
       const disc = document.getElementById('musicDisc');
       const wrap = document.getElementById('musicDiscWrap');
       if (!disc || !wrap) return;
 
+      // 未初始化时展示第一首；已初始化时展示当前正在播放的歌曲
+      const displaySong = musicInitialized && songList[currentIndex]
+        ? songList[currentIndex]
+        : songs[0];
+
       const cover = disc.querySelector('.vinyl-cover');
-      if (cover && latest.cover) {
-        cover.src = latest.cover.replace(/^http:/, 'https:');
+      if (cover && displaySong.cover) {
+        cover.src = displaySong.cover.replace(/^http:/, 'https:');
       }
 
-      disc.title = `${latest.name} — ${latest.artist}`;
+      disc.title = `${displaySong.name} — ${displaySong.artist}`;
       disc.style.cursor = 'pointer';
 
-      // 存储歌单用于列表循环
+      // 存储歌单用于列表循环（首次初始化时设置当前索引）
       songList = songs;
-      currentIndex = 0;
+      if (!musicInitialized) {
+        currentIndex = 0;
+      }
 
       // 构建弹出播放列表（全部 5 首）
       let popupHTML = '<div class="vinyl-popup">';
@@ -490,7 +495,7 @@
       songs.forEach((s, i) => {
         const safeCover = (s.cover || '').replace(/^http:/, 'https:');
         const songData = encodeURIComponent(JSON.stringify({ name: s.name, artist: s.artist, cover: s.cover, id: s.id }));
-        const currentClass = i === 0 ? ' vinyl-popup-current' : '';
+        const currentClass = i === currentIndex ? ' vinyl-popup-current' : '';
         popupHTML += `
           <div class="vinyl-popup-item${currentClass}" data-song="${songData}" title="${s.name} — ${s.artist}">
             <img class="vinyl-popup-cover" src="${safeCover}" alt="" loading="lazy" onerror="this.style.display='none'" />
@@ -557,8 +562,18 @@
       popup.addEventListener('mouseenter', showPopup);
       popup.addEventListener('mouseleave', tryHide);
 
-      // 搜索可播放音源
-      switchToSong(latest.name, latest.artist, latest.cover, latest.id);
+      if (!musicInitialized) {
+        // 首次加载：搜索可播放音源并自动播放
+        musicInitialized = true;
+        switchToSong(displaySong.name, displaySong.artist, displaySong.cover, displaySong.id);
+      } else {
+        // 页面切换：保留当前播放状态，仅重建 UI 交互
+        setupDiscClick(songList[currentIndex] && songList[currentIndex].id);
+        // 恢复旋转动画状态
+        if (playing) {
+          disc.style.animationPlayState = 'running';
+        }
+      }
     } catch (err) {
       console.warn('[Blog] Failed to load recent song:', err);
     }
@@ -572,6 +587,7 @@
   let clickLock = false;
   let songList = [];
   let currentIndex = 0;
+  let musicInitialized = false;
 
   // 播放/暂停图标（1.5s 显示，渐入渐出各 0.5s）
   const PLAY_ICON = '<svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg>';
@@ -665,17 +681,20 @@
 
       musicAudio.addEventListener('play', () => {
         playing = true;
-        disc.style.animationPlayState = 'running';
+        const discEl = document.getElementById('musicDisc');
+        if (discEl) discEl.style.animationPlayState = 'running';
         flashStateIcon(true);
       });
       musicAudio.addEventListener('pause', () => {
         playing = false;
-        disc.style.animationPlayState = 'paused';
+        const discEl = document.getElementById('musicDisc');
+        if (discEl) discEl.style.animationPlayState = 'paused';
         flashStateIcon(false);
       });
       musicAudio.addEventListener('ended', () => {
         playing = false;
-        disc.style.animationPlayState = 'paused';
+        const discEl = document.getElementById('musicDisc');
+        if (discEl) discEl.style.animationPlayState = 'paused';
         playNext();
       });
 
