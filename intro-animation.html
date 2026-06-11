@@ -116,18 +116,7 @@
     transform: scale(0.95);
   }
 
-  /* 入场缩放：JS 在页面加载时加此类，animationend 后移除 */
-  .intro-moon.rising {
-    opacity: 0;
-    transform: scale(0.7);
-    animation: moonScaleIn 2.2s cubic-bezier(0.45, 0, 0.25, 1) forwards;
-    transition: none;
-  }
-  @keyframes moonScaleIn {
-    from { opacity: 0; transform: scale(0.7); }
-    25%  { opacity: 0; }
-    to   { opacity: 1; transform: scale(1); }
-  }
+  /* JS rAF 动画结束后加此类（无动画，纯 transition hover） */
 
   /* 内光斑（让月亮有层次感） */
   .intro-moon::before {
@@ -204,10 +193,11 @@
 <script>
 (function () {
   var moon = document.getElementById('introMoon');
+  var riser = document.getElementById('moonRiser');
   var overlay = document.getElementById('introOverlay');
   var sparksContainer = document.getElementById('sparks');
 
-  // 生成 8 个碎光点，随机位置在月亮周围
+  // 生成 8 个碎光点
   var sparksHTML = '';
   for (var i = 0; i < 8; i++) {
     var size = 2 + Math.random() * 3;
@@ -221,15 +211,66 @@
   }
   sparksContainer.innerHTML = sparksHTML;
 
-  // 启动入场缩放动画
-  moon.classList.add('rising');
+  // ---- 纯 JS rAF 入场动画，不碰 CSS animation，不与 transition 冲突 ----
+  var duration = 2200;
+  var start = null;
+  var startY = -160;
+  var endY_rel = 65; // vh
 
-  // 动画结束：移除动画类，回到基类（hover transition 自然生效）
-  moon.addEventListener('animationend', function () {
-    moon.classList.remove('rising');
-  });
+  moon.style.opacity = '0';
+  moon.style.transform = 'scale(0.7)';
+  moon.style.transition = 'none';
+  // riser 也置初始态
+  riser.style.bottom = startY + 'px';
+  riser.style.opacity = '0';
 
-  // 点击月亮解除遮罩
+  function easeOut(t) {
+    // cubic-bezier(0.45, 0, 0.25, 1)
+    var c = 1.45, d = 1.75, e = 1.25;
+    if (t >= 1) return 1;
+    return 1 - Math.pow(1 - t, 3.5) + (t < 0.3 ? t * 0.3 : 0);
+    // simpler approximation of the cubic bezier
+  }
+
+  function easeOutQuad(t) {
+    return t * (2 - t);
+  }
+
+  function animate(ts) {
+    if (!start) start = ts;
+    var elapsed = ts - start;
+    var progress = Math.min(elapsed / duration, 1);
+    var eased = easeOutQuad(progress);
+
+    // 月亮本体：缩放 + 不透明
+    var moonScale = 0.7 + 0.3 * eased;
+    var moonOpacity = eased < 0.25 ? 0 : eased;
+    moon.style.transform = 'scale(' + moonScale + ')';
+    moon.style.opacity = moonOpacity;
+
+    // riser：底部位置 + 不透明
+    var riserBottom = startY + (endY_rel - startY / window.innerHeight * 100) * eased;
+    // 简化：从底部到 65vh
+    var bottomPx = startY + (window.innerHeight * 0.65 - startY) * eased;
+    riser.style.bottom = bottomPx + 'px';
+    riser.style.opacity = eased < 0.2 ? 0 : eased;
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      // 动画结束：清除 inline style，启用 CSS transition
+      moon.style.transform = '';
+      moon.style.opacity = '';
+      moon.style.transition = '';
+      moon.classList.add('done');
+      riser.style.bottom = '65vh';
+      riser.style.opacity = '1';
+    }
+  }
+
+  requestAnimationFrame(animate);
+
+  // ---- 交互 ----
   function dismiss() {
     if (overlay.classList.contains('dismiss')) return;
     overlay.classList.add('dismiss');
