@@ -1,6 +1,6 @@
 # YEYU's Blog — 项目配置记录
 
-> 最后更新：2026-06-11
+> 最后更新：2026-06-12
 > 仓库：https://github.com/Kreatur-ECHO/Kreatur-ECHO.github.io
 > 线上地址：https://kreatur-echo.github.io/
 
@@ -372,6 +372,23 @@ likesApi: 'https://1441674200-buqu8i9sqn.ap-guangzhou.tencentscf.com',
 - 桌面端 CSS `display: none`（侧边栏已有），平板/手机显示
 - 弹出列表标题右侧添加「每日 4:00 刷新」
 - 页面导航时保留音乐播放状态
+
+### 6.13 入场动画（2026-06-12 原型，未集成）
+
+- `intro-animation.html` 独立测试文件
+- 黑色遮罩 + 米色圆月从底部居中升至头像高度
+- 月面 4 层径向渐变（米白→暗金），双轨纹理漂移模拟 3D 起伏
+- 8px 月芯霓虹灯 + 四层 box-shadow 光晕脉动
+- 水波环向心收缩（`rippleIn` 3s 循环）
+- 18 颗金粉从月下方向上飘散，5-15s 随机节奏
+- hover 放大 8%（与头像交互一致），点击解除遮罩
+- 架构：上升动画在外层 `.moon-stage`（只动 `bottom`），月亮本体纯 transition
+
+### 6.14 待集成
+
+- 入场动画原型需集成到 `index.html`（CSS → `style.css`，JS → `main.js`）
+- 需 localStorage 标记首次访问才播放
+- 需适配暗色模式
 
 ---
 
