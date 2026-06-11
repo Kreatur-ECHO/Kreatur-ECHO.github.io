@@ -139,15 +139,8 @@ const Renderer = (() => {
 
     const renderCard = post => {
       const isMobile = window.matchMedia('(max-width: 640px)').matches;
-      let tags = post.tags;
-      let tagLimit = isMobile ? 2 : 4;
-      let tagsHTML;
-      if (tags.length > tagLimit) {
-        tagsHTML = tags.slice(0, tagLimit).map(t => `<span class="post-tag">${t}</span>`).join('')
-          + '<span class="post-tag post-tag-more">...</span>';
-      } else {
-        tagsHTML = tags.map(t => `<span class="post-tag">${t}</span>`).join('');
-      }
+      // 先全量渲染，稍后由 trimOverflowTags() 根据实际溢出裁剪
+      var tagsHTML = post.tags.map(function (t) { return '<span class="post-tag">' + t + '</span>'; }).join('');
       const featuredClass = post.featured ? ' featured' : '';
 
       if (isMobile) {

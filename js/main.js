@@ -146,6 +146,7 @@
     loadGitHubData();
     loadVisitCount();
     loadArticleViews();
+    trimOverflowTags();
     loadRecentSong();
 
     // ---- 留言模块 ----
@@ -450,6 +451,34 @@
       });
     } catch (err) {
       console.warn('[Blog] Failed to record article view:', err);
+    }
+  }
+
+  // ---- 标签溢出检测：超出容器宽度的标签替换为 ... ----
+  function trimOverflowTags() {
+    var containers = document.querySelectorAll('.post-tags');
+    for (var i = 0; i < containers.length; i++) {
+      var c = containers[i];
+      // 移除已有的 ...
+      var more = c.querySelector('.post-tag-more');
+      if (more) more.remove();
+      // 获取当前标签
+      var tags = c.querySelectorAll('.post-tag');
+      if (tags.length <= 1) continue;
+      // 从末尾移除直到不溢出
+      var trimmed = false;
+      while (c.scrollWidth > c.clientWidth && tags.length > 1) {
+        tags[tags.length - 1].remove();
+        tags = c.querySelectorAll('.post-tag');
+        trimmed = true;
+      }
+      // 有裁剪则追加 ...
+      if (trimmed) {
+        var dot = document.createElement('span');
+        dot.className = 'post-tag post-tag-more';
+        dot.textContent = '...';
+        c.appendChild(dot);
+      }
     }
   }
 
