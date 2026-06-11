@@ -602,19 +602,25 @@
     barTimer = setInterval(function () {
       var bars = document.querySelectorAll('.vinyl-bar');
       if (!bars.length) { stopBarDance(); return; }
-      // 先全部归底，再随机挑几根跳起来
-      for (var k = 0; k < bars.length; k++) bars[k].style.setProperty('--h', '0px');
-      for (var n = 0; n < 14; n++) {
-        var idx = Math.floor(Math.random() * 72);
-        var h = 3 + Math.floor(Math.random() * 18);
-        if (bars[idx]) bars[idx].style.setProperty('--h', h + 'px');
+      // 每轮更新 ~30 根为随机高度，其余自然衰减
+      for (var i = 0; i < 72; i++) {
+        if (Math.random() < 0.42) {
+          var h = 2 + Math.floor(Math.random() * 10);
+          if (bars[i]) bars[i].style.setProperty('--h', h + 'px');
+        } else if (bars[i]) {
+          var cur = parseFloat(bars[i].style.getPropertyValue('--h')) || 2;
+          if (cur > 2) bars[i].style.setProperty('--h', Math.max(2, cur * 0.65) + 'px');
+        }
       }
-      // 低频区（0-23）稍高
-      for (var m = 0; m < 4; m++) {
+      // 低频区额外抬几根
+      for (var j = 0; j < 3; j++) {
         var bi = Math.floor(Math.random() * 24);
-        if (bars[bi]) bars[bi].style.setProperty('--h', (8 + Math.floor(Math.random() * 16)) + 'px');
+        if (bars[bi]) {
+          var bh = 4 + Math.floor(Math.random() * 8);
+          bars[bi].style.setProperty('--h', bh + 'px');
+        }
       }
-    }, 120);
+    }, 70);
   }
 
   function stopBarDance() {
