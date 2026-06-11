@@ -770,11 +770,8 @@
         playNext();
       });
 
-      // 自动播放：先静音以通过浏览器自动播放策略
-      musicAudio.muted = true;
-      musicAudio.play().then(function () {
-        musicAudio.muted = false;
-      }).catch(function () {});
+      // 自动播放（用户此前已与站点交互过时可通过，否则被浏览器策略阻止）
+      musicAudio.play().catch(function () {});
 
       // 可视化已初始化 → 新 audio 也接入 captureStream 旁路
       if (audioCtx) {
