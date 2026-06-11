@@ -507,6 +507,12 @@ img {
   margin-bottom: 10px;
   line-height: 1.4;
   color: var(--color-text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: calc(1.2rem * 1.4 * 2);
 }
 
 .post-excerpt {
@@ -515,14 +521,12 @@ img {
   color: var(--color-text-secondary);
   font-size: 0.925rem;
   line-height: 1.65;
-  margin-bottom: 16px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   line-clamp: 3;
   -webkit-box-orient: vertical;
-  max-height: calc(0.925rem * 1.65 * 3);
   word-break: break-word;
 }
 
@@ -530,6 +534,7 @@ img {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  margin-top: auto;
 }
 
 .post-tag {
