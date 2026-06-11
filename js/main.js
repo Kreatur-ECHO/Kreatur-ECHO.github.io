@@ -594,11 +594,11 @@
   const PAUSE_ICON = '<svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
   let iconTimer = null;
 
-  // ---- 音柱可视化 (Web Audio API — 只读旁路，不干涉音频播放) ----
-  let audioCtx = null;
-  let analyser = null;
-  let streamSource = null;
-  let animFrameId = null;
+  // ---- 音柱可视化 (Web Audio API) ----
+  var audioCtx = null;
+  var analyser = null;
+  var mediaSource = null;
+  var animFrameId = null;
 
   function initAudioContext() {
     if (!audioCtx) {
@@ -606,23 +606,28 @@
       analyser = audioCtx.createAnalyser();
       analyser.fftSize = 64;
       analyser.smoothingTimeConstant = 0.75;
-      // 注意：analyser 不连接到 destination！
-      // captureStream() 提供只读旁路，音频直接到扬声器，不受 AudioContext 状态影响
+      analyser.connect(audioCtx.destination);
+      // Chrome 会在 ~30s 无音频后挂起 AudioContext；
+      // createMediaElementSource 已接管音频路由，挂起 = 静音 → 自动恢复；
+      // 恢复后尝试接入音柱（如果之前因 context 挂起而跳过了）
+      audioCtx.addEventListener('statechange', function () {
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        } else if (audioCtx && audioCtx.state === 'running') {
+          tryEnableVisualizer();
+        }
+      });
     }
-    // 确保 context 在运行（rAF 中的 getByteFrequencyData 需要 running context）
-    if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
   }
 
   function startVisualizer(audio) {
-    if (!analyser || !audio || !audio.captureStream) return;
+    if (!analyser || !audio) return;
     stopVisualizer();
     try {
-      var stream = audio.captureStream();
-      streamSource = audioCtx.createMediaStreamSource(stream);
-      streamSource.connect(analyser);
-    } catch (_) { streamSource = null; return; }
+      mediaSource = audioCtx.createMediaElementSource(audio);
+      mediaSource.connect(analyser);
+    } catch (_) { mediaSource = null; return; }
 
     var bufferLength = analyser.frequencyBinCount;
     var dataArray = new Uint8Array(bufferLength);
@@ -633,7 +638,6 @@
       analyser.getByteFrequencyData(dataArray);
 
       for (var i = 0; i < 72; i++) {
-        // 32 个频率 bin 线性映射到 72 根音柱
         var binCenter = i * bufferLength / 72;
         var binStart = Math.floor(binCenter);
         var binEnd = Math.ceil(binCenter + bufferLength / 72);
@@ -641,34 +645,29 @@
         if (binStart < 0) binStart = 0;
         if (binEnd > bufferLength) binEnd = bufferLength;
         var sum = 0;
-        for (var j = binStart; j < binEnd; j++) {
-          sum += dataArray[j];
-        }
+        for (var j = binStart; j < binEnd; j++) sum += dataArray[j];
         var avg = sum / (binEnd - binStart);
-        // 映射到 2–22px，无声音 2px 底线
         var h = Math.max(2, (avg / 255) * 22);
         var bar = document.querySelector('.vinyl-bar:nth-child(' + (i + 1) + ')');
-        if (bar) {
-          bar.style.setProperty('--h', h + 'px');
-        }
+        if (bar) bar.style.setProperty('--h', h + 'px');
       }
     }
     animate();
   }
 
   function stopVisualizer() {
-    if (animFrameId) {
-      cancelAnimationFrame(animFrameId);
-      animFrameId = null;
-    }
-    if (streamSource) {
-      try { streamSource.disconnect(); } catch (_) {}
-      streamSource = null;
-    }
+    if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+    if (mediaSource) { try { mediaSource.disconnect(); } catch (_) {} mediaSource = null; }
     var bars = document.querySelectorAll('.vinyl-bar');
-    for (var k = 0; k < bars.length; k++) {
-      bars[k].style.setProperty('--h', '2px');
-    }
+    for (var k = 0; k < bars.length; k++) bars[k].style.setProperty('--h', '2px');
+  }
+
+  // 在 AudioContext 恢复运行后尝试接入音柱（可能在首次加载时因 context 挂起而延迟）
+  function tryEnableVisualizer() {
+    if (!audioCtx || !analyser || !musicAudio || !musicAudio.src) return;
+    if (mediaSource) return;  // 已接入
+    if (audioCtx.state !== 'running') return;
+    startVisualizer(musicAudio);
   }
 
   function flashStateIcon(isPlaying) {
@@ -697,8 +696,9 @@
         if (playing) {
           musicAudio.pause();
         } else {
-          // 确保 AudioContext 在运行（用于音柱可视化，不影响音频播放）
-          if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+          // 用户点击恢复 → 尝试启用音柱（AudioContext 此时可被唤醒）
+          initAudioContext();
+          tryEnableVisualizer();
           musicAudio.play().catch(function (err) { console.warn('[Blog] Play failed:', err); });
         }
       } else {
@@ -781,12 +781,9 @@
       // 自动播放
       musicAudio.play().catch(function () {});
 
-      // ---- 音柱可视化（play 之后再启动，确保 captureStream 能拿到活跃的媒体流） ----
+      // ---- 音柱可视化 ----
       initAudioContext();
-      if (audioCtx && audioCtx.state !== 'running') {
-        audioCtx.resume();  // 不 await，不阻塞
-      }
-      startVisualizer(musicAudio);
+      tryEnableVisualizer();
     } catch (err) {
       console.warn('[Blog] Failed to search music:', err);
     }
