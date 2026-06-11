@@ -490,7 +490,7 @@
 
       // 构建弹出播放列表（全部 5 首）
       let popupHTML = '<div class="vinyl-popup">';
-      popupHTML += '<div class="vinyl-popup-title">最近喜欢</div>';
+      popupHTML += '<div class="vinyl-popup-title">最近喜欢<span class="vinyl-popup-refresh">每日 4:00 刷新</span></div>';
       popupHTML += '<div class="vinyl-popup-list">';
       songs.forEach((s, i) => {
         const safeCover = (s.cover || '').replace(/^http:/, 'https:');
