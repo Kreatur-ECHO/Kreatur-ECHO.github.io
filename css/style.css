@@ -867,6 +867,8 @@ img {
   pointer-events: none;
   transition: opacity 0.3s ease;
   z-index: 3;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 .back-to-top svg {
   width: 14px;
@@ -1446,6 +1448,8 @@ img {
   bottom: 24px;
   right: 24px;
   z-index: 998;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .vinyl-disc {
@@ -1497,6 +1501,8 @@ img {
   pointer-events: none;
   z-index: 2;
   overflow: visible;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .vinyl-bar {
@@ -1510,7 +1516,9 @@ img {
   transform-origin: center bottom;
   opacity: 0.7;
   transition: height 0.5s ease-out;
-  will-change: height;
+  will-change: height, transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 /* 低频暖紫 — 中频亮紫 — 高频冷蓝 */
@@ -2066,7 +2074,7 @@ img {
       0 3px 12px rgba(0,0,0,0.35);
   }
   .vinyl-bars { top: -24px; left: -24px; right: -24px; bottom: -24px; }
-  .vinyl-bar { width: 1.8px; opacity: 0.55; --bar-gap: -22px; transition: height 0.5s ease-out; }
+  .vinyl-bar { width: 1.8px; opacity: 0.55; --bar-gap: -22px; transition: height 0.5s ease-out; will-change: height, transform; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
   .vinyl-center {
     width: 36px;
     height: 36px;
