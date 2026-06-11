@@ -745,10 +745,24 @@
         musicAudio.remove();
       }
       musicAudio = new Audio();
+      musicAudio.crossOrigin = 'anonymous';  // 尝试 CORS，captureStream 才能取到频谱
       musicAudio.src = data.audioUrl;
       musicAudio.preload = 'none';
       musicAudio.volume = 0.19;
       document.body.appendChild(musicAudio);
+
+      // 若 CDN 不支持 CORS 导致加载失败，回退到无 crossorigin
+      var corsRetried = false;
+      musicAudio.addEventListener('error', function () {
+        if (musicAudio.crossOrigin === 'anonymous' && !corsRetried) {
+          corsRetried = true;
+          musicAudio.crossOrigin = '';
+          var src = musicAudio.src;
+          musicAudio.src = '';
+          musicAudio.src = src;
+          musicAudio.load();
+        }
+      });
 
       // 先绑定事件再播放，确保 play/pause 状态正确
       musicAudio.addEventListener('play', () => {
