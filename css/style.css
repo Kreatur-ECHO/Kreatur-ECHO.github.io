@@ -521,20 +521,18 @@ img {
   color: var(--color-text-secondary);
   font-size: 0.925rem;
   line-height: 1.65;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
+  overflow-y: hidden;
   word-break: break-word;
+  /* 底部渐隐过渡，替代生硬截断 */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%);
 }
 
 .post-tags {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  margin-top: auto;
+  margin-top: 12px;
 }
 
 .post-tag {
@@ -1873,7 +1871,7 @@ img {
     white-space: nowrap;
   }
 
-  /* 简介：单行省略（覆盖桌面 flex:1 防纵向撑高） */
+  /* 简介：单行省略（覆盖桌面渐变遮罩） */
   .post-excerpt {
     flex: 0 0 auto;
     display: block;
@@ -1884,7 +1882,8 @@ img {
     text-overflow: ellipsis;
     white-space: nowrap;
     color: var(--color-text-muted);
-    -webkit-line-clamp: unset;
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
   /* 标签+日期同行容器 */
