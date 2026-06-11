@@ -446,6 +446,12 @@ img {
   gap: 24px;
 }
 
+.post-card-link {
+  display: flex;
+  min-width: 0;
+  height: 100%;
+}
+
 .post-card {
   display: flex;
   flex-direction: column;
@@ -518,12 +524,12 @@ img {
 .post-excerpt {
   flex: 1;
   min-width: 0;
+  max-height: 140px;
   color: var(--color-text-secondary);
   font-size: 0.925rem;
   line-height: 1.65;
   overflow-y: hidden;
   word-break: break-word;
-  /* 底部渐隐过渡，替代生硬截断 */
   -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%);
   mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%);
 }
