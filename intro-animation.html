@@ -115,34 +115,29 @@
     inset: 0;
     border-radius: 50%;
     pointer-events: none;
-    opacity: 0.35;
+    opacity: 0.5;
     background:
-      /* 暗纹1 */
-      radial-gradient(ellipse 42px 30px at 30% 48%, rgba(140,110,60,0.45) 0%, transparent 70%),
-      /* 暗纹2 */
-      radial-gradient(ellipse 28px 38px at 62% 55%, rgba(140,110,60,0.38) 0%, transparent 65%),
-      /* 暗纹3 */
-      radial-gradient(ellipse 22px 24px at 48% 28%, rgba(130,100,50,0.32) 0%, transparent 60%),
-      /* 亮斑 */
-      radial-gradient(ellipse 35px 22px at 42% 38%, rgba(255,250,235,0.3) 0%, transparent 55%);
-    animation: textureDrift 6s ease-in-out infinite;
+      radial-gradient(ellipse 44px 32px at 28% 52%, rgba(110,80,40,0.55) 0%, transparent 65%),
+      radial-gradient(ellipse 30px 40px at 64% 48%, rgba(115,85,42,0.48) 0%, transparent 60%),
+      radial-gradient(ellipse 24px 26px at 50% 24%, rgba(100,70,35,0.4) 0%, transparent 58%),
+      radial-gradient(ellipse 38px 24px at 40% 40%, rgba(255,250,235,0.35) 0%, transparent 50%);
+    animation: textureDrift 5s ease-in-out infinite;
   }
-  /* 第二层纹理，反向飘 */
   .moon-texture:nth-child(2) {
-    opacity: 0.25;
+    opacity: 0.38;
     background:
-      radial-gradient(ellipse 50px 22px at 55% 60%, rgba(150,115,60,0.35) 0%, transparent 65%),
-      radial-gradient(ellipse 18px 28px at 35% 40%, rgba(140,105,50,0.3) 0%, transparent 55%),
-      radial-gradient(ellipse 30px 16px at 50% 50%, rgba(255,245,225,0.22) 0%, transparent 50%);
-    animation: textureDrift 7s ease-in-out 1s infinite reverse;
+      radial-gradient(ellipse 52px 24px at 58% 62%, rgba(120,88,42,0.45) 0%, transparent 62%),
+      radial-gradient(ellipse 20px 30px at 32% 38%, rgba(105,78,38,0.38) 0%, transparent 52%),
+      radial-gradient(ellipse 32px 18px at 52% 48%, rgba(255,248,228,0.28) 0%, transparent 48%);
+    animation: textureDrift 6.5s ease-in-out 1.5s infinite reverse;
   }
 
   @keyframes textureDrift {
-    0%   { transform: translate(0, 0); }
-    25%  { transform: translate(3px, 2px); }
-    50%  { transform: translate(-2px, 4px); }
-    75%  { transform: translate(-4px, -1px); }
-    100% { transform: translate(0, 0); }
+    0%   { transform: translate(0, 0) rotate(0deg); }
+    25%  { transform: translate(8px, 5px) rotate(0.5deg); }
+    50%  { transform: translate(-5px, 10px) rotate(-0.3deg); }
+    75%  { transform: translate(-10px, -3px) rotate(-0.6deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
   }
 
   /* ==== 金粉碎光 ==== */
