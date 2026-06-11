@@ -607,8 +607,16 @@
       analyser.fftSize = 64;          // 32 个频率 bin，匹配 24 根音柱
       analyser.smoothingTimeConstant = 0.75;
       analyser.connect(audioCtx.destination);
+      // Chrome 会在 ~30s 无音频后自动挂起 AudioContext，
+      // 一旦 createMediaElementSource 接管了 <audio> 路由，
+      // 挂起的 context 会让所有音频静默丢弃 → 必须自动恢复
+      audioCtx.addEventListener('statechange', function () {
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      });
     }
-    if (audioCtx.state === 'suspended') {
+    if (audioCtx && audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
   }
@@ -681,16 +689,15 @@
         if (playing) {
           musicAudio.pause();
         } else {
-          // 用户点击时尝试启用音柱可视化（AudioContext 此时可被唤醒）
-          if (audioCtx && !currentSource && analyser) {
-            initAudioContext();
-            if (audioCtx.state === 'running') {
-              try {
-                currentSource = audioCtx.createMediaElementSource(musicAudio);
-                currentSource.connect(analyser);
-                startVisualizer();
-              } catch (_) { currentSource = null; }
-            }
+          // 确保 AudioContext 处于运行状态（可能因暂停过久被浏览器挂起）
+          initAudioContext();
+          // 若尚未开启可视化且 context 已运行，则接入音柱
+          if (audioCtx && !currentSource && analyser && audioCtx.state === 'running') {
+            try {
+              currentSource = audioCtx.createMediaElementSource(musicAudio);
+              currentSource.connect(analyser);
+              startVisualizer();
+            } catch (_) { currentSource = null; }
           }
           musicAudio.play().catch(() => {});
         }
