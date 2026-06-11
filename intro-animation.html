@@ -64,7 +64,7 @@
     to   { bottom: 65vh; opacity: 1; }
   }
 
-  /* ===== 圆月本体（缩放/光晕，动画结束后释放 transform 给 hover） ===== */
+  /* ===== 圆月本体 ===== */
   .intro-moon {
     width: 120px;
     height: 120px;
@@ -76,15 +76,25 @@
       0 0 60px 20px rgba(220, 190, 120, 0.25),
       0 0 120px 40px rgba(210, 175, 100, 0.15),
       0 0 200px 60px rgba(200, 160, 80, 0.08);
-    animation: moonScaleIn 2.2s cubic-bezier(0.45, 0, 0.25, 1);
-    transition: transform 0.35s ease, box-shadow 0.35s ease;
+    /* 初始不可见，animationend 后 JS 换类 */
+    opacity: 0;
+    transform: scale(0.7);
   }
   @keyframes moonScaleIn {
     from { transform: scale(0.7); opacity: 0; }
     25%  { opacity: 0; }
     to   { transform: scale(1); opacity: 1; }
   }
-  /* JS 在动画结束后加 .ready 并移除 animation，释放 transform 给 hover */
+  /* 动画播放中：JS 动态加此类 */
+  .intro-moon.rising {
+    animation: moonScaleIn 2.2s cubic-bezier(0.45, 0, 0.25, 1) forwards;
+  }
+  /* 动画结束：JS 加此类，完全不用 animation，transition 干净无冲突 */
+  .intro-moon.ready {
+    opacity: 1;
+    transform: scale(1);
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
+  }
   .intro-moon.ready:hover {
     transform: scale(1.08);
   }
@@ -198,8 +208,12 @@
   }
   sparksContainer.innerHTML = sparksHTML;
 
-  // 动画结束后启用 hover
+  // 启动入场缩放动画
+  moon.classList.add('rising');
+
+  // 动画结束：切到 ready（完全不用 animation，transition 干净无冲突）
   moon.addEventListener('animationend', function () {
+    moon.classList.remove('rising');
     moon.classList.add('ready');
   });
 
