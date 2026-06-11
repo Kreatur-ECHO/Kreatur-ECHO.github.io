@@ -1446,13 +1446,17 @@ img {
 /* ===== 旋转黑胶唱片（右下角音乐图标） ===== */
 .vinyl-wrapper {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: 18px;
+  right: 18px;
   z-index: 998;
+  width: 124px;
+  height: 124px;
 }
 
 .vinyl-disc {
-  position: relative;
+  position: absolute;
+  bottom: 0;
+  right: 0;
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -1488,6 +1492,36 @@ img {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+
+/* ===== 黑胶音柱（不随唱片旋转，环绕外围） ===== */
+.vinyl-bars {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 56px;
+  height: 56px;
+  pointer-events: none;
+  z-index: 0;
+  overflow: visible;
+}
+
+.vinyl-bar {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1.5px;
+  height: var(--h, 3px);
+  background: var(--bar-color, var(--color-accent));
+  border-radius: 1px;
+  transform-origin: center bottom;
+  opacity: 0.65;
+  will-change: height;
+}
+
+/* 低频暖紫 — 中频亮紫 — 高频冷蓝 */
+.vinyl-bar.bass  { --bar-color: #b87cff; }
+.vinyl-bar.mid   { --bar-color: #6c63ff; }
+.vinyl-bar.treble{ --bar-color: #5b9cf5; }
 
 /* 黑胶中心标签（专辑封面区域） */
 .vinyl-center {
@@ -2025,6 +2059,8 @@ img {
   .vinyl-wrapper {
     bottom: 56px;
     right: 12px;
+    width: 96px;
+    height: 96px;
   }
   .vinyl-disc {
     width: 40px;
@@ -2035,6 +2071,8 @@ img {
       0 0 0 3px var(--color-accent),
       0 3px 12px rgba(0,0,0,0.35);
   }
+  .vinyl-bars { width: 40px; height: 40px; }
+  .vinyl-bar { width: 1.2px; opacity: 0.5; }
   .vinyl-center {
     width: 36px;
     height: 36px;

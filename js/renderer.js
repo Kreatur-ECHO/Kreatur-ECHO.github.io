@@ -337,8 +337,21 @@ const Renderer = (() => {
       '<text x="50" y="62" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="48" font-weight="700" font-family="sans-serif">♪</text>' +
       '</svg>'
     );
+    // 24 根音柱，均匀环绕黑胶（15° 间隔），分低频/中频/高频三区
+    var barClasses = [];
+    for (var i = 0; i < 24; i++) {
+      if (i < 8) barClasses.push('bass');
+      else if (i < 16) barClasses.push('mid');
+      else barClasses.push('treble');
+    }
+    var barsHTML = '';
+    for (var j = 0; j < 24; j++) {
+      var angle = j * 15;
+      barsHTML += '<div class="vinyl-bar ' + barClasses[j] + '" style="transform: rotate(' + angle + 'deg) translateY(-30px)"></div>';
+    }
     return `
     <div class="vinyl-wrapper" id="musicDiscWrap">
+      <div class="vinyl-bars">${barsHTML}</div>
       <div class="vinyl-disc" id="musicDisc" title="最近在听">
         <div class="vinyl-center">
           <img class="vinyl-cover" src="${defaultCover}" alt="music" width="22" height="22" />

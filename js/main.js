@@ -594,6 +594,67 @@
   const PAUSE_ICON = '<svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
   let iconTimer = null;
 
+  // ---- 音柱可视化 (Web Audio API) ----
+  let audioCtx = null;
+  let analyser = null;
+  let currentSource = null;
+  let animFrameId = null;
+
+  function initAudioContext() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 64;          // 32 个频率 bin，匹配 24 根音柱
+      analyser.smoothingTimeConstant = 0.75;
+      analyser.connect(audioCtx.destination);
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  function startVisualizer() {
+    if (!analyser) return;
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+
+    var bufferLength = analyser.frequencyBinCount;
+    var dataArray = new Uint8Array(bufferLength);
+
+    function animate() {
+      animFrameId = requestAnimationFrame(animate);
+      analyser.getByteFrequencyData(dataArray);
+
+      for (var i = 0; i < 24; i++) {
+        var binStart = Math.floor(i * bufferLength / 24);
+        var binEnd = Math.floor((i + 1) * bufferLength / 24);
+        var sum = 0;
+        for (var j = binStart; j < binEnd; j++) {
+          sum += dataArray[j];
+        }
+        var avg = sum / (binEnd - binStart);
+        // 映射到 2–24px（无声音时 2px 最低，满音量 24px）
+        var h = Math.max(2, (avg / 255) * 24);
+        var bar = document.querySelector('.vinyl-bar:nth-child(' + (i + 1) + ')');
+        if (bar) {
+          bar.style.setProperty('--h', h + 'px');
+        }
+      }
+    }
+    animate();
+  }
+
+  function stopVisualizer() {
+    if (animFrameId) {
+      cancelAnimationFrame(animFrameId);
+      animFrameId = null;
+    }
+    // 复位全部音柱到最低
+    var bars = document.querySelectorAll('.vinyl-bar');
+    for (var k = 0; k < bars.length; k++) {
+      bars[k].style.setProperty('--h', '2px');
+    }
+  }
+
   function flashStateIcon(isPlaying) {
     const icon = document.getElementById('vinylStateIcon');
     if (!icon) return;
@@ -678,6 +739,19 @@
       musicAudio.preload = 'none';
       musicAudio.volume = 0.19;
       document.body.appendChild(musicAudio);
+
+      // ---- 接入音柱可视化 ----
+      initAudioContext();
+      if (currentSource) {
+        try { currentSource.disconnect(); } catch (_) {}
+      }
+      try {
+        currentSource = audioCtx.createMediaElementSource(musicAudio);
+        currentSource.connect(analyser);
+        startVisualizer();
+      } catch (_) {
+        // createMediaElementSource 对同一 audio 只能调用一次（不应发生，但兜底）
+      }
 
       musicAudio.addEventListener('play', () => {
         playing = true;
