@@ -770,8 +770,11 @@
         playNext();
       });
 
-      // 自动播放
-      musicAudio.play().catch(function () {});
+      // 自动播放：先静音以通过浏览器自动播放策略
+      musicAudio.muted = true;
+      musicAudio.play().then(function () {
+        musicAudio.muted = false;
+      }).catch(function () {});
 
       // 可视化已初始化 → 新 audio 也接入 captureStream 旁路
       if (audioCtx) {
