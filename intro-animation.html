@@ -7,105 +7,42 @@
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-  /* 模拟主页背景 */
   body {
     background: #fafafa;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
+    font-family: -apple-system, sans-serif;
     min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     color: #1a1a2e;
   }
 
-  .mock-content {
-    text-align: center;
-    padding: 2rem;
-  }
-  .mock-content h1 {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-  }
-  .mock-content p {
-    color: #888;
-  }
+  .mock-content { text-align: center; padding: 2rem; }
+  .mock-content h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+  .mock-content p { color: #888; }
 
-  /* ===== 入场动画遮罩 ===== */
+  /* ===== 遮罩 ===== */
   .intro-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 10000;
+    position: fixed; inset: 0; z-index: 10000;
     background: #0a0a14;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: auto;
+    display: flex; align-items: center; justify-content: center;
     transition: opacity 0.6s ease;
   }
-  .intro-overlay.dismiss {
-    opacity: 0;
-    pointer-events: none;
-  }
+  .intro-overlay.dismiss { opacity: 0; pointer-events: none; }
 
-  /* ===== 月亮外壳（负责上升+光晕，光晕不跟月亮缩放） ===== */
-  .moon-riser {
-    position: absolute;
-    left: 50%;
-    bottom: -160px;
-    width: 120px;
-    height: 120px;
-    margin-left: -60px;
-    animation: moonRise 2.2s cubic-bezier(0.45, 0, 0.25, 1) forwards;
-  }
-  /* 静态光晕：不随月亮 hover 缩放 */
-  .moon-riser::before {
-    content: '';
-    position: absolute;
-    inset: -70px;
-    border-radius: 50%;
-    background: radial-gradient(circle,
-      rgba(220,190,120,0.22) 0%,
-      rgba(210,175,100,0.12) 40%,
-      rgba(200,160,80,0.04) 60%,
-      transparent 75%);
-    pointer-events: none;
-  }
-  /* 脉动光晕 */
-  .moon-riser::after {
-    content: '';
-    position: absolute;
-    inset: -50px;
-    border-radius: 50%;
-    background: radial-gradient(circle,
-      rgba(220,190,120,0.25) 0%,
-      rgba(210,175,100,0.1) 50%,
-      transparent 70%);
-    animation: moonGlow 3s ease-in-out infinite;
-    pointer-events: none;
-  }
-
-  @keyframes moonRise {
-    from { bottom: -160px; opacity: 0; }
-    20%  { opacity: 0; }
-    to   { bottom: 65vh; opacity: 1; }
-  }
-
-  @keyframes moonGlow {
-    0%, 100% { opacity: 0.8; }
-    50%      { opacity: 1.2; }
-  }
-
-  /* ===== 圆月本体（不发光，光晕在外层 riser 上） ===== */
-  .intro-moon {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    cursor: pointer;
+  /* ===== 月亮容器（含光晕） ===== */
+  .moon-stage {
     position: relative;
-    pointer-events: auto;
+    width: 120px; height: 120px;
+  }
+
+  /* 圆月 — 只有 hover */
+  .intro-moon {
+    width: 120px; height: 120px; border-radius: 50%;
+    cursor: pointer;
     background: radial-gradient(circle at 40% 40%, #f5e6c8 0%, #e8d5a3 30%, #d4b86a 60%, #b8935a 100%);
-    opacity: 1;
-    transform: scale(1);
+    box-shadow:
+      0 0 60px 20px rgba(220, 190, 120, 0.25),
+      0 0 120px 40px rgba(210, 175, 100, 0.15),
+      0 0 200px 60px rgba(200, 160, 80, 0.08);
     transition: transform 0.35s ease;
   }
   .intro-moon:hover {
@@ -114,181 +51,32 @@
   .intro-moon:active {
     transform: scale(0.95);
   }
-
-  /* JS rAF 动画结束后加此类（无动画，纯 transition hover） */
-
-  /* 内光斑（让月亮有层次感） */
-  .intro-moon::before {
-    content: '';
-    position: absolute;
-    top: 18%;
-    left: 25%;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,250,240,0.6) 0%, transparent 70%);
-  }
-  /* 表面暗纹 */
-  .intro-moon::after {
-    content: '';
-    position: absolute;
-    top: 45%;
-    left: 55%;
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(160,130,80,0.35) 0%, transparent 70%);
-  }
-
-  /* 月亮旁边的碎光点 */
-  .intro-spark {
-    position: absolute;
-    border-radius: 50%;
-    background: #f0d78c;
-    opacity: 0;
-    animation: sparkFloat 2s ease-out forwards;
-  }
-
-  @keyframes sparkFloat {
-    0%   { opacity: 0; transform: translate(0, 0) scale(0); }
-    20%  { opacity: 0.8; transform: translate(8px, -30px) scale(1); }
-    100% { opacity: 0; transform: translate(20px, -120px) scale(0.3); }
-  }
-
-  /* 主题切换按钮 */
-  .theme-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 10001;
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.2);
-    color: #ccc;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.85rem;
-  }
 </style>
 </head>
 <body>
 
-  <!-- 模拟主页内容 -->
   <div class="mock-content">
     <h1>YEYU's Blog</h1>
-    <p>主页内容在这里（模拟）</p>
+    <p>背景内容</p>
   </div>
 
-  <!-- 入场动画遮罩 -->
-  <div class="intro-overlay" id="introOverlay">
-    <div class="moon-riser" id="moonRiser">
-      <div class="intro-moon" id="introMoon"></div>
+  <div class="intro-overlay" id="overlay">
+    <div class="moon-stage">
+      <div class="intro-moon" id="moon"></div>
     </div>
-    <div id="sparks"></div>
   </div>
-
-  <button class="theme-btn" onclick="toggleTheme()">切换暗色模式预览</button>
 
 <script>
-(function () {
-  var moon = document.getElementById('introMoon');
-  var riser = document.getElementById('moonRiser');
-  var overlay = document.getElementById('introOverlay');
-  var sparksContainer = document.getElementById('sparks');
-
-  // 生成 8 个碎光点
-  var sparksHTML = '';
-  for (var i = 0; i < 8; i++) {
-    var size = 2 + Math.random() * 3;
-    var delay = 1 + Math.random() * 1.6;
-    var xOff = (Math.random() - 0.5) * 200;
-    var yOff = -20 - Math.random() * 100;
-    sparksHTML += '<div class="intro-spark" style="'
-      + 'width:' + size + 'px; height:' + size + 'px; '
-      + 'bottom:' + (-yOff) + 'px; left:calc(50% + ' + xOff + 'px); '
-      + 'animation-delay:' + delay + 's;"></div>';
-  }
-  sparksContainer.innerHTML = sparksHTML;
-
-  // ---- 纯 JS rAF 入场动画，不碰 CSS animation，不与 transition 冲突 ----
-  var duration = 2200;
-  var start = null;
-  var startY = -160;
-  var endY_rel = 65; // vh
-
-  moon.style.opacity = '0';
-  moon.style.transform = 'scale(0.7)';
-  moon.style.transition = 'none';
-  // riser 也置初始态
-  riser.style.bottom = startY + 'px';
-  riser.style.opacity = '0';
-
-  function easeOut(t) {
-    // cubic-bezier(0.45, 0, 0.25, 1)
-    var c = 1.45, d = 1.75, e = 1.25;
-    if (t >= 1) return 1;
-    return 1 - Math.pow(1 - t, 3.5) + (t < 0.3 ? t * 0.3 : 0);
-    // simpler approximation of the cubic bezier
-  }
-
-  function easeOutQuad(t) {
-    return t * (2 - t);
-  }
-
-  function animate(ts) {
-    if (!start) start = ts;
-    var elapsed = ts - start;
-    var progress = Math.min(elapsed / duration, 1);
-    var eased = easeOutQuad(progress);
-
-    // 月亮本体：缩放 + 不透明
-    var moonScale = 0.7 + 0.3 * eased;
-    var moonOpacity = eased < 0.25 ? 0 : eased;
-    moon.style.transform = 'scale(' + moonScale + ')';
-    moon.style.opacity = moonOpacity;
-
-    // riser：底部位置 + 不透明
-    var riserBottom = startY + (endY_rel - startY / window.innerHeight * 100) * eased;
-    // 简化：从底部到 65vh
-    var bottomPx = startY + (window.innerHeight * 0.65 - startY) * eased;
-    riser.style.bottom = bottomPx + 'px';
-    riser.style.opacity = eased < 0.2 ? 0 : eased;
-
-    if (progress < 1) {
-      requestAnimationFrame(animate);
-    } else {
-      // 动画结束：清除 inline style，启用 CSS transition
-      moon.style.transform = '';
-      moon.style.opacity = '';
-      moon.style.transition = '';
-      moon.classList.add('done');
-      riser.style.bottom = '65vh';
-      riser.style.opacity = '1';
-    }
-  }
-
-  requestAnimationFrame(animate);
-
-  // ---- 交互 ----
-  function dismiss() {
-    if (overlay.classList.contains('dismiss')) return;
-    overlay.classList.add('dismiss');
-    setTimeout(function () {
-      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-    }, 700);
-  }
+  var moon = document.getElementById('moon');
+  var overlay = document.getElementById('overlay');
 
   moon.addEventListener('click', function (e) {
     e.stopPropagation();
-    dismiss();
+    overlay.classList.add('dismiss');
+    setTimeout(function () {
+      if (overlay.parentNode) overlay.parentNode.remove();
+    }, 700);
   });
-})();
-
-function toggleTheme() {
-  var isDark = document.body.style.background === 'rgb(13, 17, 23)';
-  document.body.style.background = isDark ? '#fafafa' : '#0d1117';
-  document.querySelector('.mock-content').style.color = isDark ? '#1a1a2e' : '#e6e6e6';
-}
 </script>
 </body>
 </html>
