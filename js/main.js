@@ -14,10 +14,9 @@
     introMoon.addEventListener('click', function (e) {
       e.stopPropagation();
       introOverlay.classList.add('dismissing');
-      // 动画结束后移除 DOM
-      introOverlay.addEventListener('transitionend', function () {
+      setTimeout(function () {
         introOverlay.style.display = 'none';
-      });
+      }, 2900);
     });
   }
 

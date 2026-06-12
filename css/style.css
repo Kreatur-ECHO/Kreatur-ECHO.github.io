@@ -2122,6 +2122,7 @@ img {
 .intro-overlay {
   position: fixed; inset: 0; z-index: 10000;
   background: #0a0a14;
+  opacity: 1;
   transition: opacity 2.8s cubic-bezier(0.22, 0, 0.18, 1);
 }
 .intro-overlay.dismissing {
