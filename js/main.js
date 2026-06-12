@@ -7,11 +7,10 @@
 (function () {
   'use strict';
 
-  // ---- 入场动画 ---- 首次访问在页面渲染后弹出月亮升起 ----
-  if (!localStorage.getItem('blog_intro_seen')) {
-    (function () {
-      var sparksHTML = '';
-      for (var i = 0; i < 18; i++) {
+  // ---- 入场动画 ---- 每次刷新展示月亮升起 ----
+  (function () {
+    var sparksHTML = '';
+    for (var i = 0; i < 18; i++) {
         var sz = 1.5 + Math.random() * 3;
         var dur = 5 + Math.random() * 10;
         var dly = Math.random() * dur;
@@ -42,12 +41,10 @@
       if (moon) {
         moon.addEventListener('click', function (e) {
           e.stopPropagation();
-          localStorage.setItem('blog_intro_seen', '1');
           overlay.style.display = 'none';
         });
       }
     })();
-  }
 
   // ---- 主题初始化（全局，仅一次） ----
   ThemeManager.init();
