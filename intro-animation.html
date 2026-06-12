@@ -182,94 +182,70 @@
   var overlay = document.getElementById('overlay');
   var stage = document.getElementById('stage');
 
-  // ---- 1. 月亮拖尾金粉 — rAF 追踪月亮位置，底部密集正态分布飘散 ----
-  var wakePool = [];
-  var wakeTimer = 0;
-  var lastWakeSpawn = 0;
-
-  // Box-Muller 正态分布
-  function normalRand(mean, sigma) {
-    var u1 = 1 - Math.random();
-    var u2 = 1 - Math.random();
-    var z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-    return z * sigma + mean;
+  // ---- 1. 底部金粉池 — 月亮路过时被惯性带起，正态分布喷散 ----
+  function norm(mean, sigma) {
+    return sigma * Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random()) + mean;
   }
 
-  function spawnWake(x, y, vxBase) {
-    // 位置：月亮底部偏下方密集
-    var ox = x + normalRand(0, 28);
-    var oy = y + normalRand(0, 22) + 10;
-    // 速度：向上飘 + 惯性水平偏移
-    var vx = vxBase + normalRand(0, 25);
-    var vy = -(25 + Math.abs(normalRand(0, 40)));
-    var size = 1 + Math.abs(normalRand(2, 1.2));
-    var life = 1.2 + Math.abs(normalRand(0, 0.6));
+  var pool = [];
+  var bottomY = window.innerHeight * 0.9; // 池底
+  for (var i = 0; i < 500; i++) {
     var dot = document.createElement('div');
     dot.className = 'curtain-spark';
-    dot.style.width  = size + 'px';
-    dot.style.height = size + 'px';
-    dot.style.left   = ox + 'px';
-    dot.style.top    = oy + 'px';
-    dot.style.opacity = 0;
+    var sz = 1 + Math.random() * 3;
+    var xx = norm(window.innerWidth / 2, window.innerWidth * 0.35);
+    var yy = bottomY + norm(0, window.innerHeight * 0.1);
+    dot.style.width  = sz + 'px';
+    dot.style.height = sz + 'px';
+    dot.style.left   = xx + 'px';
+    dot.style.top    = yy + 'px';
+    dot.style.opacity = 0.05 + Math.random() * 0.2;
     dot.style.animation = 'none';
     overlay.appendChild(dot);
-    wakePool.push({ el: dot, vx: vx, vy: vy, life: life, born: performance.now(), y: oy });
+    pool.push({ el: dot, x: xx, y: yy, vx: 0, vy: 0, life: 0, born: 0, done: false });
   }
 
-  var prevMoonX = null, prevMoonY = null, prevTime = 0;
+  var prevMY = null, prevMT = 0, wakeTimer = 0;
+  var R = 220; // 月亮影响半径
 
   function wakeLoop(ts) {
     var now = performance.now();
-    if (!wakeTimer) { wakeTimer = now; prevTime = now; }
-    var elapsed = (now - wakeTimer) / 1000;
-
+    if (!wakeTimer) { wakeTimer = now; prevMT = now; }
     var rect = stage.getBoundingClientRect();
     var mx = rect.left + rect.width / 2;
-    var my = rect.top + rect.height - 5;
+    var my = rect.top + rect.height - 5; // 月底
+    var dt = (now - prevMT) / 1000;
+    var moonSpeed = prevMY !== null ? (my - prevMY) / dt : 0;
+    prevMY = my; prevMT = now;
 
-    // 计算月亮移动速度，速度越快粒子越多
-    var dt = (now - prevTime) / 1000;
-    if (dt <= 0) dt = 0.016;
-    var speed = 0;
-    if (prevMoonX !== null) {
-      var dy = my - prevMoonY;
-      speed = dy / dt; // px/s，向上为正
-    }
-    prevMoonX = mx; prevMoonY = my; prevTime = now;
-
-    // 月亮上升阶段持续生成
-    if (elapsed <= 3.5 && speed > 0) {
-      var intensity = speed / 300; // 速度快粒子多
-      if (intensity < 0.3) intensity = 0.3;
-      var count = Math.floor(8 * intensity);
-
-      if (now - lastWakeSpawn > 30) {
-        lastWakeSpawn = now;
-        for (var i = 0; i < count; i++) {
-          spawnWake(mx, my, 0);
+    for (var w = pool.length - 1; w >= 0; w--) {
+      var p = pool[w];
+      if (p.done) {
+        var age = (now - p.born) / 1000;
+        if (age > p.life) { p.el.remove(); pool.splice(w, 1); }
+        else {
+          var t = age, prog = t / p.life;
+          p.el.style.opacity = (1 - prog) * 0.7;
+          p.el.style.transform = 'translate(' + (p.vx * t) + 'px, ' + (p.vy * t + 0.5 * 80 * t * t) + 'px)';
         }
-      }
-    }
-
-    // 更新粒子
-    for (var w = wakePool.length - 1; w >= 0; w--) {
-      var p = wakePool[w];
-      var age = (now - p.born) / 1000;
-      if (age > p.life) {
-        p.el.remove();
-        wakePool.splice(w, 1);
         continue;
       }
-      var prog = age / p.life;
-      p.el.style.opacity = (prog < 0.08 ? prog * 11 : (1 - prog)) * 0.8;
-      p.el.style.transform = 'translate('
-        + (p.vx * age) + 'px, '
-        + (p.vy * age) + 'px)';
+      // 未激活：检测月亮是否进入影响范围
+      var dx = p.x - mx, dy = p.y - my;
+      if (Math.sqrt(dx*dx + dy*dy) < R && moonSpeed > 0) {
+        p.done = true; p.born = now;
+        p.life = 1 + Math.random() * 2;
+        var inertia = moonSpeed * 0.6 + 40;
+        p.vy = -(inertia + Math.abs(norm(0, 60)));
+        p.vx = norm(0, inertia * 0.4);
+        p.el.style.opacity = '1';
+      } else {
+        // 保持底部微光
+        p.el.style.opacity = Math.max(0.02, p.el.style.opacity - 0.0003);
+      }
     }
 
-    if (elapsed < 7 || wakePool.length > 0) {
-      requestAnimationFrame(wakeLoop);
-    }
+    if (pool.length > 0) requestAnimationFrame(wakeLoop);
   }
 
   requestAnimationFrame(wakeLoop);
