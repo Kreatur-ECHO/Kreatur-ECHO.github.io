@@ -7,17 +7,16 @@
 (function () {
   'use strict';
 
-  // ---- 入场动画 ---- 点击月亮溶解进入博客 ----
+  // ---- 入场动画遮罩 ---- 点击月亮后渐隐，露出下方主页 ----
   var introOverlay = document.getElementById('introOverlay');
   var introMoon    = document.getElementById('introMoon');
   if (introOverlay && introMoon) {
     introMoon.addEventListener('click', function (e) {
       e.stopPropagation();
-      introOverlay.classList.add('dissolving');
-      introOverlay.addEventListener('animationend', function (ev) {
-        if (ev.animationName === 'dissolveOut') {
-          introOverlay.style.display = 'none';
-        }
+      introOverlay.classList.add('dismissing');
+      // 动画结束后移除 DOM
+      introOverlay.addEventListener('transitionend', function () {
+        introOverlay.style.display = 'none';
       });
     });
   }
