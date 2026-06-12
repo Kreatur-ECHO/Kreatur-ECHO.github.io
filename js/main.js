@@ -45,6 +45,11 @@
     introMoon.addEventListener('click', function (e) {
       e.stopPropagation();
       introOverlay.classList.add('dismissing');
+      introOverlay.addEventListener('transitionend', function (ev) {
+        if (ev.target === introOverlay && ev.propertyName === 'opacity') {
+          introOverlay.style.display = 'none';
+        }
+      });
     });
   }
 

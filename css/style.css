@@ -2167,7 +2167,7 @@ img {
 @keyframes moonRise {
   from { bottom: -160px; opacity: 0; }
   18%  { opacity: 0; }
-  to   { bottom: 76vh; opacity: 1; }
+  to   { bottom: 18vh; opacity: 1; }
 }
 
 .intro-moon {
