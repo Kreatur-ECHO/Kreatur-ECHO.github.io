@@ -8,16 +8,11 @@
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    background: #fafafa;
+    background: #0a0a14;
     font-family: -apple-system, sans-serif;
     min-height: 100vh;
-    display: flex; align-items: center; justify-content: center;
-    color: #1a1a2e;
+    margin: 0;
   }
-
-  .mock-content { text-align: center; padding: 2rem; }
-  .mock-content h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-  .mock-content p { color: #888; }
 
   /* ===== 遮罩 ===== */
   .intro-overlay {
@@ -35,6 +30,7 @@
     width: 140px; height: 140px;
     margin-left: -70px;
     overflow: visible;
+    z-index: 2;
     animation: moonRise 2.2s cubic-bezier(0.45, 0, 0.25, 1) forwards;
   }
 
@@ -192,8 +188,9 @@
     color: #e8e0d0;
     opacity: 0;
     pointer-events: none;
-    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 60%, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 0%, #000 60%, transparent 100%);
+    z-index: 0;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 80%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 80%, transparent 100%);
     animation: logoRise 2.2s cubic-bezier(0.45, 0, 0.25, 1) forwards;
   }
   .intro-logo .logo-accent {
@@ -227,11 +224,6 @@
 </style>
 </head>
 <body>
-
-  <div class="mock-content">
-    <h1>YEYU's Blog</h1>
-    <p>背景内容</p>
-  </div>
 
   <div class="intro-overlay" id="overlay">
     <div class="intro-logo" id="logo">Y<span class="logo-accent">E</span>YU</div>
