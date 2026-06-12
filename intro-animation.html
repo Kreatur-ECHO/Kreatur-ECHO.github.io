@@ -204,13 +204,10 @@
     var t = (now - animStart) / 1000;
 
     // 月亮升起阶段持续喷粒子（0~3s）
-    if (t < 3 && !animDone && (now - lastSpawn > 18) && dust.length < MAX) {
+    if (t < 3 && !animDone && (now - lastSpawn > 20) && dust.length < MAX) {
       lastSpawn = now;
-      // 从月亮下方喷出，正态分布直接体现在初始 x 坐标上
-      var rect = stage.getBoundingClientRect();
-      var moonCX = rect.left + rect.width / 2;
-      var moonY  = rect.top + rect.height;
-
+      // sigma 随时间增大 → 底部窄、高处宽的钟形
+      var sigma = 40 + t * 90;
       var n = 8 + Math.floor(Math.random() * 8);
       for (var i = 0; i < n; i++) {
         var sz = 5 + Math.random() * 7;
@@ -220,16 +217,16 @@
         dot.style.height = sz + 'px';
         dot.style.opacity = '1';
         dot.style.animation = 'none';
-        var sx = norm(moonCX, 70);
+        var sx = norm(baseX, sigma);
         dot.style.left = sx + 'px';
-        dot.style.top  = (moonY + 5) + 'px';
+        dot.style.top  = baseY + 'px';
         overlay.appendChild(dot);
         dust.push({
           el: dot, born: now,
-          startX: sx, startY: moonY + 5,
+          startX: sx, startY: baseY,
           vx: 0,
-          vy: -(120 + Math.random() * 100),
-          life: 3 + Math.random() * 4
+          vy: -(150 + Math.random() * 180),
+          life: 3.5 + Math.random() * 4
         });
       }
     }
