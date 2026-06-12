@@ -189,24 +189,24 @@
 
   var pool = [];
   var bottomY = window.innerHeight * 0.9; // 池底
-  for (var i = 0; i < 500; i++) {
+  for (var i = 0; i < 600; i++) {
     var dot = document.createElement('div');
     dot.className = 'curtain-spark';
-    var sz = 1 + Math.random() * 3;
-    var xx = norm(window.innerWidth / 2, window.innerWidth * 0.35);
-    var yy = bottomY + norm(0, window.innerHeight * 0.1);
+    var sz = 1.5 + Math.random() * 4;
+    var xx = norm(window.innerWidth / 2, window.innerWidth * 0.4);
+    var yy = bottomY + norm(0, window.innerHeight * 0.15);
     dot.style.width  = sz + 'px';
     dot.style.height = sz + 'px';
     dot.style.left   = xx + 'px';
     dot.style.top    = yy + 'px';
-    dot.style.opacity = 0.05 + Math.random() * 0.2;
+    dot.style.opacity = 0.15 + Math.random() * 0.35;
     dot.style.animation = 'none';
     overlay.appendChild(dot);
     pool.push({ el: dot, x: xx, y: yy, vx: 0, vy: 0, life: 0, born: 0, done: false });
   }
 
   var prevMY = null, prevMT = 0, wakeTimer = 0;
-  var R = 220; // 月亮影响半径
+  var R = 300; // 月亮影响半径
 
   function wakeLoop(ts) {
     var now = performance.now();
@@ -234,14 +234,13 @@
       var dx = p.x - mx, dy = p.y - my;
       if (Math.sqrt(dx*dx + dy*dy) < R && moonSpeed > 0) {
         p.done = true; p.born = now;
-        p.life = 1 + Math.random() * 2;
-        var inertia = moonSpeed * 0.6 + 40;
-        p.vy = -(inertia + Math.abs(norm(0, 60)));
-        p.vx = norm(0, inertia * 0.4);
+        p.life = 2.5 + Math.random() * 3;
+        var inertia = moonSpeed * 0.8 + 80;
+        p.vy = -(inertia + Math.abs(norm(0, 120)));
+        p.vx = norm(0, inertia * 0.55);
         p.el.style.opacity = '1';
       } else {
-        // 保持底部微光
-        p.el.style.opacity = Math.max(0.02, p.el.style.opacity - 0.0003);
+        // 保持初始微光，不随时间消失
       }
     }
 
