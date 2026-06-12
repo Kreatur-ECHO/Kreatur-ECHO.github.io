@@ -189,44 +189,92 @@
   var overlay = document.getElementById('overlay');
   var stage = document.getElementById('stage');
 
-  // ---- 1. 金粉帘幕：沿月亮上升路径布300粒，按月亮到达时间错开激活 ----
-  var riseDuration = 2200; // ms, matches CSS
-  var riseStart = -160;    // px
-  var riseEnd   = 68;      // vh
+  // ---- 1. 跟踪月亮上升，从月亮底部生成金粉尾迹 ----
+  var riseDuration = 2200;
+  var wakePool = [];
+  var wakeSpawned = 0;
+  var lastWakeFrame = 0;
 
-  var curtainHTML = '';
-  for (var i = 0; i < 300; i++) {
-    // 垂直分布在底部 0% ~ 75vh，覆盖月亮全程
-    var yPct = Math.random() * 0.75;
-    var yPx  = yPct * window.innerHeight;
-
-    // 月亮到达此刻 y 位置的时间（线性近似）
-    // 月亮从 -160px 升到 68vh ≈ 0.68*windowH
-    var endPx = window.innerHeight * 0.68;
-    // ease-out: 前期快后期慢，简化用线性 + 随机扰动
-    var progress = (yPx - riseStart) / (endPx - riseStart);
-    if (progress < 0) progress = 0;
-    // easeOutQuad 反算：实际时间 = (1-(1-progress)^2) * duration
-    var delay = (progress * (2 - progress)) * (riseDuration / 1000);
-    // 粒子在月亮到达前后 0.3s 范围内激活
-    delay += (Math.random() - 0.4) * 0.6;
-    if (delay < 0) delay = 0;
-
-    // 水平分布：集中在月亮路径宽度内
-    var xPct = 50 + (Math.random() - 0.5) * 40;
-
-    // 迸溅方向：偏上偏外
-    var dx = (Math.random() - 0.5) * 200;
-    var dy = -(yPct * 0.6 + Math.random() * 0.4) * window.innerHeight * 0.7;
-    var size = 1 + Math.random() * 3.5;
-
-    curtainHTML += '<div class="curtain-spark" style="'
-      + 'width:' + size + 'px; height:' + size + 'px; '
-      + 'left:' + xPct.toFixed(1) + '%; bottom:' + (yPct * 100).toFixed(1) + 'vh; '
-      + 'animation-delay:' + delay.toFixed(2) + 's; '
-      + '--dx:' + dx.toFixed(0) + 'px; --dy:' + dy.toFixed(0) + 'px;"></div>';
+  function spawnWakeParticle(x, y) {
+    // 金粉从月亮底部释放，向两侧稍散
+    var vx = (Math.random() - 0.5) * 40;
+    var vy = -(20 + Math.random() * 60); // 向上飘
+    var size = 1.5 + Math.random() * 3;
+    var life = 1.2 + Math.random() * 2;
+    var dot = document.createElement('div');
+    dot.className = 'curtain-spark';
+    dot.style.width  = size + 'px';
+    dot.style.height = size + 'px';
+    dot.style.left   = x + 'px';
+    dot.style.top    = y + 'px';
+    dot.style.opacity = 0;
+    dot.style.animation = 'none'; // 手动控制，不用 CSS animation
+    overlay.appendChild(dot);
+    wakePool.push({ el: dot, x: x, y: y, vx: vx, vy: vy, life: life, born: performance.now(), size: size });
   }
-  overlay.insertAdjacentHTML('beforeend', curtainHTML);
+
+  var wakeTimer = 0;
+  var spawnInterval = 22; // ms between spawns
+
+  function wakeUpdate(now) {
+    // 清除过期粒子
+    for (var w = wakePool.length - 1; w >= 0; w--) {
+      var p = wakePool[w];
+      var dt = (now - p.born) / 1000;
+      if (dt > p.life) {
+        p.el.remove();
+        wakePool.splice(w, 1);
+      }
+    }
+  }
+
+  function wakeLoop(ts) {
+    var now = performance.now();
+    if (!wakeTimer) wakeTimer = now;
+
+    // 若动画还在进行，在月亮底部生成粒子
+    var elapsed = (now - wakeTimer) / 1000;
+    if (elapsed <= 3.5) {
+      var rect = stage.getBoundingClientRect();
+      // 月亮底部中心
+      var mx = rect.left + rect.width / 2;
+      var my = rect.top + rect.height - 5;
+
+      if (now - lastWakeFrame > spawnInterval) {
+        lastWakeFrame = now;
+        // 每帧生成小簇
+        var n = 2 + Math.floor(Math.random() * 4);
+        for (var i = 0; i < n; i++) {
+          spawnWakeParticle(mx, my);
+        }
+      }
+    }
+
+    // 更新所有尾迹粒子
+    for (var w = wakePool.length - 1; w >= 0; w--) {
+      var p = wakePool[w];
+      var dt = (now - p.born) / 1000;
+      if (dt > p.life) {
+        p.el.remove();
+        wakePool.splice(w, 1);
+        continue;
+      }
+      var prog = dt / p.life;
+      p.el.style.opacity = (prog < 0.1 ? prog * 9 : (1 - prog)) * 0.85;
+      p.el.style.transform = 'translate('
+        + (p.vx * dt) + 'px, '
+        + (p.vy * dt) + 'px) scale(' + (1 - prog * 0.7) + ')';
+    }
+
+    wakeUpdate(now);
+
+    // 持续运行直到粒子清空（动画结束后允许尾迹自然消散）
+    if (elapsed < 6 || wakePool.length > 0) {
+      requestAnimationFrame(wakeLoop);
+    }
+  }
+
+  requestAnimationFrame(wakeLoop);
 
   // ---- 2. 底部银河（30颗闪烁金粉） ----
   var floorHTML = '';
