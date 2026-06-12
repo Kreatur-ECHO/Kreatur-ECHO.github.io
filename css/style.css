@@ -2167,7 +2167,7 @@ img {
 @keyframes moonRise {
   from { bottom: -160px; opacity: 0; }
   18%  { opacity: 0; }
-  to   { bottom: 91vh; opacity: 1; }
+  to   { bottom: 80vh; opacity: 1; }
 }
 
 .intro-moon {
@@ -2226,7 +2226,7 @@ img {
 @keyframes clockRise {
   from { opacity: 0; bottom: -40px; }
   18%  { opacity: 0; }
-  to   { opacity: 1; bottom: 22vh; }
+  to   { opacity: 1; bottom: 12vh; }
 }
 
 .moon-texture {
