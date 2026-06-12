@@ -177,29 +177,25 @@
     position: absolute;
     left: 50%;
     bottom: 5vh;
+    left: 50%;
     transform: translateX(-50%);
-    width: 100vw;
-    text-align: center;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
     font-size: 35vw;
     font-weight: 800;
     letter-spacing: 0.04em;
     line-height: 0.85;
+    white-space: nowrap;
     color: #e8e0d0;
     opacity: 0;
     pointer-events: none;
     z-index: 0;
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 30%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 0%, black 30%, transparent 100%);
     animation: logoRise 2.2s cubic-bezier(0.45, 0, 0.25, 1) forwards;
   }
   .intro-logo .logo-accent {
     color: #6c63ff;
   }
-  .intro-logo::after {
-    content: '';
-    position: absolute;
-    left: 0; right: 0; top: 0; bottom: 0;
-    pointer-events: none;
-    background: linear-gradient(to bottom, transparent 0%, transparent 25%, #0a0a14 80%, #0a0a14 100%);
   }
   .intro-logo .logo-accent {
     color: #6c63ff;
