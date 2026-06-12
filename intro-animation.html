@@ -135,6 +135,11 @@
     50%{opacity:1;box-shadow:0 0 10px 5px rgba(255,255,250,1),0 0 24px 14px rgba(255,248,220,0.7),0 0 45px 26px rgba(255,235,180,0.45),0 0 80px 50px rgba(255,220,150,0.25)}
   }
 
+  @keyframes sparkTwinkle {
+    0%,100%{opacity:0.3;transform:scale(0.7)}
+    40%{opacity:0.85;transform:scale(1.2)}
+    70%{opacity:0.5;transform:scale(0.9)}
+  }
 </style>
 </head>
 <body>
@@ -159,38 +164,23 @@
   var stage = document.getElementById('stage');
 
   // ---- 月亮周围漂浮金粉 ----
-  var sparkEls = [];
   for (var i = 0; i < 3; i++) {
     var dot = document.createElement('div');
     var sz = 3 + Math.random() * 2;
     var angle = Math.random() * Math.PI * 2;
-    var dist = 40 + Math.random() * 30;
-    dot.style.cssText = 'position:fixed;border-radius:50%;background:#ffeaa7;pointer-events:none;z-index:100003;'
+    var dist = 50 + Math.random() * 40;
+    dot.style.cssText = 'position:absolute;border-radius:50%;background:#ffeaa7;pointer-events:none;z-index:5;'
       + 'width:' + sz + 'px;height:' + sz + 'px;'
-      + 'box-shadow:0 0 8px 4px rgba(255,216,100,0.85);';
-    document.body.appendChild(dot);
-    sparkEls.push({ el: dot, ox: Math.cos(angle) * dist, oy: Math.sin(angle) * dist, phase: Math.random() * Math.PI * 2 });
+      + 'top:' + (70 + Math.sin(angle) * dist).toFixed(0) + 'px;'
+      + 'left:' + (70 + Math.cos(angle) * dist).toFixed(0) + 'px;'
+      + 'box-shadow:0 0 8px 4px rgba(255,216,100,0.85);'
+      + 'animation:sparkTwinkle 3s ease-in-out infinite;';
+    stage.appendChild(dot);
   }
-
-  function sparkLoop() {
-    var rect = stage.getBoundingClientRect();
-    var cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2, t = performance.now() / 1000;
-    for (var s = 0; s < sparkEls.length; s++) {
-      var sp = sparkEls[s];
-      sp.el.style.left = (cx + sp.ox) + 'px';
-      sp.el.style.top  = (cy + sp.oy + Math.sin(sp.phase + t) * 5) + 'px';
-      sp.el.style.opacity = 0.5 + 0.4 * Math.sin(sp.phase * 2 + t * 1.5);
-    }
-    requestAnimationFrame(sparkLoop);
-  }
-  requestAnimationFrame(sparkLoop);
 
   // ---- 交互 ----
   moon.addEventListener('click', function (e) {
     e.stopPropagation();
-    // 清理金粉
-    for (var s = 0; s < sparkEls.length; s++) sparkEls[s].el.remove();
-    sparkEls = [];
     overlay.classList.add('dismiss');
     setTimeout(function () {
       if (overlay.parentNode) overlay.parentNode.remove();
