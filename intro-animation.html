@@ -196,7 +196,7 @@
   var animDone = false;
 
   // 总粒子上限
-  var MAX = 800;
+  var MAX = 600;
 
   function wakeLoop(ts) {
     var now = performance.now();
@@ -204,11 +204,11 @@
     var t = (now - animStart) / 1000;
 
     // 月亮升起阶段持续喷粒子（0~3s）
-    if (t < 3 && !animDone && (now - lastSpawn > 16) && dust.length < MAX) {
+    if (t < 3.5 && !animDone && (now - lastSpawn > 20) && dust.length < MAX) {
       lastSpawn = now;
-      var n = 6 + Math.floor(Math.random() * 8);
+      var n = 8 + Math.floor(Math.random() * 10);
       for (var i = 0; i < n; i++) {
-        var sz = 6 + Math.random() * 8;
+        var sz = 4 + Math.random() * 6;
         var dot = document.createElement('div');
         dot.className = 'curtain-spark';
         dot.style.width  = sz + 'px';
@@ -219,16 +219,16 @@
         dot.style.animation = 'none';
         overlay.appendChild(dot);
         dust.push({
-          el: dot,
-          vx: norm(0, 160),
-          vy: -(280 + Math.random() * 600),
-          life: 3.5 + Math.random() * 6,
-          born: now
+          el: dot, born: now,
+          startX: baseX, startY: baseY,
+          vx: norm(0, 50),
+          vy: -(120 + Math.random() * 80),
+          life: 4 + Math.random() * 3
         });
       }
     }
 
-    if (t >= 3) animDone = true;
+    if (t >= 3.5) animDone = true;
 
     // 更新已生成粒子
     for (var w = dust.length - 1; w >= 0; w--) {
@@ -240,7 +240,8 @@
       }
       var prog = age / p.life;
       p.el.style.opacity = (1 - prog) * 0.7;
-      p.el.style.transform = 'translate(' + (p.vx * age) + 'px, ' + (p.vy * age) + 'px)';
+      p.el.style.left = (p.startX + p.vx * age) + 'px';
+      p.el.style.top  = (p.startY + p.vy * age) + 'px';
     }
 
     if (dust.length > 0 || !animDone) requestAnimationFrame(wakeLoop);
