@@ -135,21 +135,10 @@
     50%{opacity:1;box-shadow:0 0 10px 5px rgba(255,255,250,1),0 0 24px 14px rgba(255,248,220,0.7),0 0 45px 26px rgba(255,235,180,0.45),0 0 80px 50px rgba(255,220,150,0.25)}
   }
 
-  /* ==== 金粉尾迹粒子 ==== */
-  .curtain-spark {
-    position: fixed;
-    z-index: 10001;
-    border-radius: 50%;
-    background: #ffd866;
-    pointer-events: none;
-    box-shadow: 0 0 12px 6px rgba(255,216,100,0.95), 0 0 30px 12px rgba(255,200,80,0.6);
-  }
-
-  /* 帘幕粒子渐闪：呼吸式闪烁 */
-  @keyframes curtainFade {
-    0%, 100% { opacity: 0.15; }
-    30%       { opacity: 0.7; }
-    60%       { opacity: 0.3; }
+  @keyframes sparkFloat {
+    0%,100%{opacity:0;transform:translate(0,0) scale(0.3)}
+    20%{opacity:0.8;transform:translate(-3px,-5px) scale(1)}
+    50%{opacity:0.4;transform:translate(5px,-15px) scale(0.7)}
   }
 </style>
 </head>
@@ -174,67 +163,25 @@
   var overlay = document.getElementById('overlay');
   var stage = document.getElementById('stage');
 
-  // ---- 1. 金粉屏障 — 密集底部，月亮冲破推起，自然钟形 ----
-  var W = window.innerWidth, H = window.innerHeight;
-  var barrier = [];
-
-  // 正态采样
-  function N(m, s) {
-    return s * Math.sqrt(-2 * Math.log(Math.max(0.001, 1 - Math.random()))) * Math.cos(2 * Math.PI * Math.random()) + m;
+  // ---- 月亮周围漂浮金粉 ----
+  var sparksHTML = '';
+  for (var i = 0; i < 18; i++) {
+    var size = 1.5 + Math.random() * 3;
+    var dur = 5 + Math.random() * 8;
+    var delay = Math.random() * dur;
+    var angle = Math.random() * Math.PI * 2;
+    var dist = 55 + Math.random() * 70;
+    var xOff = Math.cos(angle) * dist;
+    var yOff = Math.sin(angle) * dist;
+    sparksHTML += '<div style="position:fixed;border-radius:50%;background:#f0d78c;pointer-events:none;'
+      + 'width:' + size + 'px;height:' + size + 'px;'
+      + 'top:calc(50% + ' + yOff.toFixed(0) + 'px);left:calc(50% + ' + xOff.toFixed(0) + 'px);'
+      + 'box-shadow:0 0 4px 2px rgba(240,215,140,0.6);'
+      + 'animation:sparkFloat ' + dur.toFixed(1) + 's ease-in-out ' + delay.toFixed(1) + 's infinite;"></div>';
   }
+  stage.insertAdjacentHTML('beforeend', sparksHTML);
 
-  for (var i = 0; i < 1200; i++) {
-    var dot = document.createElement('div');
-    dot.className = 'curtain-spark';
-    var sz = 2 + Math.random() * 4;
-    // 底部 78-98vh，正态水平分布
-    var py = (0.78 + Math.random() * 0.20) * H;
-    var px = N(W * 0.5, W * 0.15);
-    dot.style.width  = sz + 'px';
-    dot.style.height = sz + 'px';
-    dot.style.left   = px + 'px';
-    dot.style.top    = py + 'px';
-    dot.style.opacity = (0.6 + Math.random() * 0.3);
-    dot.style.animation = 'none';
-    overlay.appendChild(dot);
-    barrier.push({ el: dot, py: py, startY: py, vy: 0, life: 0, born: 0, done: false });
-  }
-
-  var t0 = 0;
-  function wakeLoop(ts) {
-    var now = performance.now();
-    if (!t0) t0 = now;
-    var elapsed = (now - t0) / 1000;
-    var rect = stage.getBoundingClientRect();
-    var mx = rect.left + rect.width / 2;
-    var my = rect.top + rect.height + 30; // 月亮下沿往下 30px
-
-    for (var b = 0; b < barrier.length; b++) {
-      var p = barrier[b];
-      if (p.done) {
-        var age = (now - p.born) / 1000;
-        if (age > p.life) { p.el.style.opacity = '0'; continue; }
-        p.el.style.opacity = age < 0.4 ? (0.6 + age / 0.4 * 0.3) : (1 - (age - 0.4) / (p.life - 0.4)) * 0.7;
-        p.py += p.vy * 0.016;
-        p.el.style.top = p.py + 'px';
-        continue;
-      }
-      // 检测碰撞
-      var dx = parseFloat(p.el.style.left) - mx;
-      var dy = p.py - my;
-      var dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist < 350 && p.py < my + 100 && elapsed > 0.3) {
-        p.done = true; p.born = now; p.life = 2 + Math.random() * 3;
-        var k = Math.max(0.08, 1 - dist / 350);
-        p.vy = -(k * 650 + 20);
-        p.el.style.opacity = '0.9';
-      }
-    }
-    requestAnimationFrame(wakeLoop);
-  }
-  requestAnimationFrame(wakeLoop);
-
-  // ---- 2. 交互 ----
+  // ---- 交互 ----
   moon.addEventListener('click', function (e) {
     e.stopPropagation();
     overlay.classList.add('dismiss');
