@@ -180,20 +180,20 @@
   .intro-logo {
     position: absolute;
     left: 50%;
-    bottom: 3vh;
+    bottom: -8vh;
     transform: translateX(-50%);
-    width: 80vw;
+    width: 100vw;
     text-align: center;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    font-size: clamp(8rem, 40vw, 32rem);
-    font-weight: 700;
-    letter-spacing: 0.06em;
+    font-size: clamp(20rem, 90vw, 70rem);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 0.85;
     color: #e8e0d0;
     opacity: 0;
     pointer-events: none;
-    /* 底部渐隐 */
-    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 60%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 60%, transparent 100%);
     animation: logoRise 2.2s cubic-bezier(0.45, 0, 0.25, 1) forwards;
   }
   .intro-logo .logo-accent {
