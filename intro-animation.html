@@ -185,13 +185,23 @@
     font-weight: 800;
     letter-spacing: 0.04em;
     line-height: 0.85;
-    color: #e8e0d0;
+    /* 用 background-clip: text 做渐变，顶部实色，底部透明 */
+    background: linear-gradient(to bottom, #e8e0d0 0%, #e8e0d0 15%, transparent 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
     opacity: 0;
     pointer-events: none;
     z-index: 0;
-    -webkit-mask-image: linear-gradient(to bottom, #000, #000 20%, transparent);
-    mask-image: linear-gradient(to bottom, #000, #000 20%, transparent);
     animation: logoRise 2.2s cubic-bezier(0.45, 0, 0.25, 1) forwards;
+  }
+  .intro-logo .logo-accent {
+    /* E 用品牌色渐变 */
+    background: linear-gradient(to bottom, #6c63ff 0%, #6c63ff 15%, transparent 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
   .intro-logo .logo-accent {
     color: #6c63ff;
