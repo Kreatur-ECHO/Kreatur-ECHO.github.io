@@ -2123,6 +2123,47 @@ img {
   position: fixed; inset: 0; z-index: 10000;
   background: #0a0a14;
 }
+/* 溶解：月亮中心向外扩散透明 */
+.intro-overlay.dissolving {
+  animation: dissolveOut 1.2s ease-in forwards;
+}
+@keyframes dissolveOut {
+  0% {
+    -webkit-mask-image: radial-gradient(circle 0px at 50% 28vh, transparent 0%, #000 0%);
+    mask-image: radial-gradient(circle 0px at 50% 28vh, transparent 0%, #000 0%);
+  }
+  100% {
+    -webkit-mask-image: radial-gradient(circle 200vmax at 50% 28vh, transparent 0%, transparent 100%);
+    mask-image: radial-gradient(circle 200vmax at 50% 28vh, transparent 0%, transparent 100%);
+  }
+}
+
+/* 溶解时月亮变白缩小消失 */
+.intro-overlay.dissolving .intro-moon {
+  animation: moonBlaze 1.2s ease-in forwards;
+  pointer-events: none;
+}
+@keyframes moonBlaze {
+  0%   { transform: scale(1);   filter: brightness(1);   opacity: 1; }
+  40%  { transform: scale(1.15); filter: brightness(2.5); opacity: 1; }
+  100% { transform: scale(0.1); filter: brightness(5);   opacity: 0; }
+}
+
+/* 溶解时辅助元素淡出 */
+.intro-overlay.dissolving .logo-wrap,
+.intro-overlay.dissolving .moon-stage::before,
+.intro-overlay.dissolving .moon-stage::after,
+.intro-overlay.dissolving .moon-texture,
+.intro-overlay.dissolving .moon-bulb {
+  animation: fadeAway 0.6s ease-in forwards;
+}
+.intro-overlay.dissolving .moon-stage {
+  animation-play-state: running;
+}
+@keyframes fadeAway {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
 
 .moon-stage {
   position: absolute;
