@@ -139,9 +139,9 @@
   .curtain-spark {
     position: fixed;
     border-radius: 50%;
-    background: radial-gradient(circle, #ffeaa7 0%, #f0d78c 50%, transparent 100%);
+    background: radial-gradient(circle, #fff3c0 0%, #f5d060 30%, rgba(220,180,80,0.2) 70%, transparent 100%);
     pointer-events: none;
-    box-shadow: 0 0 5px 2px rgba(240,215,140,0.5);
+    box-shadow: 0 0 8px 3px rgba(255,220,120,0.7), 0 0 18px 6px rgba(240,200,100,0.3);
   }
 
   /* ==== 底部银河闪烁 ==== */
@@ -188,25 +188,25 @@
   }
 
   var pool = [];
-  var bottomY = window.innerHeight * 0.9; // 池底
-  for (var i = 0; i < 600; i++) {
+  var bottomY = window.innerHeight * 0.85; // 池底略高，有空间向上
+  for (var i = 0; i < 800; i++) {
     var dot = document.createElement('div');
     dot.className = 'curtain-spark';
-    var sz = 1.5 + Math.random() * 4;
+    var sz = 2 + Math.random() * 5;
     var xx = norm(window.innerWidth / 2, window.innerWidth * 0.4);
-    var yy = bottomY + norm(0, window.innerHeight * 0.15);
+    var yy = bottomY + norm(0, window.innerHeight * 0.25);
     dot.style.width  = sz + 'px';
     dot.style.height = sz + 'px';
     dot.style.left   = xx + 'px';
     dot.style.top    = yy + 'px';
-    dot.style.opacity = 0.15 + Math.random() * 0.35;
+    dot.style.opacity = 0.3 + Math.random() * 0.5;
     dot.style.animation = 'none';
     overlay.appendChild(dot);
     pool.push({ el: dot, x: xx, y: yy, vx: 0, vy: 0, life: 0, born: 0, done: false });
   }
 
   var prevMY = null, prevMT = 0, wakeTimer = 0;
-  var R = 300; // 月亮影响半径
+  var R = 400; // 月亮影响半径
 
   function wakeLoop(ts) {
     var now = performance.now();
@@ -226,7 +226,7 @@
         else {
           var t = age, prog = t / p.life;
           p.el.style.opacity = (1 - prog) * 0.7;
-          p.el.style.transform = 'translate(' + (p.vx * t) + 'px, ' + (p.vy * t + 0.5 * 80 * t * t) + 'px)';
+          p.el.style.transform = 'translate(' + (p.vx * t) + 'px, ' + (p.vy * t + 0.5 * 15 * t * t) + 'px)';
         }
         continue;
       }
@@ -234,10 +234,10 @@
       var dx = p.x - mx, dy = p.y - my;
       if (Math.sqrt(dx*dx + dy*dy) < R && moonSpeed > 0) {
         p.done = true; p.born = now;
-        p.life = 2.5 + Math.random() * 3;
-        var inertia = moonSpeed * 0.8 + 80;
-        p.vy = -(inertia + Math.abs(norm(0, 120)));
-        p.vx = norm(0, inertia * 0.55);
+        p.life = 3 + Math.random() * 4;
+        var inertia = moonSpeed * 0.8 + 150;
+        p.vy = -(inertia + Math.abs(norm(0, 200)));
+        p.vx = norm(0, inertia * 1.2);
         p.el.style.opacity = '1';
       } else {
         // 保持初始微光，不随时间消失
