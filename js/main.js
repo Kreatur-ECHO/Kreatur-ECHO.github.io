@@ -43,10 +43,7 @@
         moon.addEventListener('click', function (e) {
           e.stopPropagation();
           localStorage.setItem('blog_intro_seen', '1');
-          overlay.classList.add('dismiss');
-          setTimeout(function () {
-            if (overlay.parentNode) overlay.parentNode.remove();
-          }, 700);
+          overlay.style.display = 'none';
         });
       }
     })();

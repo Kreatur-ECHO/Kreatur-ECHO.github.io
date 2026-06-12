@@ -2122,9 +2122,7 @@ img {
 .intro-overlay {
   position: fixed; inset: 0; z-index: 10000;
   background: #0a0a14;
-  transition: opacity 0.6s ease;
 }
-.intro-overlay.dismiss { opacity: 0; pointer-events: none; }
 
 .moon-stage {
   position: absolute;
