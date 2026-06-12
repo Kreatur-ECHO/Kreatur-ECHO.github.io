@@ -182,73 +182,57 @@
   var overlay = document.getElementById('overlay');
   var stage = document.getElementById('stage');
 
-  // ---- 1. 底部喷泉金粉 — 屏幕底部居中喷出，正态分布左右散开 ----
-  function norm(mean, sigma) {
-    var u1 = 1 - Math.random(), u2 = 2 * Math.PI * Math.random();
-    return sigma * Math.sqrt(-2 * Math.log(u1 || 0.001)) * Math.cos(u2) + mean;
+  // ---- 1. 金粉屏障 — 底部铺满，月亮冲破带起，纯数学无 DOM 查询 ----
+  var W = window.innerWidth, H = window.innerHeight;
+  var pool = [];
+  for (var i = 0; i < 800; i++) {
+    var dot = document.createElement('div');
+    dot.className = 'curtain-spark';
+    var sz = 5 + Math.random() * 7;
+    // 用 px 存储，避免 vh→px 转换问题
+    var py = (0.72 + Math.random() * 0.28) * H; // 72-100vh → px
+    var px = Math.random() * W;
+    dot.style.width = sz + 'px';
+    dot.style.height = sz + 'px';
+    dot.style.left = px + 'px';
+    dot.style.top  = py + 'px';
+    dot.style.opacity = '0.5';
+    dot.style.animation = 'none';
+    overlay.appendChild(dot);
+    pool.push({ el: dot, py: py, vy: 0, life: 0, born: 0, done: false });
   }
 
-  var dust = [];     // 活跃粒子
-  var baseX = window.innerWidth / 2;
-  var baseY = window.innerHeight; // 屏幕底部
-  var animStart = 0;
-  var lastSpawn = 0;
-  var animDone = false;
-
-  // 总粒子上限
-  var MAX = 600;
-
+  var t0 = 0;
   function wakeLoop(ts) {
     var now = performance.now();
-    if (!animStart) animStart = now;
-    var t = (now - animStart) / 1000;
+    if (!t0) t0 = now;
+    // 仅一次 getBoundingClientRect（月位），不在循环内
+    var rect = stage.getBoundingClientRect();
+    var mx = rect.left + rect.width / 2;
+    var my = rect.top + rect.height;
 
-    // 月亮升起阶段持续喷粒子（0~3s）
-    if (t < 3 && !animDone && (now - lastSpawn > 20) && dust.length < MAX) {
-      lastSpawn = now;
-      // sigma 随时间增大 → 底部窄、高处宽的钟形
-      var sigma = 40 + t * 90;
-      var n = 8 + Math.floor(Math.random() * 8);
-      for (var i = 0; i < n; i++) {
-        var sz = 5 + Math.random() * 7;
-        var dot = document.createElement('div');
-        dot.className = 'curtain-spark';
-        dot.style.width  = sz + 'px';
-        dot.style.height = sz + 'px';
-        dot.style.opacity = '1';
-        dot.style.animation = 'none';
-        var sx = norm(baseX, sigma);
-        dot.style.left = sx + 'px';
-        dot.style.top  = baseY + 'px';
-        overlay.appendChild(dot);
-        dust.push({
-          el: dot, born: now,
-          startX: sx, startY: baseY,
-          vx: 0,
-          vy: -(150 + Math.random() * 180),
-          life: 3.5 + Math.random() * 4
-        });
-      }
-    }
-
-    if (t >= 3.5) animDone = true;
-
-    // 更新已生成粒子
-    for (var w = dust.length - 1; w >= 0; w--) {
-      var p = dust[w];
-      var age = (now - p.born) / 1000;
-      if (age > p.life) {
-        p.el.remove(); dust.splice(w, 1);
+    for (var w = 0; w < pool.length; w++) {
+      var p = pool[w];
+      if (p.done) {
+        var age = (now - p.born) / 1000;
+        if (age > p.life) { p.el.style.opacity = '0'; continue; }
+        p.el.style.opacity = (1 - age / p.life) * 0.6;
+        p.py += p.vy * 0.016;
+        p.el.style.top = p.py + 'px';
         continue;
       }
-      var prog = age / p.life;
-      p.el.style.opacity = (1 - prog) * 0.7;
-      p.el.style.top  = (p.startY + p.vy * age) + 'px';
+      var dx = parseFloat(p.el.style.left) - mx;
+      var dy = p.py - my;
+      var dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 420 && my > 0 && (now - t0) > 250) {
+        p.done = true; p.born = now; p.life = 3 + Math.random() * 5;
+        var k = Math.exp(-dist*dist / (2*200*200));
+        p.vy = -(k * 600 + 60);
+        p.el.style.opacity = '1';
+      }
     }
-
-    if (dust.length > 0 || !animDone) requestAnimationFrame(wakeLoop);
+    requestAnimationFrame(wakeLoop);
   }
-
   requestAnimationFrame(wakeLoop);
 
   // ---- 2. 底部银河（30颗闪烁金粉） ----
