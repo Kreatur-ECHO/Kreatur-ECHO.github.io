@@ -204,28 +204,32 @@
     var t = (now - animStart) / 1000;
 
     // 月亮升起阶段持续喷粒子（0~3s）
-    if (t < 3.5 && !animDone && (now - lastSpawn > 20) && dust.length < MAX) {
+    if (t < 3 && !animDone && (now - lastSpawn > 18) && dust.length < MAX) {
       lastSpawn = now;
-      var n = 8 + Math.floor(Math.random() * 10);
+      // 从月亮下方喷出，正态分布直接体现在初始 x 坐标上
+      var rect = stage.getBoundingClientRect();
+      var moonCX = rect.left + rect.width / 2;
+      var moonY  = rect.top + rect.height;
+
+      var n = 8 + Math.floor(Math.random() * 8);
       for (var i = 0; i < n; i++) {
-        var sz = 4 + Math.random() * 6;
+        var sz = 5 + Math.random() * 7;
         var dot = document.createElement('div');
         dot.className = 'curtain-spark';
         dot.style.width  = sz + 'px';
         dot.style.height = sz + 'px';
-        dot.style.left   = sx + 'px';
-        dot.style.top    = baseY + 'px';
         dot.style.opacity = '1';
         dot.style.animation = 'none';
+        var sx = norm(moonCX, 70);
+        dot.style.left = sx + 'px';
+        dot.style.top  = (moonY + 5) + 'px';
         overlay.appendChild(dot);
-        // 正态分布初始位置：钟形集中在中心
-        var sx = norm(baseX, 250);
         dust.push({
           el: dot, born: now,
-          startX: sx, startY: baseY,
+          startX: sx, startY: moonY + 5,
           vx: 0,
-          vy: -(120 + Math.random() * 80),
-          life: 4 + Math.random() * 3
+          vy: -(120 + Math.random() * 100),
+          life: 3 + Math.random() * 4
         });
       }
     }
