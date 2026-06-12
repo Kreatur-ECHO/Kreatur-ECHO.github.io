@@ -182,93 +182,68 @@
   var overlay = document.getElementById('overlay');
   var stage = document.getElementById('stage');
 
-  // ---- 1. 底部金粉帘幕 — 月亮路过推起，距离越近推力越大，自然钟形 ----
-  var dust = [];           // 所有底部金粉
-  var wakeTimer = 0;
-  var lastCheck = 0;
-
-  // 底部金粉层：屏幕下 30% 高度，全宽正态分布
-  for (var i = 0; i < 1200; i++) {
-    var dot = document.createElement('div');
-    dot.className = 'curtain-spark';
-    var sz = 7 + Math.random() * 8;
-    dot.style.width  = sz + 'px';
-    dot.style.height = sz + 'px';
-    dot.style.left   = (Math.random() * 100) + '%';
-    dot.style.top    = (55 + Math.random() * 45) + 'vh';
-    dot.style.opacity = 0.5 + Math.random() * 0.4;
-    dot.style.animation = 'none';
-    overlay.appendChild(dot);
-    dust.push({
-      el: dot, leftPct: parseFloat(dot.style.left) / 100,
-      topPx: parseFloat(dot.style.top),  // placeholder, updated below
-      vx: 0, vy: 0, life: 0, born: 0, awoken: false
-    });
+  // ---- 1. 底部喷泉金粉 — 屏幕底部居中喷出，正态分布左右散开 ----
+  function norm(mean, sigma) {
+    var u1 = 1 - Math.random(), u2 = 2 * Math.PI * Math.random();
+    return sigma * Math.sqrt(-2 * Math.log(u1 || 0.001)) * Math.cos(u2) + mean;
   }
 
-  // 更新 fixed 定位的 top 值（vh → px）
-  for (var d = 0; d < dust.length; d++) {
-    var rect_el = dust[d].el.getBoundingClientRect();
-    dust[d].topPx = rect_el.top;
-  }
+  var dust = [];     // 活跃粒子
+  var baseX = window.innerWidth / 2;
+  var baseY = window.innerHeight; // 屏幕底部
+  var animStart = 0;
+  var lastSpawn = 0;
+  var animDone = false;
+
+  // 总粒子上限
+  var MAX = 800;
 
   function wakeLoop(ts) {
     var now = performance.now();
-    if (!wakeTimer) wakeTimer = now;
+    if (!animStart) animStart = now;
+    var t = (now - animStart) / 1000;
 
-    var rect = stage.getBoundingClientRect();
-    var mx = rect.left + rect.width / 2;   // 月亮中心 x
-    var my = rect.top + rect.height;        // 月亮底部 y
-
-    // 每 50ms 检查一次附近粒子
-    if (now - lastCheck > 50) {
-      lastCheck = now;
-
-      for (var d = dust.length - 1; d >= 0; d--) {
-        var p = dust[d];
-        if (p.awoken) continue; // 已激活跳过
-
-        // 计算粒子到月亮底部的距离
-        var px = p.leftPct * window.innerWidth;
-        var py = p.topPx;
-        var dx = px - mx;
-        var dy = py - my;
-        var dist = Math.sqrt(dx*dx + dy*dy);
-
-        // 在月亮 500px 范围内的粒子被推起
-        if (dist < 500 && my > 0 && (now - wakeTimer) > 300) {
-          p.awoken = true;
-          p.born = now;
-          p.life = 3 + Math.random() * 5;
-
-          // 推力与距离成反比（高斯衰减）—— 近处推最高，远处推低
-          var force = Math.exp(-dist * dist / (2 * 180 * 180));
-          var baseSpeed = force * 600 + 40;
-
-          // 速度方向：径向向外 + 向上偏置
-          var angle = Math.atan2(dy, dx);
-          p.vx = dx / dist * baseSpeed * 0.5;
-          p.vy = -(baseSpeed * 0.7 + Math.random() * baseSpeed * 0.3);
-        }
+    // 月亮升起阶段持续喷粒子（0~3s）
+    if (t < 3 && !animDone && (now - lastSpawn > 16) && dust.length < MAX) {
+      lastSpawn = now;
+      var n = 6 + Math.floor(Math.random() * 8);
+      for (var i = 0; i < n; i++) {
+        var sz = 6 + Math.random() * 8;
+        var dot = document.createElement('div');
+        dot.className = 'curtain-spark';
+        dot.style.width  = sz + 'px';
+        dot.style.height = sz + 'px';
+        dot.style.left   = baseX + 'px';
+        dot.style.top    = baseY + 'px';
+        dot.style.opacity = '1';
+        dot.style.animation = 'none';
+        overlay.appendChild(dot);
+        dust.push({
+          el: dot,
+          vx: norm(0, 160),
+          vy: -(280 + Math.random() * 600),
+          life: 3.5 + Math.random() * 6,
+          born: now
+        });
       }
     }
 
-    // 更新已激活的粒子
+    if (t >= 3) animDone = true;
+
+    // 更新已生成粒子
     for (var w = dust.length - 1; w >= 0; w--) {
       var p = dust[w];
-      if (!p.awoken) continue;
-
       var age = (now - p.born) / 1000;
       if (age > p.life) {
         p.el.remove(); dust.splice(w, 1);
         continue;
       }
       var prog = age / p.life;
-      p.el.style.opacity = (1 - prog) * 0.75;
+      p.el.style.opacity = (1 - prog) * 0.7;
       p.el.style.transform = 'translate(' + (p.vx * age) + 'px, ' + (p.vy * age) + 'px)';
     }
 
-    if (dust.length > 0) requestAnimationFrame(wakeLoop);
+    if (dust.length > 0 || !animDone) requestAnimationFrame(wakeLoop);
   }
 
   requestAnimationFrame(wakeLoop);
