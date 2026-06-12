@@ -181,6 +181,8 @@
     opacity: 0;
     pointer-events: none;
     z-index: 0;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 65%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 65%, transparent 100%);
     animation: logoRise 2.2s cubic-bezier(0.45, 0, 0.25, 1) forwards;
   }
 
@@ -203,15 +205,6 @@
   }
   .intro-logo .logo-accent {
     color: #6c63ff;
-  }
-
-  /* 渐变覆盖层 */
-  .logo-fade {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    pointer-events: none;
-    z-index: 1;
-    background: linear-gradient(to bottom, transparent 0%, transparent 25%, #0a0a14 55%, #0a0a14 100%);
   }
 
   /* ==== 金粉碎光 ==== */
@@ -239,7 +232,6 @@
   <div class="intro-overlay" id="overlay">
     <div class="logo-wrap" id="logoWrap">
       <div class="intro-logo">Y<span class="logo-accent">E</span>YU</div>
-      <div class="logo-fade"></div>
     </div>
     <div class="moon-stage" id="stage">
       <div class="intro-moon" id="moon">
