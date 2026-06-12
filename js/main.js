@@ -7,6 +7,49 @@
 (function () {
   'use strict';
 
+  // ---- 入场动画 ---- 首次访问展示月亮升起动效 ----
+  (function initIntro() {
+    var overlay = document.getElementById('introOverlay');
+    var moon    = document.getElementById('introMoon');
+    if (!overlay || !moon) return;
+
+    // 已访问过则直接隐藏
+    if (localStorage.getItem('blog_intro_seen')) {
+      overlay.style.display = 'none';
+      return;
+    }
+
+    // 金粉碎光
+    var sparksContainer = document.getElementById('introSparks');
+    if (sparksContainer) {
+      var h = '';
+      for (var i = 0; i < 18; i++) {
+        var sz = 1.5 + Math.random() * 3;
+        var dur = 5 + Math.random() * 10;
+        var dly = Math.random() * dur;
+        var angle = -Math.PI/2 + (Math.random() - 0.5) * Math.PI * 1.6;
+        var xo = Math.cos(angle) * (50 + Math.random() * 80);
+        var yo = 30 + Math.sin(angle) * 60;
+        h += '<div class="intro-spark" style="'
+          + 'width:' + sz + 'px;height:' + sz + 'px;'
+          + 'top:calc(50% + ' + yo.toFixed(0) + 'px);left:calc(50% + ' + xo.toFixed(0) + 'px);'
+          + 'animation-duration:' + dur.toFixed(1) + 's;'
+          + 'animation-delay:' + dly.toFixed(1) + 's;"></div>';
+      }
+      sparksContainer.innerHTML = h;
+    }
+
+    // 点击月亮解除遮罩
+    moon.addEventListener('click', function (e) {
+      e.stopPropagation();
+      localStorage.setItem('blog_intro_seen', '1');
+      overlay.classList.add('dismiss');
+      setTimeout(function () {
+        if (overlay.parentNode) overlay.parentNode.remove();
+      }, 700);
+    });
+  })();
+
   // ---- 主题初始化（全局，仅一次） ----
   ThemeManager.init();
   ThemeManager.listenSystem();
