@@ -10,14 +10,14 @@
   // ---- 入场动画 ---- 点击月亮溶解进入博客 ----
   var introOverlay = document.getElementById('introOverlay');
   var introMoon    = document.getElementById('introMoon');
-  var introStage   = document.getElementById('introMoonStage');
   if (introOverlay && introMoon) {
     introMoon.addEventListener('click', function (e) {
       e.stopPropagation();
       introOverlay.classList.add('dissolving');
-      // 动画结束后隐藏
-      introOverlay.addEventListener('animationend', function () {
-        introOverlay.style.display = 'none';
+      introOverlay.addEventListener('animationend', function (ev) {
+        if (ev.animationName === 'dissolveOut') {
+          introOverlay.style.display = 'none';
+        }
       });
     });
   }
