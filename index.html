@@ -47,7 +47,7 @@
   <!-- themes.css: 颜色、字体、圆角等设计变量 -->
   <link rel="stylesheet" href="css/themes.css?v=6">
   <!-- style.css: 布局和组件样式 -->
-  <link rel="stylesheet" href="css/style.css?v=35">
+  <link rel="stylesheet" href="css/style.css?v=36">
   <!-- admin.css: 管理面板样式 -->
   <link rel="stylesheet" href="css/admin.css?v=6">
 </head>
@@ -56,10 +56,11 @@
   <!-- ===== 入场动画 ===== -->
   <div class="intro-overlay" id="introOverlay">
     <div class="logo-wrap"><div class="intro-logo">Y<span class="logo-accent">E</span>YU</div></div>
-    <div class="moon-stage">
+    <div class="moon-stage" id="introMoonStage">
       <div class="intro-moon" id="introMoon">
         <div class="moon-texture"></div><div class="moon-texture"></div><div class="moon-bulb"></div>
       </div>
+      <div id="introSparks"></div>
     </div>
     <div class="moon-clock" id="introClock"></div>
   </div>
@@ -81,6 +82,6 @@
   <script src="js/comments.js?v=13"></script>
   <script src="js/effects.js?v=10"></script>
   <script src="js/admin.js?v=7"></script>
-  <script src="js/main.js?v=45"></script>
+  <script src="js/main.js?v=46"></script>
 </body>
 </html>

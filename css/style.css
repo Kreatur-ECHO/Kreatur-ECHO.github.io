@@ -2146,6 +2146,7 @@ img {
 .intro-overlay.dismissing .moon-stage::before,
 .intro-overlay.dismissing .moon-stage::after,
 .intro-overlay.dismissing .moon-clock,
+.intro-overlay.dismissing .intro-spark,
 .intro-overlay.dismissing .moon-texture,
 .intro-overlay.dismissing .moon-bulb {
   animation: gentleFade 2s ease-out forwards;

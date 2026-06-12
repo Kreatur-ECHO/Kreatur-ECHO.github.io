@@ -11,6 +11,26 @@
   var introOverlay = document.getElementById('introOverlay');
   var introMoon    = document.getElementById('introMoon');
   var introClock   = document.getElementById('introClock');
+  // 金粉碎光
+  var sparksEl = document.getElementById('introSparks');
+  if (sparksEl) {
+    var h = '';
+    for (var i = 0; i < 18; i++) {
+      var sz = 1.5 + Math.random() * 3;
+      var dur = 5 + Math.random() * 10;
+      var dly = Math.random() * dur;
+      var angle = -Math.PI/2 + (Math.random() - 0.5) * Math.PI * 1.6;
+      var xo = Math.cos(angle) * (50 + Math.random() * 80);
+      var yo = 30 + Math.sin(angle) * 60;
+      h += '<div class="intro-spark" style="'
+        + 'width:' + sz + 'px;height:' + sz + 'px;'
+        + 'top:calc(50% + ' + yo.toFixed(0) + 'px);left:calc(50% + ' + xo.toFixed(0) + 'px);'
+        + 'animation-duration:' + dur.toFixed(1) + 's;'
+        + 'animation-delay:' + dly.toFixed(1) + 's;"></div>';
+    }
+    sparksEl.innerHTML = h;
+  }
+  // 时钟
   if (introClock) {
     function tick() {
       var now = new Date();
