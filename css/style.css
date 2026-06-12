@@ -2221,12 +2221,12 @@ img {
   pointer-events: none;
   user-select: none;
   opacity: 0;
-  animation: clockRise 2s cubic-bezier(0.45, 0, 0.25, 1) 0.2s forwards;
+  animation: clockRise 2s cubic-bezier(0.45, 0, 0.25, 1) 0.4s forwards;
 }
 @keyframes clockRise {
   from { opacity: 0; bottom: -40px; }
   18%  { opacity: 0; }
-  to   { opacity: 1; bottom: 19vh; }
+  to   { opacity: 1; bottom: 23vh; }
 }
 
 .moon-texture {
