@@ -10,6 +10,18 @@
   // ---- 入场动画遮罩 ---- 点击月亮后渐隐，露出下方主页 ----
   var introOverlay = document.getElementById('introOverlay');
   var introMoon    = document.getElementById('introMoon');
+  var introClock   = document.getElementById('introClock');
+  if (introClock) {
+    function tick() {
+      var now = new Date();
+      var h = now.getHours();
+      var m = now.getMinutes();
+      var s = now.getSeconds();
+      introClock.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    }
+    tick();
+    setInterval(tick, 1000);
+  }
   if (introOverlay && introMoon) {
     introMoon.addEventListener('click', function (e) {
       e.stopPropagation();

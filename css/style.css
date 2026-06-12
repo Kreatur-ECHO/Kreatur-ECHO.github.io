@@ -2145,6 +2145,7 @@ img {
 .intro-overlay.dismissing .logo-wrap,
 .intro-overlay.dismissing .moon-stage::before,
 .intro-overlay.dismissing .moon-stage::after,
+.intro-overlay.dismissing .moon-clock,
 .intro-overlay.dismissing .moon-texture,
 .intro-overlay.dismissing .moon-bulb {
   animation: gentleFade 2s ease-out forwards;
@@ -2165,7 +2166,7 @@ img {
 @keyframes moonRise {
   from { bottom: -160px; opacity: 0; }
   18%  { opacity: 0; }
-  to   { bottom: 82vh; opacity: 1; }
+  to   { bottom: 76vh; opacity: 1; }
 }
 
 .intro-moon {
@@ -2202,6 +2203,22 @@ img {
   0%   { transform: translate(-50%,-50%) scale(1.575); opacity: 0;   border-width: 0.3px; }
   50%  { transform: translate(-50%,-50%) scale(0.9);  opacity: 0.45; border-width: 1.8px; }
   100% { transform: translate(-50%,-50%) scale(0.5625); opacity: 0.1; border-width: 0.5px; }
+}
+
+/* 月亮下方时钟 */
+.moon-clock {
+  position: absolute;
+  left: 50%; top: 100%;
+  transform: translate(-50%, 20px);
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 1rem;
+  font-weight: 400;
+  color: rgba(220, 190, 140, 0.7);
+  letter-spacing: 0.08em;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
 }
 
 .moon-texture {
