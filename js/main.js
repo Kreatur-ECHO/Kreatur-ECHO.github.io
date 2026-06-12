@@ -7,44 +7,15 @@
 (function () {
   'use strict';
 
-  // ---- 入场动画 ---- 每次刷新展示月亮升起 ----
-  (function () {
-    var sparksHTML = '';
-    for (var i = 0; i < 18; i++) {
-        var sz = 1.5 + Math.random() * 3;
-        var dur = 5 + Math.random() * 10;
-        var dly = Math.random() * dur;
-        var angle = -Math.PI/2 + (Math.random() - 0.5) * Math.PI * 1.6;
-        var xo = Math.cos(angle) * (50 + Math.random() * 80);
-        var yo = 30 + Math.sin(angle) * 60;
-        sparksHTML += '<div class="intro-spark" style="'
-          + 'width:' + sz + 'px;height:' + sz + 'px;'
-          + 'top:calc(50% + ' + yo.toFixed(0) + 'px);left:calc(50% + ' + xo.toFixed(0) + 'px);'
-          + 'animation-duration:' + dur.toFixed(1) + 's;'
-          + 'animation-delay:' + dly.toFixed(1) + 's;"></div>';
-      }
-
-      var overlayHTML =
-        '<div class="intro-overlay" id="introOverlay">'
-        + '<div class="logo-wrap"><div class="intro-logo">Y<span class="logo-accent">E</span>YU</div></div>'
-        + '<div class="moon-stage">'
-        + '<div class="intro-moon" id="introMoon">'
-        + '<div class="moon-texture"></div><div class="moon-texture"></div><div class="moon-bulb"></div>'
-        + '</div>'
-        + '<div id="introSparks">' + sparksHTML + '</div>'
-        + '</div></div>';
-
-      document.body.insertAdjacentHTML('beforeend', overlayHTML);
-
-      var overlay = document.getElementById('introOverlay');
-      var moon    = document.getElementById('introMoon');
-      if (moon) {
-        moon.addEventListener('click', function (e) {
-          e.stopPropagation();
-          overlay.style.display = 'none';
-        });
-      }
-    })();
+  // ---- 入场动画 ---- 点击月亮进入博客 ----
+  var introOverlay = document.getElementById('introOverlay');
+  var introMoon    = document.getElementById('introMoon');
+  if (introOverlay && introMoon) {
+    introMoon.addEventListener('click', function (e) {
+      e.stopPropagation();
+      introOverlay.style.display = 'none';
+    });
+  }
 
   // ---- 主题初始化（全局，仅一次） ----
   ThemeManager.init();
