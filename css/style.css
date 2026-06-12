@@ -2209,9 +2209,9 @@ img {
 .moon-clock {
   position: absolute;
   left: 50%; top: 100%;
-  transform: translate(-50%, 36px);
+  transform: translate(-50%, 52px);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  font-size: 2rem;
+  font-size: 4rem;
   font-weight: 800;
   color: rgba(220, 190, 140, 0.7);
   letter-spacing: 0.04em;
