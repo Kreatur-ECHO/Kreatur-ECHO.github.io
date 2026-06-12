@@ -172,13 +172,27 @@
     }
   }
 
-  /* ==== YEYU 大字 ==== */
-  .intro-logo {
+  /* ==== YEYU 文字 ==== */
+  .logo-wrap {
     position: absolute;
     left: 50%;
     bottom: 5vh;
-    left: 50%;
     transform: translateX(-50%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 0;
+    animation: logoRise 2.2s cubic-bezier(0.45, 0, 0.25, 1) forwards;
+  }
+
+  @keyframes logoRise {
+    from { bottom: -40px; opacity: 0; }
+    18%  { opacity: 0; }
+    to   { bottom: 5vh; opacity: 1; }
+  }
+
+  .intro-logo {
+    position: relative;
+    z-index: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
     font-size: 35vw;
     font-weight: 800;
@@ -186,25 +200,18 @@
     line-height: 0.85;
     white-space: nowrap;
     color: #e8e0d0;
-    opacity: 0;
-    pointer-events: none;
-    z-index: 0;
-    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 30%, transparent 100%);
-    mask-image: linear-gradient(to bottom, black 0%, black 30%, transparent 100%);
-    animation: logoRise 2.2s cubic-bezier(0.45, 0, 0.25, 1) forwards;
-  }
-  .intro-logo .logo-accent {
-    color: #6c63ff;
-  }
   }
   .intro-logo .logo-accent {
     color: #6c63ff;
   }
 
-  @keyframes logoRise {
-    from { bottom: -40px; opacity: 0; }
-    18%  { opacity: 0; }
-    to   { bottom: 5vh; opacity: 1; }
+  /* 渐变覆盖层 */
+  .logo-fade {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 1;
+    background: linear-gradient(to bottom, transparent 0%, transparent 25%, #0a0a14 85%, #0a0a14 100%);
   }
 
   /* ==== 金粉碎光 ==== */
@@ -230,7 +237,10 @@
 <body>
 
   <div class="intro-overlay" id="overlay">
-    <div class="intro-logo" id="logo">Y<span class="logo-accent">E</span>YU</div>
+    <div class="logo-wrap" id="logoWrap">
+      <div class="intro-logo">Y<span class="logo-accent">E</span>YU</div>
+      <div class="logo-fade"></div>
+    </div>
     <div class="moon-stage" id="stage">
       <div class="intro-moon" id="moon">
         <div class="moon-texture"></div>
