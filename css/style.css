@@ -2122,7 +2122,7 @@ img {
 .intro-overlay {
   position: fixed; inset: 0; z-index: 10000;
   background: #0a0a14;
-  transition: opacity 1.4s cubic-bezier(0.22, 0, 0.18, 1);
+  transition: opacity 2.8s cubic-bezier(0.22, 0, 0.18, 1);
 }
 .intro-overlay.dismissing {
   opacity: 0;
@@ -2131,7 +2131,7 @@ img {
 
 /* 点击后月亮泛光 + 柔化缩小 */
 .intro-overlay.dismissing .intro-moon {
-  animation: moonSoften 1.4s ease-in forwards;
+  animation: moonSoften 2.8s ease-in forwards;
   pointer-events: none;
 }
 @keyframes moonSoften {
@@ -2146,7 +2146,7 @@ img {
 .intro-overlay.dismissing .moon-stage::after,
 .intro-overlay.dismissing .moon-texture,
 .intro-overlay.dismissing .moon-bulb {
-  animation: gentleFade 1s ease-out forwards;
+  animation: gentleFade 2s ease-out forwards;
 }
 @keyframes gentleFade {
   0%   { opacity: 1; }
