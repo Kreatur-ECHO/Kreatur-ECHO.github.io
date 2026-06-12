@@ -16,8 +16,7 @@
       var now = new Date();
       var h = now.getHours();
       var m = now.getMinutes();
-      var s = now.getSeconds();
-      introClock.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+      introClock.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
     }
     tick();
     setInterval(tick, 1000);
