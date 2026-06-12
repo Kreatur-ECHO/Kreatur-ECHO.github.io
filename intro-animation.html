@@ -213,15 +213,17 @@
         dot.className = 'curtain-spark';
         dot.style.width  = sz + 'px';
         dot.style.height = sz + 'px';
-        dot.style.left   = baseX + 'px';
+        dot.style.left   = sx + 'px';
         dot.style.top    = baseY + 'px';
         dot.style.opacity = '1';
         dot.style.animation = 'none';
         overlay.appendChild(dot);
+        // 正态分布初始位置：钟形集中在中心
+        var sx = norm(baseX, 130); // 68% 在中心±130px，95%在±260px
         dust.push({
           el: dot, born: now,
-          startX: baseX, startY: baseY,
-          vx: norm(0, 50),
+          startX: sx, startY: baseY,
+          vx: 0,
           vy: -(120 + Math.random() * 80),
           life: 4 + Math.random() * 3
         });
@@ -240,7 +242,6 @@
       }
       var prog = age / p.life;
       p.el.style.opacity = (1 - prog) * 0.7;
-      p.el.style.left = (p.startX + p.vx * age) + 'px';
       p.el.style.top  = (p.startY + p.vy * age) + 'px';
     }
 
