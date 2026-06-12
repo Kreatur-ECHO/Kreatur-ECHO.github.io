@@ -174,25 +174,26 @@
   var stage = document.getElementById('stage');
 
   // ---- 1. 金粉屏障 — 底部铺满，月亮冲破带起，纯数学无 DOM 查询 ----
+  function norm(mean, sigma) {
+    return sigma * Math.sqrt(-2 * Math.log(Math.max(0.001, 1 - Math.random()))) * Math.cos(2 * Math.PI * Math.random()) + mean;
+  }
   var W = window.innerWidth, H = window.innerHeight;
   var pool = [];
-  for (var i = 0; i < 160; i++) {
+  for (var i = 0; i < 200; i++) {
     var dot = document.createElement('div');
     dot.className = 'curtain-spark';
-    var sz = 2 + Math.random() * 3;
-    var py = (0.72 + Math.random() * 0.28) * H;
-    var px = Math.random() * W;
+    var sz = 3 + Math.random() * 4;
+    // 钟形水平分布集中在屏幕中央
+    var py = (0.70 + Math.random() * 0.30) * H;
+    var px = norm(W / 2, W * 0.28);
     dot.style.width = sz + 'px';
     dot.style.height = sz + 'px';
     dot.style.left = px + 'px';
     dot.style.top  = py + 'px';
-    dot.style.opacity = '0';
-    // 随机 3-5s 渐闪动画
-    var dur = 3 + Math.random() * 2;
-    var dly = Math.random() * 1.5;
-    dot.style.animation = 'curtainFade ' + dur.toFixed(1) + 's ease-in-out ' + dly.toFixed(1) + 's infinite';
+    dot.style.opacity = (0.2 + Math.random() * 0.3);
+    dot.style.animation = 'none';
     overlay.appendChild(dot);
-    pool.push({ el: dot, py: py, vy: 0, life: 0, born: 0, done: false });
+    pool.push({ el: dot, py: py, vy: 0, life: 0, born: 0, done: false, phase: Math.random() * Math.PI * 2 });
   }
 
   var t0 = 0;
@@ -209,18 +210,24 @@
       if (p.done) {
         var age = (now - p.born) / 1000;
         if (age > p.life) { p.el.style.opacity = '0'; continue; }
-        p.el.style.opacity = (1 - age / p.life) * 0.6;
+        // 前 0.5s 闪耀，之后渐隐
+        if (age < 0.5) p.el.style.opacity = (0.5 + age / 0.5 * 0.5);
+        else p.el.style.opacity = (1 - (age - 0.5) / (p.life - 0.5)) * 0.7;
         p.py += p.vy * 0.016;
         p.el.style.top = p.py + 'px';
         continue;
       }
+      // 未激活：呼吸闪烁
+      var t_sec = now / 1000;
+      p.el.style.opacity = 0.15 + 0.3 * (0.5 + 0.5 * Math.sin(p.phase + t_sec * 1.8));
+
       var dx = parseFloat(p.el.style.left) - mx;
       var dy = p.py - my;
       var dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist < 420 && my > 0 && (now - t0) > 250) {
-        p.done = true; p.born = now; p.life = 3 + Math.random() * 5;
-        var k = Math.exp(-dist*dist / (2*200*200));
-        p.vy = -(k * 600 + 60);
+      if (dist < 500 && my > 0 && (now - t0) > 200) {
+        p.done = true; p.born = now; p.life = 2.5 + Math.random() * 4;
+        var k = Math.max(0.12, 1 - dist / 500);
+        p.vy = -(k * 700 + 30);
         p.el.style.opacity = '1';
       }
     }
