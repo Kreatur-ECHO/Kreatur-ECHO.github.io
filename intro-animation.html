@@ -199,9 +199,9 @@
     var mx = rect.left + rect.width / 2;
     var my = rect.top + rect.height + 6;
 
-    if ((now - wakeTimer) < 4000 && (now - lastSpawn) > 20) {
+    if ((now - wakeTimer) < 4000 && (now - lastSpawn) > 12) {
       lastSpawn = now;
-      var n = 5 + Math.floor(Math.random() * 6);
+      var n = 8 + Math.floor(Math.random() * 10);
       for (var i = 0; i < n; i++) {
         var sz = 3 + Math.random() * 5;
         var dot = document.createElement('div');
@@ -214,9 +214,9 @@
         overlay.appendChild(dot);
         trail.push({
           el: dot, born: now,
-          vx: norm(0, 180),        // 正态分布水平散开
-          vy: -(200 + Math.random() * 350), // 高速上飘
-          life: 3 + Math.random() * 4       // 长寿命
+          vx: norm(0, 350),        // 正态分布水平散开（sigma=350）
+          vy: -(300 + Math.random() * 500), // 高速上飘，大幅拉开垂直层次
+          life: 4 + Math.random() * 5       // 更长寿命 4-9s
         });
       }
     }
@@ -229,7 +229,7 @@
         continue;
       }
       var prog = age / p.life;
-      p.el.style.opacity = (1 - prog) * 0.7;
+      p.el.style.opacity = (1 - prog * 0.7) * 0.8;
       // 匀速直线 — 零重力漂浮
       p.el.style.transform = 'translate(' + (p.vx * age) + 'px, ' + (p.vy * age) + 'px)';
     }
