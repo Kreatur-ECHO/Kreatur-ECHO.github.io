@@ -163,39 +163,23 @@
   var overlay = document.getElementById('overlay');
   var stage = document.getElementById('stage');
 
-  // ---- 月亮周围漂浮金粉：rAF 跟踪月位 + position:fixed ----
-  var sparkEls = [];
+  // ---- 月亮周围漂浮金粉 ----
+  var sparksHTML = '';
   for (var i = 0; i < 18; i++) {
-    var dot = document.createElement('div');
-    dot.className = 'moon-spark';
-    var sz = 2 + Math.random() * 3;
+    var size = 1.5 + Math.random() * 3;
+    var dur = 5 + Math.random() * 8;
+    var delay = Math.random() * dur;
     var angle = Math.random() * Math.PI * 2;
     var dist = 55 + Math.random() * 70;
-    dot.style.cssText = 'position:fixed;border-radius:50%;background:#f0d78c;pointer-events:none;z-index:10002;'
-      + 'width:' + sz + 'px;height:' + sz + 'px;'
-      + 'box-shadow:0 0 6px 3px rgba(240,215,140,0.7);';
-    overlay.appendChild(dot);
-    sparkEls.push({
-      el: dot, ox: Math.cos(angle) * dist, oy: Math.sin(angle) * dist,
-      phase: Math.random() * Math.PI * 2, speed: 0.6 + Math.random() * 0.8
-    });
+    var xOff = Math.cos(angle) * dist;
+    var yOff = Math.sin(angle) * dist;
+    sparksHTML += '<div style="position:absolute;border-radius:50%;background:#f0d78c;pointer-events:none;'
+      + 'width:' + size + 'px;height:' + size + 'px;'
+      + 'top:calc(50% + ' + yOff.toFixed(0) + 'px);left:calc(50% + ' + xOff.toFixed(0) + 'px);'
+      + 'box-shadow:0 0 4px 2px rgba(240,215,140,0.6);'
+      + 'animation:sparkFloat ' + dur.toFixed(1) + 's ease-in-out ' + delay.toFixed(1) + 's infinite;"></div>';
   }
-
-  function sparkLoop() {
-    var rect = stage.getBoundingClientRect();
-    var cx = rect.left + rect.width / 2;
-    var cy = rect.top + rect.height / 2;
-    var t = performance.now() / 1000;
-    for (var s = 0; s < sparkEls.length; s++) {
-      var sp = sparkEls[s];
-      var wave = Math.sin(sp.phase + t * sp.speed);
-      sp.el.style.left = (cx + sp.ox) + 'px';
-      sp.el.style.top  = (cy + sp.oy + wave * 6) + 'px';
-      sp.el.style.opacity = 0.3 + 0.5 * (0.5 + 0.5 * Math.sin(sp.phase * 1.7 + t * 1.3));
-    }
-    requestAnimationFrame(sparkLoop);
-  }
-  requestAnimationFrame(sparkLoop);
+  stage.insertAdjacentHTML('beforeend', sparksHTML);
 
   // ---- 交互 ----
   moon.addEventListener('click', function (e) {
