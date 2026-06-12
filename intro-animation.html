@@ -207,23 +207,53 @@
     color: #6c63ff;
   }
 
-  /* ==== 金粉碎光 ==== */
+  /* ==== 金粉碎光（月亮周围漂浮） ==== */
   .intro-spark {
-    position: absolute;
+    position: fixed;
     border-radius: 50%;
     background: #f0d78c;
     opacity: 0;
     pointer-events: none;
     box-shadow: 0 0 3px 1px rgba(240,215,140,0.5);
-    animation: sparkRise 6s ease-in-out infinite;
+    animation: sparkFloat 5s ease-in-out infinite;
   }
 
-  @keyframes sparkRise {
-    0%   { opacity: 0;   transform: translate(0, 20px) scale(0.3); }
-    15%  { opacity: 0.7; transform: translate(0, 10px) scale(0.8); }
-    25%  { opacity: 0.5; transform: translate(0, 0) scale(1); }
-    50%  { opacity: 0.2; transform: translate(0, -30px) scale(0.7); }
-    100% { opacity: 0;   transform: translate(0, -60px) scale(0.2); }
+  @keyframes sparkFloat {
+    0%   { opacity: 0;   transform: translate(0, 15px) scale(0.2); }
+    20%  { opacity: 0.8; transform: translate(-5px, 0) scale(1); }
+    60%  { opacity: 0.5; transform: translate(5px, -40px) scale(0.6); }
+    100% { opacity: 0;   transform: translate(-3px, -70px) scale(0.15); }
+  }
+
+  /* ==== 出水金粉（月亮升起时下方迸溅） ==== */
+  .splash-particle {
+    position: fixed;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffeaa7 0%, #f0d78c 60%, transparent 100%);
+    pointer-events: none;
+    opacity: 0;
+    box-shadow: 0 0 5px 2px rgba(240,215,140,0.6);
+  }
+
+  /* ==== 底部闪烁金粉 ==== */
+  .floor-spark {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .floor-spark.dot {
+    background: #f0d78c;
+    box-shadow: 0 0 4px 2px rgba(240,215,140,0.6);
+  }
+  .floor-spark.flare {
+    background: radial-gradient(circle, rgba(255,234,167,0.9) 0%, rgba(240,215,140,0.3) 40%, transparent 70%);
+  }
+
+  @keyframes floorTwinkle {
+    0%, 100% { opacity: 0.1; transform: scale(0.6); }
+    40%      { opacity: 0.9; transform: scale(1.2); }
+    70%      { opacity: 0.5; transform: scale(1); }
   }
 </style>
 </head>
@@ -246,19 +276,19 @@
 <script>
   (function () {
     var moon = document.getElementById('moon');
+    var stage = document.getElementById('stage');
     var overlay = document.getElementById('overlay');
     var sparksContainer = document.getElementById('sparks');
 
-    // 金粉碎光：18 颗从月亮下方升起慢飘
+    // ---- 1. 月亮周围漂浮金粉 ----
     var h = '';
     for (var i = 0; i < 18; i++) {
       var size = 1.5 + Math.random() * 3;
       var dur = 5 + Math.random() * 10;
       var delay = Math.random() * dur;
-      // 偏向下方半圆：角度集中在 -90°~+90° 范围（月下到月侧）
       var angle = -Math.PI/2 + (Math.random() - 0.5) * Math.PI * 1.6;
       var xOff = Math.cos(angle) * (50 + Math.random() * 80);
-      var yOff = 30 + Math.sin(angle) * 60;  // 偏下方
+      var yOff = 30 + Math.sin(angle) * 60;
       h += '<div class="intro-spark" style="'
         + 'width:' + size + 'px; height:' + size + 'px; '
         + 'top:calc(50% + ' + yOff.toFixed(0) + 'px); left:calc(50% + ' + xOff.toFixed(0) + 'px); '
@@ -267,6 +297,103 @@
     }
     sparksContainer.innerHTML = h;
 
+    // ---- 2. 底部闪烁金粉 ----
+    var floorHTML = '';
+    for (var f = 0; f < 30; f++) {
+      var fs = 1 + Math.random() * 3;
+      var fl = 5 + Math.random() * 22;
+      var fb = 1 + Math.random() * 14;
+      var type = Math.random() < 0.3 ? 'flare' : 'dot';
+      floorHTML += '<div class="floor-spark ' + type + '" style="'
+        + 'width:' + fs + 'px; height:' + fs + 'px; '
+        + 'left:' + fl.toFixed(1) + '%; bottom:' + fb.toFixed(1) + '%; '
+        + 'animation: floorTwinkle ' + (2 + Math.random() * 4).toFixed(1) + 's ease-in-out infinite; '
+        + 'animation-delay:' + (Math.random() * 3).toFixed(1) + 's;"></div>';
+    }
+    overlay.insertAdjacentHTML('beforeend', floorHTML);
+
+    // ---- 3. 出水迸溅：rAF 跟踪月亮位置 ----
+    var splashStart = null;
+    var splashPool = [];
+    var lastSpawn = 0;
+
+    function spawnSplash(cx, cy) {
+      // 从月亮底部边缘向两侧迸溅
+      var rx = (Math.random() - 0.5) * 80; // 水平扩散
+      var ry = 30 + Math.random() * 50;    // 向下/侧下落
+      var size = 2 + Math.random() * 4;
+      var vx = (Math.random() - 0.5) * 60;
+      var vy = -40 - Math.random() * 90;
+      var grav = 30 + Math.random() * 40;
+      var life = 1 + Math.random() * 1.5;
+      var dot = document.createElement('div');
+      dot.className = 'splash-particle';
+      dot.style.width = size + 'px';
+      dot.style.height = size + 'px';
+      dot.style.left = cx + 'px';
+      dot.style.top = cy + 'px';
+      dot.style.opacity = '0.9';
+      overlay.appendChild(dot);
+      splashPool.push({ el: dot, x: cx, y: cy, vx: vx, vy: vy, gravity: grav, life: life, born: performance.now(), size: size });
+    }
+
+    function spawnBurst(cx, cy, count) {
+      for (var b = 0; b < count; b++) {
+        spawnSplash(cx, cy);
+      }
+    }
+
+    function tickSplash(now) {
+      for (var s = splashPool.length - 1; s >= 0; s--) {
+        var p = splashPool[s];
+        var dt = (now - p.born) / 1000;
+        if (dt > p.life) {
+          p.el.remove();
+          splashPool.splice(s, 1);
+          continue;
+        }
+        var progress = dt / p.life;
+        p.el.style.opacity = (1 - progress) * 0.9;
+        p.el.style.transform = 'translate('
+          + (p.vx * dt) + 'px, '
+          + (p.vy * dt + 0.5 * p.gravity * dt * dt) + 'px)';
+      }
+    }
+
+    function moonSplashLoop(ts) {
+      var now = performance.now();
+      if (!splashStart) splashStart = now;
+      var elapsed = (now - splashStart) / 1000;
+      if (elapsed <= 2.4) {
+        // 月亮位置：CSS bottom 动画 -160px → 68vh
+        var eased = elapsed / 2.2;
+        if (eased > 1) eased = 1;
+        var eo = eased * (2 - eased); // easeOutQuad
+        var bottomPx = -160 + (window.innerHeight * 0.68 - (-160)) * eo;
+        var rect = stage.getBoundingClientRect();
+        var moonCX = rect.left + rect.width / 2;
+        var moonCY = rect.top + rect.height - 10; // 底部边缘
+
+        // 每隔 ~50ms 迸溅一批
+        if (ts - lastSpawn > 50) {
+          lastSpawn = ts;
+          var count = 3 + Math.floor(Math.random() * 5);
+          spawnBurst(moonCX, moonCY, count);
+        }
+        tickSplash(now);
+        requestAnimationFrame(moonSplashLoop);
+      } else {
+        // 动画结束，清理残留
+        tickSplash(now);
+        if (splashPool.length) {
+          requestAnimationFrame(moonSplashLoop);
+        }
+      }
+    }
+
+    requestAnimationFrame(moonSplashLoop);
+
+    // ---- 交互 ----
     moon.addEventListener('click', function (e) {
       e.stopPropagation();
       overlay.classList.add('dismiss');
