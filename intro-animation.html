@@ -219,7 +219,7 @@
         dot.style.animation = 'none';
         overlay.appendChild(dot);
         // 正态分布初始位置：钟形集中在中心
-        var sx = norm(baseX, 130); // 68% 在中心±130px，95%在±260px
+        var sx = norm(baseX, 250);
         dust.push({
           el: dot, born: now,
           startX: sx, startY: baseY,
