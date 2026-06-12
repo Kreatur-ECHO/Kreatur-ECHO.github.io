@@ -2122,11 +2122,35 @@ img {
 .intro-overlay {
   position: fixed; inset: 0; z-index: 10000;
   background: #0a0a14;
-  transition: opacity 0.8s ease;
+  transition: opacity 1.4s cubic-bezier(0.22, 0, 0.18, 1);
 }
 .intro-overlay.dismissing {
   opacity: 0;
   pointer-events: none;
+}
+
+/* 点击后月亮泛光 + 柔化缩小 */
+.intro-overlay.dismissing .intro-moon {
+  animation: moonSoften 1.4s ease-in forwards;
+  pointer-events: none;
+}
+@keyframes moonSoften {
+  0%   { transform: scale(1);   filter: brightness(1); }
+  30%  { transform: scale(1.25); filter: brightness(2.2); }
+  100% { transform: scale(0.3); filter: brightness(3.8); opacity: 0; }
+}
+
+/* 装饰元素柔和渐隐 */
+.intro-overlay.dismissing .logo-wrap,
+.intro-overlay.dismissing .moon-stage::before,
+.intro-overlay.dismissing .moon-stage::after,
+.intro-overlay.dismissing .moon-texture,
+.intro-overlay.dismissing .moon-bulb {
+  animation: gentleFade 1s ease-out forwards;
+}
+@keyframes gentleFade {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 .moon-stage {
