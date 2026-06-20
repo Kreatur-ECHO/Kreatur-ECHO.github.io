@@ -726,6 +726,27 @@
     }, 1700);
   }
 
+  // fadeVolume — 音频音量渐变, target: 目标音量(0-1), duration: 渐变时长(ms), callback: 完成后回调
+  var _fadeTimer = null;
+  function fadeVolume(audio, target, duration, callback) {
+    if (!audio) return;
+    clearInterval(_fadeTimer);
+    var steps = 30;
+    var stepMs = duration / steps;
+    var startVol = audio.volume;
+    var delta = (target - startVol) / steps;
+    var step = 0;
+    _fadeTimer = setInterval(function () {
+      step++;
+      audio.volume = Math.max(0, Math.min(1, startVol + delta * step));
+      if (step >= steps) {
+        clearInterval(_fadeTimer);
+        _fadeTimer = null;
+        if (callback) callback();
+      }
+    }, stepMs);
+  }
+
   // setupDiscClick — 黑胶点击行为(仅执行一次,clickReady守卫)
   // - musicAudio存在且有src: toggle播放/暂停
   // - musicAudio为null或无src: 重新调用switchToSong获取音源(不跳转网易云!)
@@ -741,11 +762,15 @@
       setTimeout(function () { clickLock = false; }, 100);
 
       if (musicAudio && musicAudio.src) {
-        // 已有音源: toggle 播放/暂停
+        // toggle 播放/暂停 — 2秒音频淡入淡出
         if (playing) {
-          musicAudio.pause();
+          fadeVolume(musicAudio, 0, 2000, function () {
+            musicAudio.pause();
+          });
         } else {
+          musicAudio.volume = 0;
           musicAudio.play().catch(function () {});
+          fadeVolume(musicAudio, 0.19, 2000);
         }
       } else if (songList.length && songList[currentIndex]) {
         // 无音源: 重新获取(不跳转网易云)
@@ -839,7 +864,7 @@
       musicAudio = new Audio();
       musicAudio.src = data.audioUrl;
       musicAudio.preload = 'none';
-      musicAudio.volume = 0.19;
+      musicAudio.volume = 0;
       document.body.appendChild(musicAudio);
 
       // 先绑定事件再播放，确保 play/pause 状态正确
@@ -866,8 +891,9 @@
         playNext();
       });
 
-      // 自动播放
+      // 自动播放(从0淡入到0.19, 2秒)
       musicAudio.play().catch(function () {});
+      fadeVolume(musicAudio, 0.19, 2000);
     } catch (err) {
       console.warn('[Blog] Failed to search music:', err);
     }
