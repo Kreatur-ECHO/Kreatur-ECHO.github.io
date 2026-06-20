@@ -730,14 +730,38 @@
         } else {
           musicAudio.play().catch(function () {});
         }
-      } else {
-        window.open('https://music.163.com/#/song?id=' + songId, '_blank');
+      } else if (songList.length && songList[currentIndex]) {
+        var s = songList[currentIndex];
+        switchToSong(s.name, s.artist, s.cover, s.id);
       }
     });
+
+    // JS hover: explicitly toggle vinyl-state-icon opacity
+    disc.addEventListener('mouseenter', function () {
+      var icon = document.getElementById('vinylStateIcon');
+      if (icon) { icon.style.opacity = '0.5'; icon.style.transition = 'opacity 0.3s ease'; }
+    });
+    disc.addEventListener('mouseleave', function () {
+      var icon = document.getElementById('vinylStateIcon');
+      if (icon) { icon.style.opacity = '0'; icon.style.transition = 'opacity 0.5s ease'; }
+    });
+
+    // Init icon with play SVG so hover shows it even before any music plays
+    var initIcon = document.getElementById('vinylStateIcon');
+    if (initIcon && !initIcon.innerHTML.trim()) {
+      initIcon.innerHTML = PLAY_ICON;
+    }
   }
 
+  var _playNextRetries = 0;
   function playNext() {
     if (!songList.length) return;
+    _playNextRetries++;
+    if (_playNextRetries > songList.length) {
+      // All songs tried, none available — stop cycling
+      _playNextRetries = 0;
+      return;
+    }
     currentIndex = (currentIndex + 1) % songList.length;
     var s = songList[currentIndex];
     switchToSong(s.name, s.artist, s.cover, s.id);
@@ -765,8 +789,13 @@
     setupDiscClick(songId);
 
     try {
-      const keyword = encodeURIComponent(`${name} ${artist}`);
-      const res = await fetch(`${MUSIC_PLAY_API}?keyword=${keyword}`);
+      const params = new URLSearchParams({
+        keyword: `${name} ${artist}`,
+        id: songId || '',
+        name: name || '',
+        artist: artist || ''
+      });
+      const res = await fetch(`${MUSIC_PLAY_API}?${params.toString()}`);
       if (!res.ok) return;
       const data = await res.json();
       if (!data.found || !data.audioUrl) {
@@ -788,6 +817,7 @@
 
       // 先绑定事件再播放，确保 play/pause 状态正确
       musicAudio.addEventListener('play', () => {
+        _playNextRetries = 0;
         playing = true;
         var discEl = document.getElementById('musicDisc');
         if (discEl) discEl.style.animationPlayState = 'running';

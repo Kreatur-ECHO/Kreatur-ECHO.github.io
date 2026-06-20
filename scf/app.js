@@ -379,56 +379,22 @@ async function handleMusicPlay(method, url) {
   const raw = (url || '').split('?')[1] || '';
   const params = new URLSearchParams(raw);
   const keyword = params.get('keyword') || '';
+  const songId = params.get('id') || '';
+  const songName = params.get('name') || '';
+  const songArtist = params.get('artist') || '';
+
+  // 网易云官方流媒体 API — 快速稳定，无需第三方代理
+  if (songId) {
+    return [200, {
+      found: true,
+      name: decodeURIComponent(songName),
+      artist: decodeURIComponent(songArtist),
+      audioUrl: `https://music.163.com/song/media/outer/url?id=${songId}.mp3`,
+    }];
+  }
+
   if (!keyword) return [400, { error: 'Missing keyword' }];
-
-  return new Promise((resolve) => {
-    const reqUrl = `https://www.at38.cn/?keyword=${encodeURIComponent(keyword)}`;
-    https.get(reqUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      },
-      timeout: 10000,
-    }, (res) => {
-      let html = '';
-      res.on('data', chunk => html += chunk);
-      res.on('end', () => {
-        try {
-          // 解析第一张音乐卡片
-          const cardMatch = html.match(/<div class="music-card"[^>]*>([\s\S]*?)<\/div>\s*(?=<div class="music-card"|<\/div>\s*<\/div>\s*<footer>)/);
-          if (!cardMatch) {
-            resolve([200, { found: false }]);
-            return;
-          }
-          const card = cardMatch[0];
-
-          const name = (card.match(/<h3>([^<]+)<\/h3>/) || [])[1] || '';
-          const artist = (card.match(/歌手：([^|<]+)/) || [])[1] || '';
-          const coverPath = (card.match(/data-src="([^"]*action=getpic[^"]*)"/) || [])[1] || '';
-          const playPath = (card.match(/src="([^"]*action=play[^"]*)"/) || [])[1] || '';
-
-          if (!playPath) {
-            resolve([200, { found: false, name, artist }]);
-            return;
-          }
-
-          const baseUrl = 'https://www.at38.cn/';
-          resolve([200, {
-            found: true,
-            name: name.trim(),
-            artist: artist.trim(),
-            coverUrl: coverPath ? baseUrl + coverPath : '',
-            audioUrl: baseUrl + playPath,
-          }]);
-        } catch (e) {
-          resolve([502, { error: 'Parse error: ' + e.message }]);
-        }
-      });
-    }).on('error', (e) => {
-      resolve([502, { error: 'Network error: ' + e.message }]);
-    }).on('timeout', () => {
-      resolve([502, { error: 'Timeout' }]);
-    });
-  });
+  return [200, { found: false, error: 'No song ID' }];
 }
 
 // ... (keep existing handlers)
