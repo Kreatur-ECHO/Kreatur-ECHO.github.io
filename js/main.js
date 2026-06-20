@@ -721,7 +721,7 @@
     iconTimer = setTimeout(function () {
       icon.style.transition = 'opacity 0.3s ease';
       icon.style.opacity = '0';
-    }, 1000);
+    }, 500);
   }
 
   // fadeVolume — 音频音量渐变, target: 目标音量(0-1), duration: 渐变时长(ms), callback: 完成后回调
@@ -757,18 +757,18 @@
       if (e.target.closest('.vinyl-popup')) return; // 点弹出列表不触发
       if (clickLock) return;
       clickLock = true;
-      setTimeout(function () { clickLock = false; }, 1100); // 配合1s音频淡入淡出
+      setTimeout(function () { clickLock = false; }, 500);
 
       if (musicAudio && musicAudio.src) {
         // toggle 播放/暂停 — 2秒音频淡入淡出
         if (playing) {
-          fadeVolume(musicAudio, 0, 1000, function () {
+          fadeVolume(musicAudio, 0, 500, function () {
             musicAudio.pause();
           });
         } else {
           musicAudio.volume = 0;
           musicAudio.play().catch(function () {});
-          fadeVolume(musicAudio, 0.19, 1000);
+          fadeVolume(musicAudio, 0.19, 500);
         }
       } else if (songList.length && songList[currentIndex]) {
         // 无音源: 重新获取(不跳转网易云)
@@ -891,7 +891,7 @@
 
       // 自动播放(从0淡入到0.19, 2秒)
       musicAudio.play().catch(function () {});
-      fadeVolume(musicAudio, 0.19, 1000);
+      fadeVolume(musicAudio, 0.19, 500);
     } catch (err) {
       console.warn('[Blog] Failed to search music:', err);
     }
