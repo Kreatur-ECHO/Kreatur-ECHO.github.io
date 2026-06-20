@@ -529,7 +529,10 @@
   }
 
   // ============================================================
-  //  网易云最近播放 — 更新黑胶唱片封面
+  //  loadRecentSong — 从 SCF /recent-song 拉取网易云红心歌单(5首)
+  //  同时构建黑胶hover弹出播放列表(.vinyl-popup)
+  //  首次加载时自动调用 switchToSong() 开始播放第一首
+  //  SPA页面切换时仅重建UI，保留播放状态
   // ============================================================
   async function loadRecentSong() {
     if (!RECENT_SONG_API) return;
@@ -655,16 +658,19 @@
   }
 
   // ============================================================
-  //  音乐搜索播放（at38.cn 代理）+ 切换歌曲 + 列表循环
+  //  MUSIC PLAYER STATE
+  //  musicAudio: <Audio>元素, 非null且有src=点击toggle播放/暂停
+  //  musicAudio为null或无src=点击重新获取音源(switchToSong)
+  //  _playNextRetries: 全部歌曲无音源时防止无限循环(最多一轮)
   // ============================================================
-  let musicAudio = null;
-  let playing = false;
-  let clickLock = false;
-  let songList = [];
-  let currentIndex = 0;
-  let musicInitialized = false;
+  let musicAudio = null;       // <Audio> 元素引用
+  let playing = false;         // 播放/暂停状态
+  let clickLock = false;       // 防连点锁(100ms)
+  let songList = [];           // [{name,artist,cover,id}] 5首
+  let currentIndex = 0;        // songList当前索引
+  let musicInitialized = false;// false=首次自动播放 true=SPA保留状态
 
-  // 播放/暂停图标（1.5s 显示，渐入渐出各 0.5s）
+  // 播放/暂停图标SVG, flashStateIcon()置入, CSS .visible控制opacity
   const PLAY_ICON = '<svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg>';
   const PAUSE_ICON = '<svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
   let iconTimer = null;
@@ -703,42 +709,52 @@
     }
   }
 
+  // flashStateIcon — 播放/暂停时图标渐显2秒后渐隐
+  // 关键: 必须先 icon.style.opacity='' 清除hover handler设置的inline样式
+  //       否则inline style优先级高于CSS .visible类, 图标无法显示
   function flashStateIcon(isPlaying) {
     const icon = document.getElementById('vinylStateIcon');
     if (!icon) return;
     clearTimeout(iconTimer);
-    icon.style.opacity = '';
-    icon.style.transition = '';
+    icon.style.opacity = '';      // 清除hover inline opacity
+    icon.style.transition = '';   // 恢复CSS transition
     icon.innerHTML = isPlaying ? PAUSE_ICON : PLAY_ICON;
     icon.classList.add('visible');
     iconTimer = setTimeout(function () {
       icon.classList.remove('visible');
-    }, 2000);
+    }, 2000);                     // 显示2秒后自动渐隐
   }
 
+  // setupDiscClick — 黑胶点击行为(仅执行一次,clickReady守卫)
+  // - musicAudio存在且有src: toggle播放/暂停
+  // - musicAudio为null或无src: 重新调用switchToSong获取音源(不跳转网易云!)
+  // - 同时绑定hover显示播控图标 + 初始化图标SVG(否则hover无可见效果)
   function setupDiscClick(songId) {
     const disc = document.getElementById('musicDisc');
-    if (!disc || disc.dataset.clickReady) return;
+    if (!disc || disc.dataset.clickReady) return;  // 仅执行一次
     disc.dataset.clickReady = '1';
     disc.addEventListener('click', function (e) {
-      if (e.target.closest('.vinyl-popup')) return;
+      if (e.target.closest('.vinyl-popup')) return; // 点弹出列表不触发
       if (clickLock) return;
       clickLock = true;
       setTimeout(function () { clickLock = false; }, 100);
 
       if (musicAudio && musicAudio.src) {
+        // 已有音源: toggle 播放/暂停
         if (playing) {
           musicAudio.pause();
         } else {
           musicAudio.play().catch(function () {});
         }
       } else if (songList.length && songList[currentIndex]) {
+        // 无音源: 重新获取(不跳转网易云)
         var s = songList[currentIndex];
         switchToSong(s.name, s.artist, s.cover, s.id);
       }
     });
 
-    // JS hover: explicitly toggle vinyl-state-icon opacity
+    // HOVER: inline style控制图标显隐
+    // 使用inline而非CSS class, 因为.vinyl-wrapper尺寸塌缩CSS hover不可靠
     disc.addEventListener('mouseenter', function () {
       var icon = document.getElementById('vinylStateIcon');
       if (icon) { icon.style.opacity = '0.5'; icon.style.transition = 'opacity 0.3s ease'; }
@@ -748,19 +764,21 @@
       if (icon) { icon.style.opacity = '0'; icon.style.transition = 'opacity 0.5s ease'; }
     });
 
-    // Init icon with play SVG so hover shows it even before any music plays
+    // 初始化图标SVG(空div即使设置opacity也无可见内容)
     var initIcon = document.getElementById('vinylStateIcon');
     if (initIcon && !initIcon.innerHTML.trim()) {
       initIcon.innerHTML = PLAY_ICON;
     }
   }
 
+  // playNext — 当前歌曲无音源时自动切到下一首
+  // _playNextRetries限制最多一轮(5首), 防止全部无音源时死循环
   var _playNextRetries = 0;
   function playNext() {
     if (!songList.length) return;
     _playNextRetries++;
     if (_playNextRetries > songList.length) {
-      // All songs tried, none available — stop cycling
+      // 全部歌曲均无音源, 停止循环
       _playNextRetries = 0;
       return;
     }
@@ -775,22 +793,28 @@
     }
   }
 
+  // switchToSong — 调SCF /music-play获取可播放音源 → 创建<Audio>
+  // SCF返回 {found:true, audioUrl:"jbsou.cn/api.php?..."}
+  // audioUrl是重定向地址, 浏览器<Audio>自动跟随到网易云CDN(.mp3)
+  // found=false或无audioUrl时 → playNext()尝试下一首
+  // 成功获取音源后重置_playNextRetries
   async function switchToSong(name, artist, cover, songId) {
     if (!MUSIC_PLAY_API) return;
     const disc = document.getElementById('musicDisc');
     if (!disc) return;
 
-    // 更新黑胶封面
+    // 更新黑胶封面图
     const coverImg = disc.querySelector('.vinyl-cover');
     if (coverImg && cover) {
       coverImg.src = cover.replace(/^http:/, 'https:');
     }
     disc.title = `${name} — ${artist}`;
 
-    // 设置点击切换（仅一次）
+    // 绑定点击事件(仅首次, 由clickReady守卫)
     setupDiscClick(songId);
 
     try {
+      // keyword是主要查询参数, id/name/artist供SCF备用
       const params = new URLSearchParams({
         keyword: `${name} ${artist}`,
         id: songId || '',

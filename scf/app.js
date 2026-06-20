@@ -199,6 +199,12 @@ function fetchRecentSongsFromNetease() {
   });
 }
 
+// ============================================================
+//  handleRecentSong — SCF /recent-song 端点 + 定时器触发
+//  从网易云API获取红心歌单(5首), 缓存到COS: recent-song.json
+//  每天凌晨4点刷新, 其余时间读缓存
+//  同时后台预搜索at38.cn缓存音频URL到 audio-cache.json
+// ============================================================
 async function handleRecentSong(method) {
   if (method !== 'GET') return [405, { error: 'Method not allowed' }];
 
@@ -372,7 +378,13 @@ async function handleDebug(req) {
   }];
 }
 
-//  jbsou.cn fast search (~2-3s, within SCF 3s timeout)
+// ============================================================
+//  fetchFromJbsou — POST jbsou.cn, 解析JSON返回音频代理URL
+//  耗时 ~2-3s, 在SCF默认3s超时内, 是music-play首选方案
+//  返回: {name,artist,audioUrl:"jbsou.cn/api.php?..."} 或 null
+//  audioUrl是重定向, 浏览器跟随到网易云CDN实际.mp3地址
+//  使用ES5语法确保Node.js 10+兼容(无箭头函数/模板字符串)
+// ============================================================
 function fetchFromJbsou(keyword) {
   return new Promise(function (resolve) {
     var postData = 'input=' + encodeURIComponent(keyword) + '&filter=name&type=netease&page=1';
@@ -407,7 +419,13 @@ function fetchFromJbsou(keyword) {
   });
 }
 
-// 音乐搜索代理 → at38.cn
+// ============================================================
+//  handleMusicPlay — SCF /music-play 端点
+//  流程: jbsou.cn(2s) → 成功返回 → at38.cn(20s, 兜底)
+//  返回: [200,{found:true,audioUrl,name,artist}] 成功
+//        [200,{found:false}] 失败, 前端调用playNext()
+//  注意: 必须包含 found:true/false, 前端以此判断是否切换歌曲
+// ============================================================
 async function handleMusicPlay(method, url) {
   if (method !== 'GET') return [405, { error: 'Method not allowed' }];
 
@@ -458,6 +476,7 @@ async function handleMusicPlay(method, url) {
       [statusCode, responseBody] = await handleArticleViews(method, body, ip);
     } else if (path === '/recent-song') {
       [statusCode, responseBody] = await handleRecentSong(method);
+    // SCF API路由: /recent-song /music-play /visits /article-views
     } else if (path === '/music-play') {
       [statusCode, responseBody] = await handleMusicPlay(method, req.url);
     } else {
