@@ -372,6 +372,41 @@ async function handleDebug(req) {
   }];
 }
 
+//  jbsou.cn fast search (~2-3s, within SCF 3s timeout)
+function fetchFromJbsou(keyword) {
+  return new Promise(function (resolve) {
+    var postData = 'input=' + encodeURIComponent(keyword) + '&filter=name&type=netease&page=1';
+    var timer = setTimeout(function () { resolve(null); }, 8000);
+    var req = https.request('https://www.jbsou.cn/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Referer': 'https://www.jbsou.cn/',
+        'X-Requested-With': 'XMLHttpRequest',
+        'User-Agent': 'Mozilla/5.0',
+      },
+      timeout: 6000,
+    }, function (res) {
+      var data = '';
+      res.on('data', function (c) { data += c; });
+      res.on('end', function () {
+        clearTimeout(timer);
+        try {
+          var json = JSON.parse(data);
+          if (json.code === 200 && json.data && json.data[0]) {
+            var s = json.data[0];
+            resolve({ name: s.name, artist: s.artist, audioUrl: 'https://www.jbsou.cn/' + s.url });
+          } else { resolve(null); }
+        } catch (e) { resolve(null); }
+      });
+    });
+    req.on('error', function () { clearTimeout(timer); resolve(null); });
+    req.on('timeout', function () { clearTimeout(timer); req.destroy(); resolve(null); });
+    req.write(postData);
+    req.end();
+  });
+}
+
 // 音乐搜索代理 → at38.cn
 async function handleMusicPlay(method, url) {
   if (method !== 'GET') return [405, { error: 'Method not allowed' }];
@@ -383,7 +418,7 @@ async function handleMusicPlay(method, url) {
 
   // 1) Try jbsou.cn first (fast, ~2-3s)
   var result = await fetchFromJbsou(keyword);
-  if (result) return [200, result];
+  if (result) return [200, { found: true, name: result.name, artist: result.artist, audioUrl: result.audioUrl }];
 
   // 2) Fallback to at38.cn (slow, ~20s) — needs SCF timeout >= 25s
   return new Promise(function (resolve) {

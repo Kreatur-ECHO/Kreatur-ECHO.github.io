@@ -707,11 +707,13 @@
     const icon = document.getElementById('vinylStateIcon');
     if (!icon) return;
     clearTimeout(iconTimer);
+    icon.style.opacity = '';
+    icon.style.transition = '';
     icon.innerHTML = isPlaying ? PAUSE_ICON : PLAY_ICON;
     icon.classList.add('visible');
     iconTimer = setTimeout(function () {
       icon.classList.remove('visible');
-    }, 1500);
+    }, 2000);
   }
 
   function setupDiscClick(songId) {
