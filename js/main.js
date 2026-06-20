@@ -709,21 +709,19 @@
     }
   }
 
-  // flashStateIcon -- fade in 0.3s, stay 1.4s, fade out 0.3s (~2s total)
-  // Uses inline style exclusively to avoid CSS class / hover handler conflicts
+  // flashStateIcon — 即刻显示图标(不延迟), 1s后自动渐隐
   function flashStateIcon(isPlaying) {
     const icon = document.getElementById('vinylStateIcon');
     if (!icon) return;
     clearTimeout(iconTimer);
-    icon.innerHTML = isPlaying ? PAUSE_ICON : PLAY_ICON;
-    // fade in: current opacity -> 0.6 (0.3s ease)
-    icon.style.transition = 'opacity 0.3s ease';
+    // 先清除hover inline, 再立刻显示
+    icon.style.transition = 'opacity 0s';
     icon.style.opacity = '0.6';
+    icon.innerHTML = isPlaying ? PAUSE_ICON : PLAY_ICON;
     iconTimer = setTimeout(function () {
-      // fade out: 0.6 -> 0 (0.3s ease), hover handler resumes control
       icon.style.transition = 'opacity 0.3s ease';
       icon.style.opacity = '0';
-    }, 1700);
+    }, 1000);
   }
 
   // fadeVolume — 音频音量渐变, target: 目标音量(0-1), duration: 渐变时长(ms), callback: 完成后回调
@@ -759,18 +757,18 @@
       if (e.target.closest('.vinyl-popup')) return; // 点弹出列表不触发
       if (clickLock) return;
       clickLock = true;
-      setTimeout(function () { clickLock = false; }, 100);
+      setTimeout(function () { clickLock = false; }, 1100); // 配合1s音频淡入淡出
 
       if (musicAudio && musicAudio.src) {
         // toggle 播放/暂停 — 2秒音频淡入淡出
         if (playing) {
-          fadeVolume(musicAudio, 0, 2000, function () {
+          fadeVolume(musicAudio, 0, 1000, function () {
             musicAudio.pause();
           });
         } else {
           musicAudio.volume = 0;
           musicAudio.play().catch(function () {});
-          fadeVolume(musicAudio, 0.19, 2000);
+          fadeVolume(musicAudio, 0.19, 1000);
         }
       } else if (songList.length && songList[currentIndex]) {
         // 无音源: 重新获取(不跳转网易云)
@@ -893,7 +891,7 @@
 
       // 自动播放(从0淡入到0.19, 2秒)
       musicAudio.play().catch(function () {});
-      fadeVolume(musicAudio, 0.19, 2000);
+      fadeVolume(musicAudio, 0.19, 1000);
     } catch (err) {
       console.warn('[Blog] Failed to search music:', err);
     }
