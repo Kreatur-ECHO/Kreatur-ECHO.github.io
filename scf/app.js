@@ -125,61 +125,6 @@ function fetchRecentSongsFromNetease() {
 }
 
 // ============================================================
-//  jbsou.cn POST API (fast, ~2-3s) — primary source
-// ============================================================
-function fetchAudioFromJbsou(keyword) {
-  return new Promise((resolve) => {
-    const postData = `input=${encodeURIComponent(keyword)}&filter=name&type=netease&page=1`;
-    const timer = setTimeout(() => resolve(null), 10000);
-
-    const req = https.request('https://www.jbsou.cn/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'X-Requested-With': 'XMLHttpRequest',
-        'Referer': 'https://www.jbsou.cn/',
-        'Accept': 'application/json, text/javascript, */*; q=0.01',
-      },
-      timeout: 8000,
-    }, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        clearTimeout(timer);
-        try {
-          const json = JSON.parse(data);
-          if (json.code === 200 && json.data && json.data.length > 0) {
-            const song = json.data[0];
-            resolve({
-              name: song.name,
-              artist: song.artist,
-              audioUrl: 'https://www.jbsou.cn/' + song.url,
-            });
-          } else { resolve(null); }
-        } catch (e) { resolve(null); }
-      });
-    });
-    req.on('error', () => { clearTimeout(timer); resolve(null); });
-    req.on('timeout', () => { clearTimeout(timer); req.destroy(); resolve(null); });
-    req.write(postData);
-    req.end();
-  });
-}
-
-// ============================================================
-//  Dual-source: jbsou.cn || at38.cn (race both)
-// ============================================================
-async function fetchAudioUrl(keyword) {
-  // Manual race — compatible with Node.js 10+
-  var result = null;
-  var jbsou = fetchAudioFromJbsou(keyword).then(function (r) { if (r && !result) result = r; }).catch(function () {});
-  var at38  = fetchAudioFromAt38(keyword).then(function (r) { if (r && !result) result = r; }).catch(function () {});
-  await Promise.all([jbsou, at38]);
-  return result;
-}
-
-// ============================================================
 //  at38.cn audio URL resolver (one song)
 // ============================================================
 function fetchAudioFromAt38(keyword) {
@@ -271,7 +216,7 @@ async function handleRecentSong(method) {
         // Skip if cached recently (< 2 hours)
         if (cache.songs[kw] && (Date.now() - cache.songs[kw].cachedAt) < 7200000) continue;
         console.log('[Cache] Resolving audio:', kw);
-        const audio = await fetchAudioUrl(kw);
+        const audio = await fetchAudioFromAt38(kw);
         if (audio) {
           cache.songs[kw] = { ...audio, cachedAt: Date.now() };
           console.log('[Cache] OK:', kw, '->', audio.audioUrl.substring(0, 50));
@@ -308,8 +253,8 @@ async function handleMusicPlay(method, url) {
     return [200, { found: true, name: entry.name, artist: entry.artist, audioUrl: entry.audioUrl, fromCache: true }];
   }
 
-  // 2) Cache miss — dual-source race (jbsou.cn ~3s || at38.cn ~20s)
-  const audio = await fetchAudioUrl(keyword);
+  // 2) Cache miss — try live (may take ~20s, but only happens once)
+  const audio = await fetchAudioFromAt38(keyword);
   if (audio) {
     // Save to cache
     if (!cache.songs) cache.songs = {};
