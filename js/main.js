@@ -762,12 +762,14 @@
       if (musicAudio && musicAudio.src) {
         // toggle 播放/暂停 — 2秒音频淡入淡出
         if (playing) {
+          flashStateIcon(false); // 图标即刻反馈
           fadeVolume(musicAudio, 0, 500, function () {
             musicAudio.pause();
           });
         } else {
           musicAudio.volume = 0;
           musicAudio.play().catch(function () {});
+          flashStateIcon(true); // 图标即刻反馈
           fadeVolume(musicAudio, 0.19, 500);
         }
       } else if (songList.length && songList[currentIndex]) {
