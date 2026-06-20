@@ -171,14 +171,12 @@ function fetchAudioFromJbsou(keyword) {
 //  Dual-source: jbsou.cn || at38.cn (race both)
 // ============================================================
 async function fetchAudioUrl(keyword) {
-  const results = await Promise.allSettled([
-    fetchAudioFromJbsou(keyword),
-    fetchAudioFromAt38(keyword),
-  ]);
-  for (const r of results) {
-    if (r.status === 'fulfilled' && r.value) return r.value;
-  }
-  return null;
+  // Manual race — compatible with Node.js 10+
+  var result = null;
+  var jbsou = fetchAudioFromJbsou(keyword).then(function (r) { if (r && !result) result = r; }).catch(function () {});
+  var at38  = fetchAudioFromAt38(keyword).then(function (r) { if (r && !result) result = r; }).catch(function () {});
+  await Promise.all([jbsou, at38]);
+  return result;
 }
 
 // ============================================================
