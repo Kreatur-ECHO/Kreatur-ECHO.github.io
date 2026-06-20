@@ -709,20 +709,21 @@
     }
   }
 
-  // flashStateIcon — 播放/暂停时图标渐显2秒后渐隐
-  // 关键: 必须先 icon.style.opacity='' 清除hover handler设置的inline样式
-  //       否则inline style优先级高于CSS .visible类, 图标无法显示
+  // flashStateIcon -- fade in 0.3s, stay 1.4s, fade out 0.3s (~2s total)
+  // Uses inline style exclusively to avoid CSS class / hover handler conflicts
   function flashStateIcon(isPlaying) {
     const icon = document.getElementById('vinylStateIcon');
     if (!icon) return;
     clearTimeout(iconTimer);
-    icon.style.opacity = '';      // 清除hover inline opacity
-    icon.style.transition = '';   // 恢复CSS transition
     icon.innerHTML = isPlaying ? PAUSE_ICON : PLAY_ICON;
-    icon.classList.add('visible');
+    // fade in: current opacity -> 0.6 (0.3s ease)
+    icon.style.transition = 'opacity 0.3s ease';
+    icon.style.opacity = '0.6';
     iconTimer = setTimeout(function () {
-      icon.classList.remove('visible');
-    }, 2000);                     // 显示2秒后自动渐隐
+      // fade out: 0.6 -> 0 (0.3s ease), hover handler resumes control
+      icon.style.transition = 'opacity 0.3s ease';
+      icon.style.opacity = '0';
+    }, 1700);
   }
 
   // setupDiscClick — 黑胶点击行为(仅执行一次,clickReady守卫)
