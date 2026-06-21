@@ -595,8 +595,11 @@
       const popupEl = wrap.querySelector('.vinyl-popup');
       if (popupEl) {
         popupEl.addEventListener('click', (e) => {
+          if (clickLock) return;  // 防连点
           const item = e.target.closest('.vinyl-popup-item');
           if (!item) return;
+          clickLock = true;
+          setTimeout(function () { clickLock = false; }, 500);
           try {
             const songInfo = JSON.parse(decodeURIComponent(item.dataset.song));
             // 更新当前索引
@@ -819,6 +822,8 @@
     }
   }
 
+  var _switchSeq = 0; // 竞态防护：只接受最新一次 switchToSong
+
   // switchToSong — 调SCF /music-play获取可播放音源 → 创建<Audio>
   // SCF返回 {found:true, audioUrl:"jbsou.cn/api.php?..."}
   // audioUrl是重定向地址, 浏览器<Audio>自动跟随到网易云CDN(.mp3)
@@ -826,6 +831,7 @@
   // 成功获取音源后重置_playNextRetries
   async function switchToSong(name, artist, cover, songId) {
     if (!MUSIC_PLAY_API) return;
+    var seq = ++_switchSeq;  // 递增序列号
     const disc = document.getElementById('musicDisc');
     if (!disc) return;
 
@@ -849,6 +855,7 @@
       });
       const res = await fetch(`${MUSIC_PLAY_API}?${params.toString()}`);
       if (!res.ok) return;
+      if (seq !== _switchSeq) return;  // 已被更新的调用覆盖，丢弃
       const data = await res.json();
       if (!data.found || !data.audioUrl) {
         // 当前歌曲无音源 → 自动跳到下一首
@@ -856,9 +863,11 @@
         return;
       }
 
-      // 切换音频
+      // 切换音频：强制释放旧音频再创建新音频
       if (musicAudio) {
         musicAudio.pause();
+        musicAudio.src = '';   // 清 src 彻底断开流
+        musicAudio.load();     // 强制 reset
         musicAudio.remove();
       }
       musicAudio = new Audio();
