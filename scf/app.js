@@ -33,6 +33,44 @@ function sha1Hex(str) {
   return crypto.createHash('sha1').update(str, 'utf8').digest('hex');
 }
 
+// ============================================================
+//  Netease WeAPI Crypto — AES-128-CBC + RSA (BigInt pow-mod)
+//  硬编码的 public key & nonce 来自网易云 Web 客户端
+// ============================================================
+const NE_MODULUS = '00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7';
+const NE_NONCE  = '0CoJUm6Qyw8W8jud';
+const NE_PUBKEY = '010001';
+
+function aesEncrypt(text, key) {
+  const cipher = crypto.createCipheriv('aes-128-cbc', key, '0102030405060708');
+  return cipher.update(text, 'utf8', 'base64') + cipher.final('base64');
+}
+
+function rsaEncrypt(text) {
+  const r  = text.split('').reverse().join('');
+  const bi = BigInt('0x' + Buffer.from(r, 'utf8').toString('hex'));
+  const mod = BigInt('0x' + NE_MODULUS);
+  let exp   = BigInt('0x' + NE_PUBKEY);
+  let base  = bi % mod;
+  let result = 1n;
+  while (exp > 0n) {
+    if (exp & 1n) result = (result * base) % mod;
+    base = (base * base) % mod;
+    exp >>= 1n;
+  }
+  return result.toString(16).padStart(256, '0');
+}
+
+function weapiEncrypt(data) {
+  const text = JSON.stringify(data);
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let secKey = '';
+  for (let i = 0; i < 16; i++) secKey += chars[Math.floor(Math.random() * chars.length)];
+  const encText   = aesEncrypt(aesEncrypt(text, NE_NONCE), secKey);
+  const encSecKey = rsaEncrypt(secKey);
+  return { params: encText, encSecKey };
+}
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -142,30 +180,90 @@ async function writeJSON(key, obj) {
 }
 
 // ============================================================
-//  网易云音乐 — 最近播放
+//  Netease Auth — COS 持久化 MUSIC_U，过期自动手机登录续期
+// ============================================================
+const NE_AUTH_KEY = 'netease-auth.json';
+
+async function loadNeteaseAuth() {
+  const data = await readJSON(NE_AUTH_KEY);
+  return (data && data.music_u) ? data : null;
+}
+
+async function saveNeteaseAuth(music_u) {
+  const auth = { music_u, updatedAt: Date.now() };
+  await writeJSON(NE_AUTH_KEY, auth);
+  return auth;
+}
+
+function getCookieStr(music_u) {
+  return music_u.startsWith('MUSIC_U=') ? music_u : 'MUSIC_U=' + music_u;
+}
+
+// neteaseLogin — WeAPI 手机号登录，返回新的 MUSIC_U
+async function neteaseLogin() {
+  const phone = process.env.NETEASE_PHONE || '';
+  const md5pw = process.env.NETEASE_PASSWORD_MD5 || '';
+  if (!phone || !md5pw) return { success: false, error: 'Missing NETEASE_PHONE or NETEASE_PASSWORD_MD5' };
+
+  const enc = weapiEncrypt({ phone, password: md5pw, countrycode: '86', rememberLogin: 'true' });
+  const body = 'params=' + encodeURIComponent(enc.params) + '&encSecKey=' + encodeURIComponent(enc.encSecKey);
+
+  return new Promise((resolve) => {
+    const r = https.request('https://music.163.com/weapi/login/cellphone', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Referer': 'https://music.163.com/',
+      },
+      timeout: 15000,
+    }, (res) => {
+      const cookies = res.headers['set-cookie'] || [];
+      let mu = '';
+      for (const c of cookies) {
+        const m = c.match(/MUSIC_U=([^;]+)/);
+        if (m) { mu = m[1]; break; }
+      }
+      let d = '';
+      res.on('data', c => d += c);
+      res.on('end', () => {
+        try {
+          const j = JSON.parse(d);
+          if (j.code === 200 || j.code === 20000) {
+            if (!mu && j.token) mu = j.token;
+            resolve({ success: true, music_u: mu });
+          } else {
+            resolve({ success: false, error: 'Login code ' + j.code, msg: j.msg || '', rawCode: j.code });
+          }
+        } catch (e) { resolve({ success: false, error: 'Parse: ' + e.message }); }
+      });
+    });
+    r.on('error', e => resolve({ success: false, error: 'Req: ' + e.message }));
+    r.on('timeout', () => { r.destroy(); resolve({ success: false, error: 'Timeout' }); });
+    r.write(body);
+    r.end();
+  });
+}
+
+// ============================================================
+//  网易云音乐 — 最近播放（红心歌单）
 // ============================================================
 
-function fetchRecentSongsFromNetease() {
-  return new Promise((resolve, reject) => {
-    if (!NETEASE_UID || !NETEASE_COOKIE) {
-      resolve({ error: 'No env vars' });
-      return;
-    }
-
+// fetchRecentSongs — 用 MUSIC_U cookie 拉取红心歌单前5首
+function fetchRecentSongs(cookie) {
+  return new Promise((resolve) => {
     const reqOpts = {
       headers: {
-        'Cookie': NETEASE_COOKIE.startsWith('MUSIC_U=') ? NETEASE_COOKIE : `MUSIC_U=${NETEASE_COOKIE}`,
+        'Cookie': getCookieStr(cookie),
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Referer': 'https://music.163.com/',
       },
       timeout: 10000,
     };
 
-    // 直接调用 playlist detail API（使用已知的 liked playlist ID）
-    // playlist ID 相对固定，不依赖 /user/playlist 登录态
     const LIKED_PLAYLIST_ID = '2488546807';
-    const detailUrl = `https://music.163.com/api/playlist/detail?id=${LIKED_PLAYLIST_ID}&limit=5`;
-    https.get(detailUrl, reqOpts, (res2) => {
+    const url = 'https://music.163.com/api/playlist/detail?id=' + LIKED_PLAYLIST_ID + '&limit=5';
+    https.get(url, reqOpts, (res2) => {
       let data2 = '';
       res2.on('data', chunk => data2 += chunk);
       res2.on('end', () => {
@@ -187,68 +285,74 @@ function fetchRecentSongsFromNetease() {
               cover: album.picUrl || '',
             };
           });
-
           resolve({ songs, updatedAt: Date.now(), likedPlaylistId: parseInt(LIKED_PLAYLIST_ID) });
-        } catch (e) {
-          reject(e);
-        }
+        } catch (e) { resolve({ error: 'Parse: ' + e.message }); }
       });
-    }).on('error', (e) => {
-      resolve({ error: 'Fetch error: ' + e.message });
-    }).on('timeout', () => { resolve({ error: 'Timeout' }); });
+    }).on('error', e => resolve({ error: 'Fetch: ' + e.message }))
+      .on('timeout', () => resolve({ error: 'Timeout' }));
   });
 }
 
 // ============================================================
-//  handleRecentSong — SCF /recent-song 端点 + 定时器触发
-//  从网易云API获取红心歌单(5首), 缓存到COS: recent-song.json
-//  每天凌晨4点刷新, 其余时间读缓存
-//  同时后台预搜索at38.cn缓存音频URL到 audio-cache.json
+//  handleRecentSong — SCF /recent-song 端点
+//  每天 4am 后首次请求刷新缓存
+//  Cookie 过期时自动手机号登录续期（WeAPI）→ 存 COS
 // ============================================================
 async function handleRecentSong(method) {
   if (method !== 'GET') return [405, { error: 'Method not allowed' }];
 
-  // 每天凌晨 4 点刷新一次缓存
   const cached = await readJSON('recent-song.json');
   const now = new Date();
   const today4am = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 4, 0, 0).getTime();
 
   if (cached && cached.updatedAt) {
     const cacheAge = now.getTime() - cached.updatedAt;
-    // 同一天且已过4点 → 用缓存；不到4点 → 用昨天的缓存
     const needsRefresh = now.getTime() >= today4am && cached.updatedAt < today4am;
     if (!needsRefresh || cacheAge < 60000) {
       return [200, { ...cached, fromCache: true }];
     }
   }
 
-  // 诊断：检查环境变量
-  if (!NETEASE_UID || !NETEASE_COOKIE) {
-    return [500, { error: 'Env vars missing',
-      hasUid: !!NETEASE_UID, hasCookie: !!NETEASE_COOKIE,
-      uidLen: (NETEASE_UID || '').length, cookieLen: (NETEASE_COOKIE || '').length }];
+  // 1) 获取当前有效 cookie：COS 持久化 > 环境变量兜底
+  let cookie = '';
+  const savedAuth = await loadNeteaseAuth();
+  if (savedAuth && savedAuth.music_u) {
+    cookie = savedAuth.music_u;
+  } else if (process.env.NETEASE_COOKIE) {
+    cookie = process.env.NETEASE_COOKIE;
   }
 
-  // 请求网易云
-  try {
-    const result = await fetchRecentSongsFromNetease();
-    if (!result || result.error) {
-      if (cached) return [200, cached];
-      return [502, result || { error: 'No result' }];
-    }
-    if (!result.songs || !result.songs.length) {
-      if (cached) return [200, cached];
-      return [502, { error: 'Empty songs list' }];
-    }
+  // 2) 拉取红心歌单
+  let result = cookie ? await fetchRecentSongs(cookie) : { error: 'No cookie' };
 
-    // 写入 COS 缓存
-    await writeJSON('recent-song.json', result);
-    return [200, result];
-  } catch (err) {
-    console.error('[RecentSong] Error:', err);
-    if (cached) return [200, cached];
-    return [502, { error: 'Crash: ' + err.message }];
+  // 3) 认证过期 (20001/-447/-460 等) → 自动手机登录续期
+  if (result && result.rawCode != null && result.rawCode !== 200) {
+    console.log('[RecentSong] Auth expired (20001), trying auto-login...');
+    const loginResult = await neteaseLogin();
+    if (loginResult.success && loginResult.music_u) {
+      await saveNeteaseAuth(loginResult.music_u);
+      console.log('[RecentSong] Auto-login OK, retrying fetch...');
+      result = await fetchRecentSongs(loginResult.music_u);
+    } else {
+      console.log('[RecentSong] Auto-login failed:', loginResult.error);
+      if (cached) return [200, { ...cached, _diagnose: { authSource: 'login-failed', loginError: loginResult.error } }];
+      return [502, { error: 'Auto-login failed', detail: loginResult.error }];
+    }
   }
+
+  // 4) 失败 → 回退缓存
+  if (!result || result.error) {
+    if (cached) return [200, { ...cached, _diagnose: result ? result.error : 'no result' }];
+    return [502, result || { error: 'No result' }];
+  }
+  if (!result.songs || !result.songs.length) {
+    if (cached) return [200, { ...cached, _diagnose: 'empty songs' }];
+    return [502, { error: 'Empty songs list' }];
+  }
+
+  // 5) 写入 COS 缓存 + 返回
+  await writeJSON('recent-song.json', result);
+  return [200, result];
 }
 
 // ============================================================
