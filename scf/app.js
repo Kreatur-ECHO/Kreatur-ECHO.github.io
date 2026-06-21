@@ -18,9 +18,6 @@ const PORT = 9000;
 const SECRET_ID = process.env.SECRET_ID || '';
 const SECRET_KEY = process.env.SECRET_KEY || '';
 
-const NETEASE_UID = process.env.NETEASE_UID || '';
-const NETEASE_COOKIE = process.env.NETEASE_COOKIE || '';
-
 function getToday() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -33,43 +30,6 @@ function sha1Hex(str) {
   return crypto.createHash('sha1').update(str, 'utf8').digest('hex');
 }
 
-// ============================================================
-//  Netease WeAPI Crypto — AES-128-CBC + RSA (BigInt pow-mod)
-//  硬编码的 public key & nonce 来自网易云 Web 客户端
-// ============================================================
-const NE_MODULUS = '00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7';
-const NE_NONCE  = '0CoJUm6Qyw8W8jud';
-const NE_PUBKEY = '010001';
-
-function aesEncrypt(text, key) {
-  const cipher = crypto.createCipheriv('aes-128-cbc', key, '0102030405060708');
-  return cipher.update(text, 'utf8', 'base64') + cipher.final('base64');
-}
-
-function rsaEncrypt(text) {
-  const r  = text.split('').reverse().join('');
-  const bi = BigInt('0x' + Buffer.from(r, 'utf8').toString('hex'));
-  const mod = BigInt('0x' + NE_MODULUS);
-  let exp   = BigInt('0x' + NE_PUBKEY);
-  let base  = bi % mod;
-  let result = 1n;
-  while (exp > 0n) {
-    if (exp & 1n) result = (result * base) % mod;
-    base = (base * base) % mod;
-    exp >>= 1n;
-  }
-  return result.toString(16).padStart(256, '0');
-}
-
-function weapiEncrypt(data) {
-  const text = JSON.stringify(data);
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let secKey = '';
-  for (let i = 0; i < 16; i++) secKey += chars[Math.floor(Math.random() * chars.length)];
-  const encText   = aesEncrypt(aesEncrypt(text, NE_NONCE), secKey);
-  const encSecKey = rsaEncrypt(secKey);
-  return { params: encText, encSecKey };
-}
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -180,89 +140,22 @@ async function writeJSON(key, obj) {
 }
 
 // ============================================================
-//  Netease Auth — COS 持久化 MUSIC_U，过期自动手机登录续期
-// ============================================================
-const NE_AUTH_KEY = 'netease-auth.json';
-
-async function loadNeteaseAuth() {
-  const data = await readJSON(NE_AUTH_KEY);
-  return (data && data.music_u) ? data : null;
-}
-
-async function saveNeteaseAuth(music_u) {
-  const auth = { music_u, updatedAt: Date.now() };
-  await writeJSON(NE_AUTH_KEY, auth);
-  return auth;
-}
-
-function getCookieStr(music_u) {
-  return music_u.startsWith('MUSIC_U=') ? music_u : 'MUSIC_U=' + music_u;
-}
-
-// neteaseLogin — WeAPI 手机号登录，返回新的 MUSIC_U
-async function neteaseLogin() {
-  const phone = process.env.NETEASE_PHONE || '';
-  const md5pw = process.env.NETEASE_PASSWORD_MD5 || '';
-  if (!phone || !md5pw) return { success: false, error: 'Missing NETEASE_PHONE or NETEASE_PASSWORD_MD5' };
-
-  const enc = weapiEncrypt({ phone, password: md5pw, countrycode: '86', rememberLogin: 'true' });
-  const body = 'params=' + encodeURIComponent(enc.params) + '&encSecKey=' + encodeURIComponent(enc.encSecKey);
-
-  return new Promise((resolve) => {
-    const r = https.request('https://music.163.com/weapi/login/cellphone', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Referer': 'https://music.163.com/',
-      },
-      timeout: 15000,
-    }, (res) => {
-      const cookies = res.headers['set-cookie'] || [];
-      let mu = '';
-      for (const c of cookies) {
-        const m = c.match(/MUSIC_U=([^;]+)/);
-        if (m) { mu = m[1]; break; }
-      }
-      let d = '';
-      res.on('data', c => d += c);
-      res.on('end', () => {
-        try {
-          const j = JSON.parse(d);
-          if (j.code === 200 || j.code === 20000) {
-            if (!mu && j.token) mu = j.token;
-            resolve({ success: true, music_u: mu });
-          } else {
-            resolve({ success: false, error: 'Login code ' + j.code, msg: j.msg || '', rawCode: j.code });
-          }
-        } catch (e) { resolve({ success: false, error: 'Parse: ' + e.message }); }
-      });
-    });
-    r.on('error', e => resolve({ success: false, error: 'Req: ' + e.message }));
-    r.on('timeout', () => { r.destroy(); resolve({ success: false, error: 'Timeout' }); });
-    r.write(body);
-    r.end();
-  });
-}
-
-// ============================================================
-//  网易云音乐 — 最近播放（红心歌单）
+//  网易云音乐 — 最近播放（BLOG 公开歌单）
 // ============================================================
 
-// fetchRecentSongs — 用 MUSIC_U cookie 拉取红心歌单前5首
-function fetchRecentSongs(cookie) {
+// fetchRecentSongs — 拉取公开歌单前5首（无需登录）
+function fetchRecentSongs() {
   return new Promise((resolve) => {
     const reqOpts = {
       headers: {
-        'Cookie': getCookieStr(cookie),
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Referer': 'https://music.163.com/',
       },
       timeout: 10000,
     };
 
-    const LIKED_PLAYLIST_ID = '2488546807';
-    const url = 'https://music.163.com/api/playlist/detail?id=' + LIKED_PLAYLIST_ID + '&limit=5';
+    const PLAYLIST_ID = '18080794017';  // BLOG 公开歌单
+    const url = 'https://music.163.com/api/playlist/detail?id=' + PLAYLIST_ID + '&limit=5';
     https.get(url, reqOpts, (res2) => {
       let data2 = '';
       res2.on('data', chunk => data2 += chunk);
@@ -285,7 +178,7 @@ function fetchRecentSongs(cookie) {
               cover: album.picUrl || '',
             };
           });
-          resolve({ songs, updatedAt: Date.now(), likedPlaylistId: parseInt(LIKED_PLAYLIST_ID) });
+          resolve({ songs, updatedAt: Date.now(), playlistId: 18080794017 });
         } catch (e) { resolve({ error: 'Parse: ' + e.message }); }
       });
     }).on('error', e => resolve({ error: 'Fetch: ' + e.message }))
@@ -295,8 +188,7 @@ function fetchRecentSongs(cookie) {
 
 // ============================================================
 //  handleRecentSong — SCF /recent-song 端点
-//  每天 4am 后首次请求刷新缓存
-//  Cookie 过期时自动手机号登录续期（WeAPI）→ 存 COS
+//  每天 4am 后首次请求刷新缓存（公开歌单无需登录）
 // ============================================================
 async function handleRecentSong(method) {
   if (method !== 'GET') return [405, { error: 'Method not allowed' }];
@@ -313,44 +205,18 @@ async function handleRecentSong(method) {
     }
   }
 
-  // 1) 获取当前有效 cookie：COS 持久化 > 环境变量兜底
-  let cookie = '';
-  const savedAuth = await loadNeteaseAuth();
-  if (savedAuth && savedAuth.music_u) {
-    cookie = savedAuth.music_u;
-  } else if (process.env.NETEASE_COOKIE) {
-    cookie = process.env.NETEASE_COOKIE;
-  }
+  // 拉取公开歌单（无需登录）
+  const result = await fetchRecentSongs();
 
-  // 2) 拉取红心歌单
-  let result = cookie ? await fetchRecentSongs(cookie) : { error: 'No cookie' };
-
-  // 3) 认证过期 (20001/-447/-460 等) → 自动手机登录续期
-  if (result && result.rawCode != null && result.rawCode !== 200) {
-    console.log('[RecentSong] Auth expired (20001), trying auto-login...');
-    const loginResult = await neteaseLogin();
-    if (loginResult.success && loginResult.music_u) {
-      await saveNeteaseAuth(loginResult.music_u);
-      console.log('[RecentSong] Auto-login OK, retrying fetch...');
-      result = await fetchRecentSongs(loginResult.music_u);
-    } else {
-      console.log('[RecentSong] Auto-login failed:', loginResult.error);
-      if (cached) return [200, { ...cached, _diagnose: { authSource: 'login-failed', loginError: loginResult.error } }];
-      return [502, { error: 'Auto-login failed', detail: loginResult.error }];
-    }
-  }
-
-  // 4) 失败 → 回退缓存
   if (!result || result.error) {
-    if (cached) return [200, { ...cached, _diagnose: result ? result.error : 'no result' }];
+    if (cached) return [200, cached];
     return [502, result || { error: 'No result' }];
   }
   if (!result.songs || !result.songs.length) {
-    if (cached) return [200, { ...cached, _diagnose: 'empty songs' }];
+    if (cached) return [200, cached];
     return [502, { error: 'Empty songs list' }];
   }
 
-  // 5) 写入 COS 缓存 + 返回
   await writeJSON('recent-song.json', result);
   return [200, result];
 }
