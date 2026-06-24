@@ -43,7 +43,8 @@
       "rocket": 0,
       "eyes": 0
     },
-    "performed_via_github_app": null
+    "performed_via_github_app": null,
+    "minimized": null
   },
   {
     "url": "https://api.github.com/repos/Kreatur-ECHO/Kreatur-ECHO.github.io/issues/comments/4656244396",
@@ -89,7 +90,8 @@
       "rocket": 0,
       "eyes": 0
     },
-    "performed_via_github_app": null
+    "performed_via_github_app": null,
+    "minimized": null
   },
   {
     "url": "https://api.github.com/repos/Kreatur-ECHO/Kreatur-ECHO.github.io/issues/comments/4656438124",
@@ -135,7 +137,8 @@
       "rocket": 0,
       "eyes": 0
     },
-    "performed_via_github_app": null
+    "performed_via_github_app": null,
+    "minimized": null
   },
   {
     "url": "https://api.github.com/repos/Kreatur-ECHO/Kreatur-ECHO.github.io/issues/comments/4665818558",
@@ -181,7 +184,8 @@
       "rocket": 0,
       "eyes": 0
     },
-    "performed_via_github_app": null
+    "performed_via_github_app": null,
+    "minimized": null
   },
   {
     "url": "https://api.github.com/repos/Kreatur-ECHO/Kreatur-ECHO.github.io/issues/comments/4665944062",
@@ -227,6 +231,7 @@
       "rocket": 0,
       "eyes": 0
     },
-    "performed_via_github_app": null
+    "performed_via_github_app": null,
+    "minimized": null
   }
 ]
